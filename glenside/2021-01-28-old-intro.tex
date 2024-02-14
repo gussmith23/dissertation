@@ -1,0 +1,196 @@
+\section{Introduction}
+
+The explosive growth
+  of deep learning
+  over the past decade
+  has reinvigorated the field
+  of computer architecture.
+ The need for powerful
+  custom-built
+  deep learning
+  accelerators
+  has given architects
+  a new target.
+\textit{Some sentences
+  explaining
+  why we need
+  automated 
+  softare-hardware codesign.}
+Yet
+  designing an accelerator
+  for a workload
+  remains
+  a mostly manual task
+  for hardware and compiler engineers.
+  
+From the workload's perspective,
+  accelerators are not complicated:
+  tensors with specific memory layouts
+  (e.g. \texttt{NCHW})
+  flow out of memory,
+  through a collection of hardware modules,
+  and back to memory.
+Each operator in the program
+  is either
+  computed by a module
+  on the accelerator,
+  or it must be computed on the host.
+Each module
+  has specific data layout expectations
+  which must be fulfilled
+  for computation to be correct.
+Operators
+  can be covered in numerous ways
+  by the hardware.
+For example,
+  weight-stationary systolic arrays
+  can compute convolutions
+  in \texttt{conv2d} mode---%
+  by applying filters
+  over a sliding window
+  of an image---%
+  or the activations can be transformed
+  into \texttt{im2col} format
+  and the systolic array can operate
+  in standard
+  matrix-multiplication
+  (also called ``fully connected" or \texttt{fc})
+  mode.
+  
+Deep learning compiler frameworks,
+  e.g.~TVM\cite{tvm},
+  are designed around optimizing
+  for \textit{existing} hardware:
+  CPUs, GPUs,
+  and increasingly,
+  custom hardware accelerators
+  such as VTA\cite{vta} or \textit{other examples}.
+These frameworks
+  take the hardware target
+  as a given,
+  and explore a range 
+  of software optimizations
+  for the hardware target.
+These optimizations include
+  operator fusion,
+  in which operators
+  can be intelligently chained
+  without needing to write intermediate data
+  to memory,
+  and \textit{other examples}.
+The development
+  of software optimizations
+  is driven by existing hardware,
+  and the feedback loop
+  for improving software
+  is instantaneous:
+  software engineers
+  can simply recompile their workloads
+  and run them on the hardware
+  to determine speedup.
+However, 
+  the same is not the case
+  for improving hardware.
+The feedback loop
+  for improving hardware
+  is much longer;
+  hardware synthesis
+  and hardware simulation
+  are much slower
+  than software compilation
+  and software execution.
+% Hm...I feel like this isn't
+% actually sending the message
+% I want to send.
+Additionally,
+  changes to the hardware
+  may result in 
+  nontrivial changes 
+  in the software.
+
+With the growing popularity
+  of reprogrammable hardware
+  such as FPGAs and CGRAs,
+  the assumption that hardware
+  must be a fixed target
+  will soon be invalid.
+In fact,
+  some have argued
+  that this view of hardware
+  has put us in a rut;
+  as long as we continue
+  to optimize for 
+  a select few hardware platforms
+  we will restrict the diversity
+  of software workloads 
+  \textit{cite hardware lotto;
+  make sure 
+  this is 
+  what they actually say}.
+This work
+  details
+As a field,
+  we must consciously take steps
+  to avoid getting stuck in this rut.
+We need to encourage
+  and enable
+  the development of
+  new hardware architectures.
+We need to avoid
+  digging ourselves deeper
+  into the rut
+  than we already are.
+We must avoid
+  giving in further
+  to the confirmation bias
+  that our current architectures
+  are truly the best architectures.
+\texttt{/rant}
+Viewing hardware
+  as just one more aspect
+  of the overall program
+  opens an even wider space
+  of potential optimizations.
+
+To this end,
+  we designed \g{},
+  a program representation
+  which captures both hardware
+  and software
+  concerns
+  simultaneously.
+Rather than make assumptions
+  about the underlying hardware,
+  \g{}
+  reifies some hardware concepts
+  (such as hardware modules
+    and memory residency)
+  in the representation itself.
+
+\g{}
+  is specifically designed
+  as a language to be used
+  in equality graphs \cite{egraph stuff}.
+\textit{Equality graphs,}
+  or \textit{egraphs},
+  are a data structure
+  designed to represent
+  a massive search space
+  of equivalent programs.
+
+The contributions
+  of this work are:
+\begin{itemize}
+\item \g{}, a language...
+\item
+  A set of rewrites over \g{},
+  and a procedure for applying them,
+  which enables a massive
+  design space exploration
+  from a single program.
+\item
+  A methodology
+  for thinking about 
+  \hwsw{} codesign
+  as a compilation problem.
+\end{itemize}

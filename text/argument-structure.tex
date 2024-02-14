@@ -1,0 +1,57 @@
+\section{Argument Structure}
+
+This section outlines the hierarchical
+  argument
+  of this dissertation.
+At the top is the 
+  thesis of the dissertation;
+  everything else present
+  in this dissertation
+  is meant to prove this thesis.
+The next level of bullets
+  represent the arguments
+  which directly support this thesis.
+Following from this,
+  each subsequent level of bullets
+  represent the arguments
+  which support the previous level of
+  arguments.
+We use the symbol ``$\Leftarrow$''
+  to capture the fact that
+  each sublevel of arguments
+  taken together
+  should imply their parent claim.
+  
+  
+
+\textbf{Thesis:}
+  Automatically generating
+  compiler backends
+  from formal models of hardware
+  improves correctness,
+  leads to emergent optimization,
+  and increases extensibility.
+\begin{itemize}[label=$\Leftarrow$]
+ \item Generating the backend
+      for a compiler for deep learning
+      accelerators
+      by modeling hardware
+      as rewrite rules
+      leads to
+      emergent optimizations
+      and more mapping opportunities.
+ \begin{itemize}[label=$\Leftarrow$]
+  \item blah
+ \end{itemize}
+ \item Generating an FPGA technology
+   mapper
+   using semantics
+   automatically extracted
+   from Verilog simulation models
+   leads to greater correctness,
+   completeness,
+   and extensibility.
+    \begin{itemize}
+        \item The models already exist in the form of Verilog simulation models.
+    \end{itemize}
+\end{itemize}
