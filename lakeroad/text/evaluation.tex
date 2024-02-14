@@ -1,0 +1,717 @@
+\section{Evaluation}
+\label{sec:evaluation}
+
+We now evaluate
+  \lr in terms of completeness
+  and extensibility.
+In the following experiments,
+  we target four FPGA architectures:
+  \textbf{Xilinx UltraScale+},
+  commonly used
+  for large, high-performance workloads;
+  \textbf{Lattice ECP5},
+  commonly used 
+  in low-power, low-cost scenarios;
+  \textbf{Intel Cyclone 10 LP},
+  an FPGA designed for low-cost,
+  high-volume use cases,
+  and 
+  \textbf{SOFA}~\cite{sofa},
+  a recent, open-source
+  FPGA developed by the
+  research community.
+We compare \lr to existing
+  technology mappers.
+For
+  Xilinx Ultrascale+, Lattice ECP5, and
+  Intel Cyclone 10 LP,
+  we compare \lr against both
+  the open source toolchain Yosys~\cite{wolf2013yosys}
+  and the
+  state-of-the-art,
+  proprietary, closed source
+  toolchains
+  for each architecture.\footnote{
+    Again, licensing restrictions 
+    prevent our naming the specific 
+    proprietary tools, but
+    they are familiar, standard packages 
+    used by many hardware designers.}\tighten
+% Though SOFA is nominally
+%   supported by OpenFPGA~\cite{tang2019openfpga},
+%   we failed to get the toolchain working despite
+%   corresponding with the authors.
+The experiments were conducted 
+  on a system running Ubuntu 20.04.3 
+  with an AMD EPYC 7702P 64-Core CPU.
+The resident set size of a single \lr process
+  did not exceed
+  300MB while running our evaluation.
+We use the software versions listed in \cref{sec:implementation}.
+% Racket version 8.9 and
+%   Rosette version 4.1 with
+%   cvc5 version 1.0.1 and
+%   Bitwuzla version 1.0
+%   were used.
+
+\subsection{\lr Completeness}
+\label{sec:completeness}
+% \input{figures/lakeroad-yosys-xilinx}
+% \input{figures/lakeroad-yosys-lattice}
+The reliance of many technology mappers,
+  including state-of-the-art tools,
+  on hand-written patterns
+  %for mapping to DSPs
+  leads them to fail when attempting to map many workloads
+  that \textit{should} be mapped to a single DSP.
+In particular, 
+  the process of partial
+  design mapping 
+  (illustrated in \cref{sec:overview}) 
+  becomes
+  a laborious endeavor because
+  of this incompleteness:
+  hardware designers
+  hand-instantiate DSPs rather
+  than rely on substandard
+  automated tooling, repeating
+  the work each time they identify a potential
+  opportunity to use a DSP.
+\lr's greater mapping completeness 
+  significantly
+  reduces the burden on hardware
+  designers during partial
+  design mapping and marks 
+  the first step in automated
+  mapping for full designs.
+  We next evaluate how \lr's program synthesis approach
+  enables it to achieve greater completeness
+  for these program fragments.
+  
+\paragraph{\textnormal{\textit{\textbf{Evaluation Setup.}}}}
+
+We highlight three particularly complex
+  DSPs for the Xilinx Ultrascale+,
+  Lattice ECP5,
+  and Intel Cyclone 10 LP architectures: 
+  the Xilinx DSP48E2,
+  Lattice ALU54A/MULT18X18C 
+  (a single DSP composed of 
+  two primitives),
+  and Intel cyclone10lp\_mac\_mult.
+SOFA provides no DSP, and is not included
+  in this part of the evaluation.
+For each architecture's DSP,
+  we enumerate a large subset 
+  of the designs
+  theoretically mappable
+  to a single DSP 
+  according to its
+  configuration manual.
+This microbenchmark set
+  aims to capture
+  the real-world designs
+  which hardware designers
+  would attempt to map
+  to a platform's DSP.
+For each architecture, we compare \lr
+  to both the corresponding
+  state-of-the-art toolchain for
+  the architecture 
+  as well as to Yosys.
+For Xilinx Ultrascale+, 
+  the DSP48E2 configuration manual details the
+  structure of designs mappable
+  to the primitive.
+Our designs for Xilinx include 
+  all permutations of the design form
+  $((a \pm b) * c) \odot d$,
+  where $\odot \in \{\&, |, \pm, \oplus \}$,
+  as well as designs of the forms $(a * b)$ and $((a * b) \pm c)$.
+We pipeline each of these
+  workloads from zero to three stages 
+  and use bitwidths from 8 to 18 bits.
+For the DSP on Lattice, we similarly enumerate
+  all designs of the form $(a * b) \odot c$, 
+  where $\odot \in \{\&, |, \oplus, \pm\}$, and of the form $(a * b)$.
+For each of these designs, 
+  we use zero to two stages
+  and bitwidths from 8 to 18 bits.
+This results in
+    1320 microbenchmarks for Xilinx UltraScale+,
+    396 for Lattice ECP5,
+    and 66 for Intel Cyclone 10 LP.
+Though \lr's output is correct by construction,
+  we further validate its output
+  by simulating each \lr-compiled design
+  over thousands of consecutive cycles
+  using Verilator.\tighten
+  
+\paragraph{\textnormal{\textit{\textbf{Comparison to Existing Toolchains.}}}}
+As demonstrated in Figure~\ref{fig:xilinx-completeness} (top),
+  \lr maps $44\times$ more
+  designs than Yosys
+  and $2.1\times$ more designs
+  than the proprietary,
+  state-of-the-art toolchain on Xilinx Ultrascale+.
+On Lattice ECP5,
+  \lr maps $6.0\times$ more
+  designs than Yosys 
+  and $3.6\times$ more designs
+  than the proprietary,
+  state-of-the-art toolchain.
+On Intel Cyclone 10 LP,
+  \lr successfully maps all designs:
+  $3\times$ more designs
+  than the proprietary,
+  state-of-the-art toolchain for Intel.
+Yosys fails to map a single design
+  on Intel.
+State-of-the-art toolchains
+  for all architectures fail
+  to map more than half
+  of the queried designs.
+\lr times out on 
+less than 20\% of designs.%
+\footnote{We restricted Rosette
+synthesis time to 
+120 seconds, 40 seconds, and 20 seconds for
+Xilinx, Lattice, and Intel
+respectively, and
+marked failure past that (though bitvector synthesis problems
+are decidable).}
+Note that \lr
+  returns ``UNSAT'' on 
+  approximately 260
+  designs on UltraScale+, i.e., 
+  \lr claims there is
+  \textit{no} possible mapping
+  to a DSP48E2 for the
+  requested workload.
+In all of these cases,
+  both Xilinx SOTA
+  and Yosys
+  agree with \lr 
+  and do not map the designs
+  to a single DSP.
+We conclude that 
+  the set of designs we presented in 
+  \textit{Evaluation Setup}
+  must be overly broad;
+  though the documentation implies
+  that all of these designs are mappable
+  to a single DSP,
+  all three Xilinx synthesis tools 
+  surveyed indicate that they are
+  indeed not mappable.
+
+For timing, we compared the mapping time for each
+  of the tools
+  and report the results
+  in Figure~\ref{fig:xilinx-completeness} (bottom).
+The wide ranges for \lr
+  show that solver time for different
+  program synthesis queries
+  is highly variable.
+This is explored more deeply in
+  \cref{fig:lakeroad-synth-time},
+  which shows that most synthesis queries
+  terminate quickly,
+  with a long tail of slower queries.
+Note that the state-of-the-art technology
+mapper for Ultrascale+ has a slow running time
+  due to its long start-up process.\tighten
+
+Regarding which solvers
+  in the portfolio were
+  most useful,
+  of all terminating
+  (success or UNSAT)
+  \lr experiments,
+  Bitwuzla was the first
+  to complete
+  for 671 of them,
+  STP for 519,
+  Yices2 for 464,
+  and cvc5 for 64.
+
+\lr's greater completeness
+  directly translates into resource reduction.
+On average, for each microbenchmark,
+  \lr uses 3.9 fewer LEs
+  (logic elements: LUTs, muxes, or carry chains)
+  and 7.5 fewer registers than the Xilinx SOTA,
+  7.2 fewer LEs/11.9 fewer registers than the Lattice SOTA,
+  8.2 fewer LEs/14.3 fewer registers than the Intel SOTA,
+  and 33.3 fewer LEs/11.4 fewer registers than Yosys. 
+In the real world, the small modules
+  captured by our microbenchmarks
+  may be reused dozens
+  if not hundreds of times
+  across a large design.
+Thus, the sizable resource
+  reduction \lr provides on a single
+  microbenchmark
+  will be multiplied significantly
+  for an entire design.\tighten
+
+
+\paragraph{\textnormal{\textit{\textbf{Discussion.}}}}
+Compared to Yosys,
+  it is clear that
+  \lr provides more complete support
+  for
+  programmable DSPs.
+However, \lr's greater completeness
+  over Yosys
+  is perhaps not surprising since 
+  Yosys is an open-source tool
+  still under active development.
+Part of the appeal
+  of the Yosys toolchain
+  is the diversity of backends
+  it can target;
+  these results show that, if incorporated
+  into Yosys, \lr
+  would further increase
+  Yosys's flexibility and generality.
+Perhaps most surprising
+  is that \lr is more complete
+  than
+  specialized proprietary toolchains. 
+Even the UNSAT results \lr produces 
+  can be useful to designers 
+  since they indicate
+  potential flaws
+  in the documentation or vendor-provided semantics.
+% Furthermore, 
+%   the UNSAT results 
+%   that \lr produces
+%   %are demonstrative
+%   reflect
+%   of the complexity
+%   of specialized primitives:
+% Even the documentation,
+%   which would ideally serve as
+%   a single source of truth,
+%   may not accurately
+%   reflect the behavior of the primitive.
+In the context of a larger
+  synthesis tool, \lr
+  would provide stronger
+  guarantees for mapping
+  modules of larger designs.
+
+
+
+
+
+
+\begin{figure}
+    \centering
+\includegraphics[width=0.44\textwidth]{assets/succeeded\_vs\_failed\_all.png}
+
+\vspace{1em}
+\footnotesize
+
+    \begin{tabular}{|l|S[table-format=3.2]|S[table-format=3.2]|S[table-format=3.2]|}
+    \hline
+     Tool & {Median Time (s)} & \multicolumn{2}{c|}{Min / Max Time (s)} \\ \hline
+    \multicolumn{4}{|c|}{\textbf{Xilinx}} \\ 
+    \hline
+         \lr & 14.99 & 2.99 & 127.70 \\  \hline
+         SOTA Xilinx & 261.61 & 227.82 & 598.67 \\ \hline
+         Yosys & 14.97 & 6.66 & 21.10 \\ \hline
+         %
+    \multicolumn{4}{|c|}{\textbf{Lattice}} \\
+    \hline
+         \lr & 9.49 & 6.70 & 55.23 \\ \hline
+         SOTA Lattice & 2.32 & 0.95 & 4.52 \\ \hline
+         Yosys & 2.31 & 0.90 & 4.01 \\ \hline
+    \multicolumn{4}{|c|}{\textbf{Intel}} \\
+    \hline
+         \lr & 2.92 & 2.12 & 4.13 \\ \hline
+         SOTA Intel & 38.73 & 19.11 & 43.49 \\ \hline
+         Yosys & 0.96 & 0.48 & 1.88 \\ \hline
+    \end{tabular}
+
+    % \begin{tabular}{|l|l|l::l|l|l|}
+    % \hline
+    % \multicolumn{3}{|c::}{\textbf{Xilinx}} & \multicolumn{3}{c|}{\textbf{Lattice}} \\
+    % \hline
+    %      Tool & Median Time (s) & Range (s) & Tool & Median Time (s) & Range (s)\\ \hline
+    %      \lr & 6.02 & 1.55--182 & \lr & 5.45 & 4.39--186\\ \hline
+    %      SOTA (Xil.) & 134 & 121--152 & SOTA (Lat.) & 0.777 & 0.593--1.04 \\ \hline
+    %      Yosys & 3.57 & 2.95--4.45 & Yosys & 0.592 & 0.442--0.798 \\ \hline
+    % \end{tabular}
+
+    \caption{
+Results of 
+  the completeness experiments
+  described in \cref{sec:completeness},
+  measuring the completeness 
+  of technology mapping tools for DSPs on Xilinx UltraScale+ and Lattice ECP5,
+  plus timing information.
+A single bar in the bar chart
+  communicates,
+  for a given FPGA architecture
+  and technology mapper,
+  the proportion of the microbenchmarks
+  that the given technology mapper could map to a single DSP.
+In \lr's case, experiments can 
+  either succeed 
+  (\lr maps the microbenchmark
+    to a single DSP),
+  timeout,
+  or return UNSAT.
+For the other tools,
+  experiments can either
+  succeed
+  or fail
+  (i.e., the tool returns a mapping,
+    but the mapping uses more than
+    a single DSP).
+There are a total of 
+  1320 experiments/microbenchmarks for Xilinx,
+  396 for Lattice,
+  and 66 for Intel.
+    }
+    \label{fig:xilinx-completeness}
+\end{figure}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.43\textwidth]{assets/time/lakeroad\_time\_xilinx.png}
+    \includegraphics[width=0.43\textwidth]{assets/time/lakeroad\_time\_lattice.png}
+    \includegraphics[width=0.43\textwidth]{assets/time/lakeroad\_time\_intel.png}
+\caption{
+Histograms of \lr program synthesis runtime
+  for all terminating
+  (success or UNSAT) \lr experiments
+  described in \cref{sec:completeness}, with timeout thresholds indicated with a vertical
+  dotted red line.
+% Note that these histograms capture only
+%   the runtime of the underlying solvers;
+%   however, in most cases, solver runtime
+%   makes up the majority of \lr's runtime.
+}
+    \label{fig:lakeroad-synth-time}
+\end{figure}
+
+% \begin{table}[]
+% \caption{This table summarizes the results
+%   of portfolio solving, listing
+%   for each solver the number
+%   of terminating (success or UNSAT)
+%   \lr experiments
+%   that each solver was first to complete.}    
+%   \label{tab:solver-counts}
+%     \begin{tabular}{|c|c|}
+% \hline
+% \textbf{solver}&\textbf{\# experiments}\\
+% \hline
+% Bitwuzla & 671 \\
+% STP&519 \\
+% Yices2&464\\
+% cvc5&64\\
+% \hline
+%     \end{tabular}
+% \end{table}
+
+\CatchFileDef{\LatticeResourceTable}{generated/lattice-resource-table.tex}{}
+\CatchFileDef{\XilinxResourceTable}{generated/xilinx-resource-table.tex}{}
+\CatchFileDef{\SofaResourceTable}{generated/sofa-resource-table.tex}{}
+\CatchFileDef{\BigTable}{generated/ThE-BiG-TaBlE-WiTh-EvErYtHiNg-In-It.tex}{}
+\CatchFileDef{\LatticeTable}{generated/LaTtIcE.tex}{}
+\CatchFileDef{\XilinxTable}{generated/xilinx-non-auto.tex}{}
+\CatchFileDef{\LatticeTable}{generated/lattice-non-auto.tex}{}
+\CatchFileDef{\SofaTable}{generated/SoFa.tex}{}
+\CatchFileDef{\SofaTable}{generated/sofa-non-auto.tex}{}
+\CatchFileDef{\FinalTable}{generated/expressive-select.tex}{}
+\newcommand{\titletilt}{90}
+
+
+% \begin{table*}[t]
+% \scriptsize{}
+% \caption{Selected benchmark runtime and resource
+%   utilization across Xilinx, Lattice, and SOFA
+%   backends. 
+%   All instructions are for 32-bit 
+%   inputs and outputs; we ran these instructions 
+%  %\sandy{"and similar"?} 
+%   and similar
+%   for 8- and 16-bit inputs and outputs.}
+% \label{tab:expressiveness-table}
+% \newcolumntype{?}{!{\vrule width 1pt}}
+% \begin{center}
+% \resizebox{\textwidth}{!}{%
+% \setlength{\extrarowheight}{2pt}
+% \setlength{\tabcolsep}{2.6pt}
+% \begin{tabular}{ll||rrr|rrrrr|rrr|c||rrr|rrrr|rrr|c||cc|c|c}
+% \toprule
+% \multicolumn{2}{c}{} & \multicolumn{12}{c}{{\bf Xilinx Ultrascale+}} & \multicolumn{11}{c}{{\bf Lattice ECP5}} & \multicolumn{4}{c}{{\bf SOFA}} \\ 
+% \cmidrule(r){3-14} \cmidrule(r){15-25} \cmidrule(r){26-29}
+% && \multicolumn{3}{c}{\lr}
+%  & \multicolumn{5}{c}{Yosys}
+%  & \multicolumn{3}{c}{SOTA Xil.} 
+%  & \multicolumn{1}{c}{SOTA Lat.}
+%  & \multicolumn{3}{c}{\lr}
+%  & \multicolumn{4}{c}{Yosys}
+%  & \multicolumn{3}{c}{SOTA Lat.} 
+%  & \multicolumn{1}{c}{SOTA Xil.}
+%  & \multicolumn{2}{c}{\lr}
+%  & \multicolumn{1}{c}{SOTA Xil.} 
+%  & \multicolumn{1}{c}{SOTA Lat.}\\
+%  \midrule
+ 
+% \FinalTable{}\\
+
+% \bottomrule
+% \end{tabular}}
+% \end{center}
+% \end{table*}
+
+\subsection{\lr Extensibility and Expressiveness}
+
+In addition to being
+  correct by construction (\cref{sec:formalization}) and
+  more complete 
+  than existing FPGA technology mappers (\cref{sec:completeness}),
+  \lr can also easily extend to new FPGA architectures.
+Furthermore, automatic primitive semantics extraction 
+  from vendor-provided HDL simulation models
+  enables \lr to support diverse, highly configurable
+  FPGA primitives.
+
+
+The architecture descriptions
+    vary in length from 20 to 240
+    source lines of code (SLoC).
+% \cref{table:loc} shows that the
+%   architecture description for each
+%   target FPGA architecture varies from
+%   20 to 240 lines of code.
+%
+SOFA (20 SLoC) is the simplest, shown in full
+  in \cref{fig:sofa-architecture-description}.
+The descriptions for Xilinx (185 SLoC), 
+  Lattice (240 SLoC), and Intel (178 SLoC)
+  are longer since those
+  FPGA architectures provide a
+  wider range of configurable primitives.
+% Though a user study is beyond the scope of this paper,
+%   anecdotally, we found these
+%   architecture descriptions straightforward to develop:
+%   for each primitive,
+%   the user includes a series of fields 
+%   %in a YAML file
+%   that describe
+%   the ``type'' of its interface
+%   (ports and parameters) as well as 
+%   the path to a (vendor-provided) behavioral HDL model
+%   that specifies its behavior.
+
+As a point of comparison,
+  the open-source Yosys toolchain,
+  which has roughly 200 contributors on GitHub,
+  provides technology mapping
+  for Xilinx UltraScale+
+  across over a dozen complex
+  Verilog, C++, and Python files (about 1300
+  lines of code).
+We cannot provide similar numbers
+  for state-of-the-art proprietary tools,
+  but a developer
+  of one such technology mapper
+  shared that extending their tool to
+  support new FPGA architectures
+  was extremely difficult since it 
+  ``spans millions of lines of low-level C.''
+This is not surprising; Yosys aims to
+  target a variety of vendor architectures, 
+  while proprietary tools have teams of
+  engineers to extract better mapping 
+  (evident by Yosys' limitations
+  in \cref{sec:completeness}).
+By contrast,
+  \lr supports
+  diverse architectures and
+  is easy to extend.
+Even if a user
+  wants to target a completely
+  new architecture that
+  \lr does not support,
+  architecture-independent
+  sketch templates allow reuse
+  of previously implemented mapping
+  strategies, and the user is
+  only required to provide
+  a few lines of
+  high-level configuration
+  for each primitive in 
+  the architecture description.
+  
+\cref{table:imported-primitves} further
+  highlights \lr's expressiveness,
+  i.e., its ability to support a diverse
+  range of configurable primitives
+  by automatically extracting semantics from
+  vendor-provided HDL simulation models.
+\lr can import the semantics
+  of large configurable primitives, 
+  such as the UltraScale+ DSP (896 lines of Verilog)
+  or Lattice ECP5's ALU and multiplier units (1642 and
+  795 lines of Verilog, respectively).
+It is difficult and error-prone
+  to manually formalize the full semantics for these primitives;
+  partial support by ad hoc search procedures
+  that rely on syntactic pattern matching
+  leads to missing many mapping opportunities,
+  as shown in \cref{sec:completeness}.
+
+% \paragraph{Extending to LUTs.}
+
+% Though \lr is primarily designed to
+%   support programmable primitives like DSPs,
+%   our approach can also support more basic elements like
+%   LUTs and carry chains.
+% \cref{tab:expressiveness-table} shows
+%   the results of using \lr to
+%   map basic arithmetic and comparison operators
+%   to these elements on our target FPGAs.
+% Baselines include
+%   Yosys and state-of-the-art tools
+%   for Lattice and Xilinx FPGAs.
+% Even with basic sketches and modest effort,
+%   \lr runs quickly and often produces results
+%   comparable to highly optimized tools.
+
+
+%%%%%%%%%%%%%%%%%%%% LoC Table %%%%%%%%%%%%%%%%%%%%
+% \begin{table}
+% \caption{Number of source lines of code (excluding comments and empty lines) for each architecture description.}
+% \centering
+% \footnotesize{}
+% \label{table:loc}
+% \begin{tabular}{l r}
+%  {\bf FPGA}   & {\bf SLoC} \\\hline
+%  Xilinx Ultrascale+     &  185       \\
+%  Lattice ECP5           &  240       \\
+%  Intel Cyclone 10 LP    &  178       \\
+%  SOFA                   &  20        \\
+% \end{tabular}
+% \end{table}
+
+\begin{table}
+\caption{FPGA primitives imported 
+  automatically by \lr from vendor-provided 
+  Verilog models, with number of source lines of code 
+  (excluding comments and empty lines) of 
+  the original Verilog models.} 
+\centering
+\footnotesize
+\label{table:imported-primitves}
+\begin{tabular}{lrr}
+ {\bf FPGA}   & \textbf{Primitive} & {\bf Verilog SLoC} \\\hline
+ Xilinx Ultrascale+  & LUT6 & 88       \\
+                     % & LUT6_2 & 123 \\ 
+                     & CARRY8 & 23       \\
+                     & DSP48E2 & 896       \\
+                     % & \\
+                     \hline
+ Lattice ECP5 & LUT2 & 5       \\
+              & LUT4 & 7       \\
+              & CCU2C & 60       \\
+              % & ALU24B & 672       \\
+              % & ALU54B & 1942 \\
+              & ALU54A & 1642 \\ 
+              % & MULT18X18D & 992       \\
+              & MULT18X18C & 795 \\
+              % & \\
+              \hline
+ Intel Cyclone 10 LP  & cyclone10lp\_mac\_mult   &  319       \\ 
+              % & \\
+              \hline
+ SOFA      & frac\_lut4   &  69       \\ 
+\end{tabular}
+\end{table}
+
+
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+% BEGIN COMMENTING OUT OF BIG TABLE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+\iffalse
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+% All Resources Table
+\begin{table*}[t]
+\caption{Tool runtime
+  and FPGA resource utilization
+  for \lr, Vivado, Diamond, and Yosys,
+  when generating implementations for our set of instructions to  
+  Xilinx UltraScale+, Lattice ECP5, and SOFA.
+The ``Template'' column
+  displays which template
+  was used for the \lr implementation:
+  BW is bitwise, Carry is bitwise with carry, 
+  Mult is multiplication,
+  Comp is comparison,
+  and DSP is the DSP template.
+A check in the
+  ``\textit{DSP?}'' columns
+  indicates that,
+  in addition to finding an implementation
+  with the listed template,
+  \lr was also able to implement the instruction
+  with the DSP template.
+  Note that neither of the proprietary
+  Vivado nor Diamond tools are portable --
+  they only narrowly work for their own
+  respective FPGA architecture.
+  Furthermore, Yosys support for SOFA
+  is unusable.
+  Only Lakeroad was able to complete
+  instruction synthesis across all three
+  architectures.
+  }
+\label{tab:resource-utilization}
+
+\newcolumntype{?}{!{\vrule width 1pt}}
+\begin{center}
+\scriptsize
+\begin{tabular}{ll||rrr:c|rrrrrr|rrrr|c||rrrr|rrrrr|rrrr|c||rr}
+\toprule
+\multicolumn{2}{c}{} & \multicolumn{15}{c}{{\bf Xilinx Ultrascale+}} 
+ & \multicolumn{14}{c}{{\bf Lattice ECP5}} & \multicolumn{2}{c}{{\bf SOFA}}\\
+\cmidrule(r){3-17}
+\cmidrule(lr){18-31}
+\cmidrule(l){32-33}
+&& \multicolumn{4}{c}{Lakeroad}
+ & \multicolumn{6}{c}{Yosys}
+ & \multicolumn{4}{c}{Vivado} 
+ & \multicolumn{1}{c}{Diam.}
+ & \multicolumn{4}{c}{Lakeroad} 
+ & \multicolumn{5}{c}{Yosys}
+ & \multicolumn{4}{c}{Diamond} 
+ & Viv.
+ & \multicolumn{2}{c}{Lakeroad}\\
+ \midrule
+%%%%%%%%%%
+% \LatticeResourceTable{}
+\BigTable{}\\
+
+\bottomrule
+\end{tabular}
+\end{center}
+\normalsize
+\end{table*}
+\fi
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+% END COMMENTING OUT OF BIG TABLE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 

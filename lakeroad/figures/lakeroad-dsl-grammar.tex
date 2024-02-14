@@ -1,0 +1,41 @@
+
+%%%%%%%%%%%%%%%%%%%% Lakeroad DSL Grammar %%%%%%%%%%%%%%%%%%%%
+\begin{figure}
+% This line is causing a font error.
+%\small
+\setlength{\grammarparsep}{3pt plus 1pt minus 1pt} % increase separation between rules
+\setlength{\grammarindent}{5em} % increase separation between LHS/RHS 
+\small{}
+\begin{grammar}
+
+<\lowlrir> ::= `prim' name <list> <\lowlrir>
+       \alt signal-const | signal-var  | <list> 
+       \alt <signal-op> | <list-op>
+
+<list>  ::= [<\lowlrir>\ldots]
+
+<signal-op> ::= `extract' int int <\lowlrir>
+         \alt `concat' <list>
+%         \alt `zero-extend' int <lrir>
+
+<list-op> ::= `list-ref' int <\lowlrir>
+         % \alt `take' int <\lowlrir>
+         % \alt `drop' int <\lowlrir>
+
+
+% <routing> ::= `bitwise' | `bitwise-reverse'
+
+% This isn't used
+% <fpga-fn> ::= `ecp5-lut4' \ |\ \ldots
+
+<sketch> ::= <\lowlrir> | <hole>
+
+<hole> ::= `(' `bitvec' width `)' 
+    \alt `(' `choose' <sketch> \ldots `)'
+         
+\end{grammar}
+
+\caption{Syntax for \lrir.}
+\label{fig:lakeroad-dsl-grammar}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%% END LR DSL GRAMMAR %%%%%%%%%%%%%%%%%%%%

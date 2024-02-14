@@ -1,0 +1,75 @@
+\centering
+$\textsc{BV} \inferrule {P[i] = v}
+                            {\smallStep{P}{i}{E}{t}{v}}$ \quad 
+%
+$\textsc{Var} 
+\inferrule {P[i] = x \quad E[x][t] = v } 
+{ \smallStep{P}{i}{E}{t}{v} }$ \quad\\[1em]
+%
+$\textsc{Op} 
+\inferrule { 
+o \in \Op \quad
+P[i] = o\ i_1\ \ldots\ i_n \quad
+\smallStep{P}{i_1}{E}{t}{v_1} \quad
+\ldots \quad
+\smallStep{P}{i_k}{E}{t}{v_n} \quad    % INPUT n
+\quad 
+v = \llbracket o \rrbracket(v_1, \ldots, v_n)}
+{ \smallStep{P}{i}{E}{t}{v} }$ \\[1em]
+
+$\textsc{RegZero}
+\inferrule{
+  P[i] =\ $\IRReg$\ i_{clk}\ i_{data}\ v_{init}
+}{\smallStep{P}{i}{E}{0}{v_{init}}}$\\[1em]
+
+$\textsc{RegHold} 
+\inferrule {
+  t > 0 \quad
+  P[i] =\ $\IRReg$\ i_{clk}\ i_{data}\ v_{init} \quad
+  \smallStep{P}{i_{clk}}{E}{t}{v_{clk}} \quad
+  \smallStep{P}{i_{clk}}{E}{t-1}{v_{oldClk}} \quad
+  \smallStep{P}{i}{E}{t-1}{v_{oldQ}} \quad
+  (v_{oldClk}, v_{clk}) \neq (0, 1)
+  } 
+{ \smallStep{P}{i}{E}{t}{v_{oldQ}} }$ \\[1em]
+
+$\textsc{RegTick} 
+\inferrule {
+  t > 0 \quad
+  P[i] =\ $\IRReg$\ i_{clk}\ i_{data}\ v_{init} \quad
+  \smallStep{P}{i_{clk}}{E}{t}{v_{clk}} \quad
+  \smallStep{P}{i_{clk}}{E}{t-1}{v_{oldClk}} \quad
+  \smallStep{P}{i_{data}}{E}{t-1}{v_{oldData}} \quad
+  (v_{oldClk}, v_{clk}) = (0, 1)
+  } 
+{ \smallStep{P}{i}{E}{t}{v_{oldData}} }$ \\[1em]
+
+% 2023/10/21: Gus added a "hack" that might fix the prim problem of not putting streams in the environment, but we still may wanna do away with these inference rules altogether in favor of the interpreter pseudocode
+$\textsc{Prim} 
+\inferrule {
+  P[i] = \SynPrim\ \langle x_1,\ldots, x_n\rangle\
+                   \langle i_1, \ldots, i_n\rangle\
+                   p \quad
+  % \smallStep{P}{i_1}{E}{t}{v_1} \quad 
+  % \ldots \quad 
+  % \smallStep{P}{i_n}{E}{t}{v_n} \quad 
+  1 \leq j \leq n\quad 
+  \smallStep{P}{i_j}{E}{0}{v_j^0} \quad 
+  \cdots \quad
+  \smallStep{P}{i_j}{E}{t}{v_j^t} \quad 
+  E^\prime = E\left[x_j \mapsto \left[v_j^0, \dots, v_j^t\right]\right] \quad
+  \smallStep{p}{p.root}{E^\prime}{t}{v}
+} 
+{ \smallStep{P}{i}{E}{t}{v} }$ \\[1em]
+
+$\textsc{Step}
+\inferrule {
+\smallStep{P}{P.root}{E}{t}{v}
+}{\bigStep{P}{E}{t}{v}}
+$
+
+% \separatingline \vspace{1em}
+
+% $\textsc{OneCycle} \inferrule { \evalsTo{e}{E}{S}{v}{S'} } { \multiEvalsTo{[E]}{e}{S}{v}{S'} }$ \quad
+% $\textsc{MultiCycle} \inferrule { \evalsTo{e}{E_1}{S}{v_{ignore}}{S'} \quad 
+% \multiEvalsTo{[E_2, \ldots, E_n]}{e}{S'}{v}{S''} } { \multiEvalsTo{[E_1, E_2, \ldots, E_n]}{e}{S}{v}{S''} }$ \\[1em]

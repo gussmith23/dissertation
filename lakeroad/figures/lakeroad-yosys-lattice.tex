@@ -1,0 +1,15 @@
+\begin{table}[]
+\caption{Synthesis time and resource usage when synthesizing various expressions for Lattice ECP5 using our \texttt{\lowercaselr} command and using the existing \texttt{synth\_ecp5} command in Yosys.}
+\label{tab:yosys-lattice}
+\hl{Replace this figure with more expansive DSP tables}
+\setlength{\tabcolsep}{2pt}
+\centering
+\begin{tabular}{l|lll|lll}
+\hline
+instruction       & \multicolumn{3}{l|}{\texttt{\lowercaselr}} & \multicolumn{3}{l}{\texttt{synth\_ecp5}} \\
+(all 16 bit)      & time (s)    & MULT         & ALU         & time (s)  & MULT        & CCU2C        \\ \hline
+$a\times b$       & 1.42         & 1        & 1       & 0.65        & 1       &         \\
+$(a\times b) + c$ & 1.87         & 1        & 1       & 0.74        & 1       & 8       \\
+$(a\times b) - c$ & 1.61         & 1        & 1       & 0.61        & 1       & 8      
+\end{tabular}
+\end{table}

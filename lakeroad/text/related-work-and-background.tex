@@ -1,0 +1,429 @@
+\section{Related Work}
+\label{sec:background-and-related-work}
+
+To the best of our knowledge,
+  \lr is the first work
+  to apply the technique of program synthesis
+  to FPGA technology mapping.
+Indeed, as noted by Sisco \textit{et al.}~\cite{sisco2022synthesis},
+  program synthesis has seldom been applied
+  in the domain of hardware design although
+  its underlying formal methods techniques
+  are frequently used for
+  the \textit{formal verification}
+  of hardware designs rather than compilation,
+  % \footnote{Program synthesis and verification are inherently related, since synthesis entails a verification step: The design ultimately produced must be checked against the specification.}
+  as in Bluespec SystemVerilog~\cite{nikhil2004bluespec},
+  \koika~\cite{bourgeat2020essence},
+  and Kami~\cite{choi2017kami}.
+Sisco \textit{et al.} cite two examples
+  of works that use program synthesis for hardware design,
+  Verisketch~\cite{ardeshiricham19verisketch} and Sketchilog~\cite{becker14sketchilog},
+  both of which apply program synthesis to produce HDL implementations from high-level designs.
+Other works use program synthesis
+  to generate \textit{software}
+  that runs on low-powered hardware,
+  like Chlorophyll~\cite{phothilimthana2014chlorophyll},
+  which targets extremely memory-constrained
+  power-efficient processors,
+  Chipmunk~\cite{gao2019chipmunk},
+  which targets programmable network switches,
+  and Diospyros~\cite{vanhattum2021vectorization},%
+  \footnote{Diospyros uses symbolic evaluation, which is related to program synthesis, to lift imperative programs for digital signal processors into a high-level mathematical representation that can then be used with the technique of equality saturation~\cite{tate2011equality} to generate optimized code for the target devices. This is also distinct from the program synthesis techniques referenced elsewhere in this paper.}
+  which generates vectorized programs for standalone digital signal processors (more powerful and general-purpose devices than the DSP units in FPGAs).
+These works demonstrate the utility of program synthesis 
+  for generating code that handles
+  specific wrinkles in hardware designs,
+  as does the use of program synthesis in \lr
+  to harness the programmability of FPGA DSPs.
+
+\lr is also related to past work in FPGA compilation and techmapping,
+  much of which does not 
+  %\sandy{Are you using 'entreaty' to mean 'attempt'? Can you simply use the latter?}
+  entreaty to support
+  programmable DSPs with as much generality.
+ODIN~\cite{jamieson2005verilog} and ODIN-II~\cite{jamieson2010odin}
+  are used in \textit{hard-block synthesis}
+  for FPGAs,
+  which is the task of mapping portions
+  of hardware designs to specialized units (\textit{hard blocks}) like multipliers.
+They operate purely over syntax (e.g., mapping \texttt{*} to a multiplier)
+  and so are greatly limited in their ability
+  to handle programmable DSPs.
+The ABC~\cite{brayton2010abc} logic synthesis tool
+  is used to lower hardware designs 
+  into LUT and carry-chain configurations; it 
+  is related to \lr in that it also uses constraint solvers
+  to find configurations,
+  though it is not general enough to handle
+  a wide variety of programmable DSPs,
+  unlike the program synthesis techniques used in \lr.
+Note also that the use of
+  configuration files in \lr to
+  abstract away details of the FPGA architecture
+  was inspired by past work in FPGA compilation,
+  including OpenFPGA~\cite{tang2019openfpga}
+  and the Verilog-to-Routing
+  project (VTR)~\cite{rose2012vtr},
+  both of which use abstract architecture descriptions
+  to facilitate portability across designs,
+  though these projects are limited in their support for DSPs.
+Library-Parameterized Models~\cite{1993lpm, lpmaltera}
+  define generic interfaces for common primitives and are also similar to \lr's primitive interfaces,
+  though they are limited in their ability to represent configurable units like DSPs.\tighten
+
+
+  
+
+
+% While much work exists that applies formal methods to hardware,
+%   most of this work
+%   has concerned the
+%   \textit{formal verification}
+%   of hardware designs,
+%   viz., proving that an implementation of a design
+%   fulfills a specification for it.
+% Examples of such work include
+%   the HOL, FORTE, and VOSS proof assistants~\cite{seger2005industrially,joyce2005hol,githubGitHubTeamVossVossII},
+%   used by Intel, among others.
+
+% It should be noted, nevertheless,
+%   that while program synthesis
+%   has had limited use in the hardware domain,
+%   the formal methods techniques
+%   that underlie program synthesis
+%   have frequently been used
+%   for \textit{formally verifying}
+%   hardware designs against machine-readable specifications.
+% For example, the HOL/FORTE/VOSS/VOSS II~\cite{seger2005industrially,joyce2005hol,githubGitHubTeamVossVossII} proof assistants
+%   have been widely used
+%   at Intel and other companies
+%   for verifying properties
+%   of hardware designs.
+% Synthesis and verification are inherently related,
+%   since synthesis includes a verification step
+%   (it must be determined that the proposed design fulfills the specification).
+% Verification techniques
+%   check that an existing design fulfills a specification;
+%   synthesis entails filling the holes in a proposed design
+%   in order for the specification to be fulfilled (thus requiring the generated design to also be checked against the specification).
+
+% Much work exists
+%   applying formal methods
+%   for \textit{formal verification}
+%   of hardware;
+%   see, for example,
+%   work on HOL/FORTE/VOSS/VOSS II ~\cite{seger2005industrially,joyce2005hol,githubGitHubTeamVossVossII}
+%   used by Intel,
+%   among others.
+% Formal verification and program synthesis
+%   are two sides of the same coin;
+%   formal verification checks whether,
+%   given a fully specified design,
+%   the design implements a given
+%   specification,
+%   while \lr's application of program
+%   synthesis
+%   checks whether, given a design with
+%   ``holes,''
+%   the holes can be filled in
+%   to generate a design which implements
+%   the given specification.
+
+% comparable to Lakeroad because it takes an architecture description and gives you a compiler
+% However, doesn't support complex constructs like DSPs, mainly just LUTs
+% Might be conceivable to explore combining OpenFPGA's generality with Lakeroad's support for DSPs
+% OpenFPGA~\cite{tang2019openfpga}
+%   is a framework
+%   for the rapid prototyping of FPGA fabrics.
+% OpenFPGA includes a method of describing architectures
+%   as architecture description files
+%   in an XML format,
+%   and enables compilation of designs
+%   (including technology mapping)
+%   to any architecture represented in this format.
+% This architecture description
+%   and compilation flow
+%   is implemented with and originally proposed by
+%   the Verilog-to-Routing
+%   project (VTR)~\cite{rose2012vtr}.
+  
+% VTR is a large project
+%   with the general goal 
+%   of automating the generation of
+%   FPGA synthesis tools
+%   given just a description
+%   of the FPGA architecture.
+% VTR is powered by three main tools:
+%   ABC~\cite{brayton2010abc}
+%   for logic synthesis,
+%   ODIN-II~\cite{jamieson2010odin}
+%   for hard-block synthesis,
+%   and VPR~\cite{betz1997vpr}
+%   for physical synthesis.
+% Both ABC and ODIN-II are relevant to this work. 
+
+  
+% ODIN-II~\cite{jamieson2010odin}
+%   and its predecessor ODIN~\cite{jamieson2005verilog}
+%   are tools
+%   for \textit{hard block synthesis,}
+%   which is the process of mapping a hardware design
+%   to specialized units,
+%   or \textit{hard blocks,}
+%   such as multipliers.
+% ODIN and ODIN-II
+%   operate purely over \textit{syntax:}
+%   e.g. searching for a literal ``\texttt{*}''
+%   symbol
+%   in Verilog code and mapping it
+%   to a multiplier.
+% This may work
+%   for an FPGA architecture
+%   with a small number
+%   of non-programmable units
+%   (e.g., fixed multipliers, fixed adders),
+%   but is not suitable for programmable units
+%   such as DSPs, which
+%   can implement an ever-expanding
+%   range of computations;
+%   the number of patterns a user would need to write
+%   would be immense.
+% \lr, on the other hand,
+%   operates over \textit{semantics:}
+%   the low-level meaning
+%   of a hardware design.
+% It is thus automatically able to determine
+%   the functioning of a DSP,
+%   and able to find opportunities
+%   ODIN would miss.
+  
+% Library Parameterized Models~\cite{1993lpm, lpmaltera}
+%   are similar to \lr's
+%   primitive interfaces:
+%   they define generic interfaces for 
+%   common primitives in FPGAs,
+%   which can then be mapped to FPGA-specific
+%   implementations.
+% They do not, however,
+%   have the ability to represent configurable
+%   units such as LUTs and DSPs.
+
+Virtual FPGA overlays~\cite{lysecky2005firm,brant2012zuma, landgraf2021compiler}
+  are another approach to
+  improving the mapping of hardware designs
+  to hardware.
+Overlays present a ``virtual''
+  FPGA architecture;
+  each actual architecture
+  must then define a mapping
+  from virtual to actual primitives.
+This required translation is similar to
+  \lr's requirement on users
+  to implement primitive interfaces
+  in an architecture description,
+  though it requires more user effort.
+The translation from virtual to actual architecture
+  often comes with
+  a steep resource
+  and performance overhead.
+  % not dissimilar to the overheads
+  % incurred by \lr, e.g.,
+  % in the imperfect alignment
+  % of Lattice's CCU2C primitive
+  % with \lr's carry-chain primitive interface.
+
+% Faster and
+%   more flexible
+%   hardware compilation
+%   is so desirable
+%   that 
+%   a number of approaches 
+%   go so far as to
+%   propose special 
+%   hardware for which
+%   compilation is easier%
+%   ~\cite{xiao2022pld,lysecky2004configurable,sekanina2000r,lysecky2004dynamic,stitt2003dynamic}.
+
+% There is a large body of work
+%   focusing on the semantics of hardware designs;
+%   see
+%   Bluespec SystemVerilog~\cite{nikhil2004bluespec},
+%   \koika~\cite{bourgeat2020essence},
+%   and Kami~\cite{choi2017kami}.
+% Unlike \lr, these works generally focus 
+%   on 
+%   \textit{verification} of existing hardware designs,
+%   however,
+%   rather than \textit{compilation.}
+  
+
+
+%\subsection{Hardware Compilation}
+%\label{sec:background-hardware-compilation}
+%
+%Xilinx's
+%  Vivado Design Suite~\cite{vivado}
+%  is related.
+%So are a number of open source tools~\cite{rose2012vtr, lavin2018rapidwright, wolf2013yosys, eldridge2021mlir,urbach2022hls}.
+%CIRCT is part of MLIR~\cite{lattner2021mlir}.
+%
+%In addition to focusing
+%  on \textit{usability,}
+%  there is a focus on
+%  \textit{correctness}
+%  in new hardware compilers.
+%\cite{herklotz2021empirical} finds that
+%  a number of commercial HLS compilers
+%  produce incorrect hardware
+%  in 2.5\% of cases;
+%  as a result,
+%  \cite{herklotz2021formal} presents
+%  the first formally-verified
+%  HLS compiler from C
+%  by building a Verilog backend
+%  for the formally verified CompCert
+%  C compiler~\cite{leroy2016compcert}.
+%
+%  
+%
+%New approaches to compilation
+%  often take issue
+%  with a fundamental step
+%  in traditional hardware compilation,
+%  in which the input design---%
+%  represented in a high-level,
+%  semantically rich language
+%  like behavioral SystemVerilog---%
+%  is compiled all the way down
+%  to a low-level representation
+%  like and--inverter graphs~\cite{callahan1998fast}.
+%This makes the process of
+%  technology mapping
+%  for FPGAs challenging,
+%  as the low-level representation
+%  must be lifted up
+%  to the 
+%  higher level of abstraction
+%  of FPGA primitives,
+%  such as look-up tables (LUTs)
+%  or even digital signal processors (DSPs).
+%Reticle~\cite{vega2021reticle},
+%  which our work builds directly off of,
+%  introduces a new representation
+%  which is compiled directly to
+%  FPGA primitives
+%  via instruction selection.
+%
+%\subsection{Formal Hardware Models}
+%\label{sec:background-formal-hardware-models}
+%
+%VHDL~\cite{ieee20191076}
+%  and Verilog/SystemVerilog~\cite{design2005ieee}.
+%Also \cite{choi2017kami}.
+%
+%Bluespec SystemVerilog~\cite{nikhil2004bluespec}
+%  raises the abstraction level
+%  of SystemVerilog.
+%\koika~\cite{bourgeat2020essence} introduces
+%  more control over scheduling
+%  which depends on dynamic analyses
+%  which might incur hardware overhead
+%  but can be simplified away
+%  potentially by static analyses.
+%Kami~\cite{choi2017kami}
+%  is a recent formalization
+%  of a subset of Bluespec
+%  in the theorem prover Coq.
+%Being embedded in Coq,
+%  Kami allows for 
+%  verification---%
+%  in the software sense of the word,
+%  that is, formal verification
+%  of mathematical properties---%
+%  of hardware designs
+%  by stating and proving theorems
+%  about them.
+%Kami can also be compiled
+%  to FPGAs.
+%
+%A number of recent representations
+%  enrich
+%   hardware design representations
+%  with new semantics.
+%Calyx~\cite{nigam2021compiler}
+%  explicitly separates
+%  datapath specification
+%  from control logic.
+%Dahlia~\cite{nigam2020predictable}
+%  uses affine types
+%  to more richly describe
+%  the semantics of
+%  reading to 
+%  and writing from
+%  memories
+%  in FPGAs.
+%Aetherling~\cite{durst2020type}
+%  presents a
+%  language
+%  which captures
+%  the spatial/temporal tradeoff
+%  of custom hardware,
+%  and uses the language
+%  to build streaming accelerators.
+%Reticle~\cite{vega2021reticle}
+%  adds placement information
+%  directly into the language
+%  representation,
+%  conveying useful information
+%  to the underlying tools.
+%
+%\textit{Satisfiability modulo theories} (SMT)
+%  is a generalization of the SAT problem
+%  allowing for variables and constraints
+%  from domains
+%  (or \textit{theories})
+%  other than boolean,
+%  such as the bitvectors
+%  and uninterpreted functions.
+%Rosette~\cite{torlak2013growing,torlak2014lightweight}
+%  embeds SMT solving capabilities
+%  within the programming language
+%  Racket,
+%  enabling users to easily formulate
+%  constraint problems,
+%  or even use solvers
+%  to write programs themselves,
+%  also known as 
+%  \textit{solver-aided programming}
+%  or \textit{synthesis.}
+%Under the hood,
+%  Rosette is powered by
+%  Z3~\cite{de2008z3},
+%  a popular SMT solver.
+%Rosette and Z3 also support
+%  optimization:
+%  Rosette via Z3 can produce
+%  a solution which satisfies
+%  the constraints
+%  and which is optimal
+%  relative to a given
+%  cost function.
+%
+%Chlorophyll~\cite{phothilimthana2014chlorophyll}
+%  is a prime example
+%  of how solvers can be used
+%  in compilers.
+%Chlorophyll
+%  uses Z3
+%  to compile programs
+%  for a unique
+%  architecture:
+%  an array of power-efficient
+%  processors.
+%It does so by
+%  expressingt he particular,
+%  architecture-specific concerns
+%  of code compilation
+%  as constraints
+%  to Z3.

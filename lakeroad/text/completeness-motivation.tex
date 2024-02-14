@@ -1,0 +1,67 @@
+% Gus integrated this content into the intro.
+
+% \section{Motivation: Techmapping Completeness}
+% \label{sec:completeness}
+
+% In this section,
+%   we empirically motivate
+%   the need for 
+%   \lr.
+% We first give a formal definition
+%   for 
+
+% \hl{
+% I'm split on whether
+%   we should introduce completeness
+%   up front in its own section,
+%   or split it up into existing sections.
+% Specifically,
+%   we have two components to be introduced:
+%   the formal completeness defintion
+%   and the empirical incompleteness evidence
+%   of other tools
+
+  
+% }
+
+
+
+\section{Motivation: Limitations of Current Approaches}
+\label{sec:completeness}
+
+Hand-written syntactic matching
+  has several key limitations 
+  when applied to programmable primitives.
+\paragraph{Limitation 1: Mapping Completeness}
+We refer to completeness as 
+  a tool's ability to map a design
+  to a primitive, if such a mapping exists.
+Completeness is challenging
+  to guarantee for programmable primitives,
+  as there may be many designs that can
+  map to a primitive---far too many to 
+  capture via handwritten patterns.
+This rigidity \hl{don't think this is the word} 
+  is further exacerbated by the fact that a high-level operation can be represented with 
+  several equivalent designs, meaning that each representation of a design would require
+  a pattern.
+As shown in \hl{andrew teaser table},
+  even canonical representations of small workloads are not mapped 
+  correctly \hl{finish off this sentence strongly}.
+
+\paragraph{Limitation 2: Correctness Guarantees}
+Handwritten patterns also do not provide formal
+  correctness guarantees; a rewrite can
+  match any pattern in the design, and 
+  replace it with anything else.
+Perhaps unsurprisingly, as a result, a
+  significant number of bugs have been found
+  across all major hardware synthesis tools \hl{sneak peek table?}
+\hl{sentence about "if only formal semantics existed maybe? might be a bit tacky}
+\paragraph{Limitation 3: Extensibility}
+Even if a handful of patterns can be
+  derived and implemented for a new primitive,
+  adding full support requires writing patterns 
+  to cover \textit{all possible ways} the primitive can be used, a daunting task.
+This process then must be \textit{repeated}
+  each time a new primitive needs to be supported.

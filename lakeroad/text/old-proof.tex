@@ -1,0 +1,254 @@
+
+\begin{lemma}
+    \label{lemma:non-termination-of-rule-implies-recursive-call}
+    If \textsc{Interp} fails to execute
+    on node $n$, then this non-termination
+    must be due to a recursive call to 
+    \textsc{Interp}.
+\end{lemma}
+\begin{proof}
+Suppose $\textsc{Interp}(p,e,t,n)$
+    fails to terminate.
+$n$ is one of five types of nodes:
+    $\SynBv$,
+    $\SynVar$,
+    $\Op$, 
+    \IRReg,
+    and \IRPrim;
+    \textsc{Interp} is not defined for holes
+    $\blacksquare_{x_i}$.
+    
+Interpreting a $\SynBv$ node
+    returns a bitvector constant,
+    and this terminates.
+
+Interpreting a $\SynVar$ node
+    performs an environment
+    lookup.
+An environment is formed either by an
+    explicit mapping of
+    variables to concrete streams,
+    or by the lambda abstraction
+    in the rule for primitives.
+Looking up a concrete mapping always
+    terminates.
+Executing the body of lambda abstraction
+    formed in the primitives rule
+    involves a single recursive call to \textsc{Interp},
+    so if this abstraction fails to terminate
+    it must be from a non-terminating recursive call.
+    
+Interpreting a \IRReg{} node when time $t=0$
+    returns a bitvector constant, which terminates.
+Interpreting a \IRReg{} node when time $t > 0$
+    involves a single recursive call to \textsc{Interp};
+    thus if execution fails to terminate then this
+    recursive call must fail to terminate.
+
+Interpreting an $\Op$ node performs a
+    map of recursive calls to \textsc{Interp}
+    to a finite list of operands,
+    and then applies the semantics 
+    of $\llbracket op \rrbracket$
+    to the result.
+Mapping function $f$ over a finite list $xs$ always
+    terminates whenever $f$ is guaranteed to
+    terminate, so for our map invocation to
+    diverge, one of the recursive
+    calls to \textsc{Interp}
+    must fail to terminate.
+Computing the operator semantics
+    $\llbracket op \rrbracket$
+    could fail to terminate in theory,
+    but in practice these operators are
+    simple bitvector operations
+    and always terminate (e.g., bitvector addition).
+    
+Interpreting a \IRPrim{} node
+    performs lambda abstraction and then
+    passes the abstraction to a recursive
+    call to \textsc{Interp}.
+Lambda abstraction always terminates.
+Thus, if interpreting a primitive node
+    diverges this must be due to the
+    recursive call failing to terminate.
+
+This, if $\textsc{Interp}(p,e,t,n)$ fails to
+    terminate, this must be due to a non-terminating recursive
+    call to \textsc{Interp}, as was to be shown.
+\end{proof}
+
+We define a \textit{recursive call sequence}
+    to be (possibly infinite) sequence of \textsc{Interp} executions 
+    $\{\mathcal{I}_i\}$,
+    where  $\mathcal{I}_i = \textsc{Interp}(p_i, e_i, t_i, n_i)$
+    for some $p_i$, $e_i$, $t_i$ and $n_i$,
+    such that $\mathcal{I}_i$ recursively invokes $\mathcal{I}_{i+1}$,
+    such that the final execution $\mathcal{I}_f$ in the sequence,
+    if it exists,
+    does not recursively call \textsc{Interp}.
+We say that a recursive call sequence $\{\mathcal{I}_i\}$ is
+    \textit{divergent} if all $\mathcal{I}_i$ are divergent.
+\begin{lemma}
+    \label{lemma:non-termination-implies-infinite-recursion}
+    A recursive call sequence of finite length cannot be divergent.
+\end{lemma}
+\begin{proof}
+Let $\{\mathcal{I}_i\}$, $i = 1\ldots L$, be a finite length
+    recursive call sequence.
+By definition the final execution $\mathcal{I}_L$
+    must not recursively call \textsc{Interp},
+    and by Lemma~\ref{lemma:non-termination-of-rule-implies-recursive-call}
+    $\mathcal{I}_L$ must terminate,
+    and $\{\mathcal{I}_i\}$ is not divergent.
+\end{proof}
+
+\begin{lemma}
+    If executing $\textsc{Interp}(p, e, t, n)$ diverges,
+    then there must exist an infinite recursive call sequence
+    $\{\mathcal{I}_i\}$ 
+    starting with $\mathcal{I}_1 = \textsc{Interp}(p, e, t, n)$.
+\end{lemma}
+\begin{proof}
+We prove by contradiction.
+Suppose executing $\textsc{Interp}(p, e, t, n)$ diverges,
+    and suppose that all recursive call sequences
+    starting with $\mathcal{I}_1 = \textsc{Interp}(p, e, t, n)$ do
+    not diverge.
+An infinite length recursive
+    call sequence corresponds to
+    infinite recursion which is divergent,
+    and so all recursive
+    call sequences starting with $\mathcal{I}_1$
+    must have finite length.
+
+\end{proof}
+
+
+\begin{lemma}
+    \label{lemma:infinite-recursion-impossible}
+    If program $p$ is well-formed, then
+    $\textsc{Interp}\ p\ e\ t\ p.root$
+    cannot recurse infinitely.
+\end{lemma}
+\begin{proof}
+We prove by contradiction.
+Suppose 
+    $\textsc{Interp}(p, e, t, r)$ diverges.
+Let $T$ be the execution tree
+    defined by the divergent execution
+    of $\textsc{Interp}(p, e, t, r)$,
+    whose (1) tree nodes are the 
+    individual executions of \textsc{Interp}
+    on the program nodes of $p$,
+    and (2) edges between
+    tree nodes $N_i$ and $N_j$ are
+    recursive invocations of \textsc{Interp}.
+Since \textsc{Interp} can execute
+    on a single program node $n_i$ multiple times,
+    a program node $n_i$ can correspond to
+    multiple tree nodes $N_{n_i, 1}, N_{n_i, 2}, \ldots$,
+    one for each time \textsc{Interp}
+    executes on $n_i$.
+From the preceding arguments, the execution of each
+    tree node is finite.
+Since execution diverges, 
+    $T$ must be \textit{infinite}
+    and in particular have
+    infinitely many tree nodes.
+
+Each rule for \textsc{Interp}
+    directly invokes \textsc{Interp} finitely
+    many times, so each tree node has
+    finitely many children.
+This implies that for $T$
+    to be infinite, it
+    must have infinite depth,
+    and it follows that
+    there exists
+    an infinite path
+    $P$ through $T$.
+Since our program $p$ has finitely many nodes,
+    there must be program node $n$
+    that is executed infinitely many
+    times in path $P$ via nodes
+    $N_{n,1}, N_{n,2}, \ldots$
+This and well-formedness rule
+    \textbf{W6} imply the existence
+    of infinitely many tree nodes
+    $N_{r,1}, N_{r,2}, \ldots$
+    in $P$ corresponding to the
+    execution of register program nodes.
+There are two cases: $n$ itself is a
+    register node, or
+    $n$ is not a register node.
+If $n$ is a register node, then
+    our claim trivially holds:
+    it exists within infinitely many tree
+    nodes $N_{n,1}, N_{n,2}, \ldots$
+    in $P$, and we are done.
+Otherwise, $n$ is not a register node,
+    and $n$ has a self-dependency.
+By \textbf{W6}, program $p$ cannot have combinational
+    cycles, meaning self-dependencies
+    must be broken by a register
+    node, and each subpath in $P$
+    starting and ending with an execution of $n$
+    must contain the execution of a register.
+
+But a path through an execution tree
+    cannot contain infinitely many register nodes:
+    each execution of a register node decrements
+    time, and no rules in \textsc{Interp} ever
+    increment a time value.
+Since time at the top of the path must
+    be some natural number $t_P$, the path
+    contains at most $t_P + 1$ register nodes.
+This contradicts that $P$ has infinitely many
+    register nodes: $P$ must be finite,
+    $T$ must be finite,
+    and $\textsc{Interp}(p, e, t, r)$
+    must terminate when $p$ is free
+    of combinational cycles.
+\end{proof}
+
+
+{\color{green}
+THE FOLLOWING IS AN OLD PROOF THAT WE CAN RECYCLE, ARGUING THAT ROSETTE TERMINATES. WE DONT WANT TO MAKE IT A THEOREM, SO INSTEAD THIS WILL BE A PROSE ARGUMENT
+\begin{proof}
+Rosette searches through
+  all possible ways of
+  filling in a sketch's holes
+  and uses \textsc{Interp} to
+  check if the resulting program
+  is equivalent to the behavioral
+  specification.
+There are finitely many holes,
+  and each hole has
+  finitely many possible completions.
+Thus there are finitely many ways to
+    fill the holes of a sketch,
+    and as long as \textsc{Interp} always
+    terminates, Rosette's synthesis query
+    is guaranteed to terminate, and the
+    entire search space can in theory
+    be explored.
+
+To show that \textsc{Interp} is guaranteed
+    to terminate on well-formed programs,
+    we show two intermediate results,
+    proved below: 
+    %
+    (i) non-termination of \textsc{Interp}
+    implies infinite recursion, 
+    (Lemma \ref{lemma:non-termination-implies-infinite-recursion}),
+    %
+    and (ii) infinite recursion is impossible on
+    a well-formed program
+    (Lemma \ref{lemma:infinite-recursion-impossible}).
+These two facts 
+    combine to imply that \textsc{Interp}
+    is guaranteed to terminate on well-formed
+    programs.
+\end{proof}
+}

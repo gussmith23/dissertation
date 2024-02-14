@@ -1,0 +1,152 @@
+% LaTeX template for Artifact Evaluation V20201122
+%
+% Prepared by Grigori Fursin with contributions from Bruce Childers,
+%   Michael Heroux, Michela Taufer and other colleagues.
+%
+% See examples of this Artifact Appendix in
+%  * SC'17 paper: https://dl.acm.org/citation.cfm?id=3126948
+%  * CGO'17 paper: https://www.cl.cam.ac.uk/~sa614/papers/Software-Prefetching-CGO2017.pdf
+%  * ACM ReQuEST-ASPLOS'18 paper: https://dl.acm.org/citation.cfm?doid=3229762.3229763
+%
+% (C)opyright 2014-2022
+%
+% CC BY 4.0 license
+%
+
+\section{Artifact Appendix}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Abstract}
+
+Our artifact
+  consists of a zipfile
+  containing the code
+  for our evaluation.
+Running the evaluation code
+  will reproduce all of the figures
+  present in this paper,
+  which artifact evaluators can
+  validate against our published data.
+The evaluation code
+  is comprised largely of
+  the following files:
+  documentation in a README,
+  a Dockerfile
+  to automatically set up the 
+  evaluation environment,
+  the \lr codebase, and
+  the evaluation scripts themselves
+  (a mix of Python and shell scripts).
+The evaluation
+  should be run on an x86 machine
+  running Linux (ideally Ubuntu).
+The evaluation benefits from many CPU cores.
+The evaluation requires at least 300GB
+  of free space,
+  mostly for installing proprietary hardware
+  toolchains.
+\tighten
+
+
+\subsection{Artifact check-list (meta-information)}
+
+{\small
+\begin{itemize}
+  \item {\bf Algorithm: }
+    Program synthesis via Rosette.
+    Hardware synthesis via traditional hardware toolchains.
+  \item {\bf Program: }
+    \lr, the Rosette-based hardware synthesis tool
+      presented in this paper,
+      plus 
+      Yosys, Xilinx Vivado, Lattice Diamond,
+      and Intel Quartus,
+      the baseline hardware synthesis tools
+      we compare against.
+  \item {\bf Run-time environment: }
+    Linux, ideally Ubuntu.
+  \item {\bf Hardware: }
+    x86 CPU, ideally with many cores.
+  \item {\bf Output: }
+    Images and CSV files representing
+      this paper's figures and tables.
+  \item {\bf Experiments: }
+    Each experiment is a single run
+      of a hardware synthesis tool
+      (either \lr or one of our baseline tools).
+    The entire experiment consists of
+      thousands of these tool runs.
+  \item {\bf How much disk space required (approximately)?: }
+    300GB.
+  \item {\bf How much time is needed to prepare workflow (approximately)?: }
+    4 hours:
+      3 hours to set up proprietary hardware tools,
+      1 hour to build Docker image.
+  \item {\bf How much time is needed to complete experiments (approximately)?: }
+    2 to 10+ hours, depending on the number of cores.
+    On our 64-core machine,
+      the evaluation takes
+      about 4 hours.
+  \item {\bf Publicly available?: }
+    Yes, at \url{https://github.com/uwsampl/lakeroad-evaluation}
+    and archived publicly on Zenodo, see 
+    DOI link below.
+    
+  \item {\bf Code licenses (if publicly available)?: } 
+    MIT.
+  \item {\bf Workflow framework used?: }
+    Python DoIt.
+  \item {\bf Archived (provide DOI)?: }
+  \url{https://doi.org/10.5281/zenodo.10515833}
+\end{itemize}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Description}
+
+\subsubsection{How to access}
+
+We recommend downloading the zipped code repository
+  from the DOI link above.
+The code can also be cloned from the GitHub
+  repository linked above.
+
+\subsubsection{Hardware dependencies}
+
+x86 CPU, preferably with many cores.
+
+\subsubsection{Software dependencies}
+
+Linux-based OS, ideally Ubuntu.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Installation}
+
+Please refer to the README in the artifact.
+A more readable version of the README can be viewed
+  on the GitHub repository,
+  or by converting the README
+  using a tool like Pandoc.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Experiment workflow}
+
+Please refer to the README in the artifact.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Evaluation and expected results}
+
+Please refer to the README in the artifact.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Methodology}
+
+Submission, reviewing and badging methodology:
+
+\begin{itemize}
+  \item \url{https://www.acm.org/publications/policies/artifact-review-badging}
+  \item \url{http://cTuning.org/ae/submission-20201122.html}
+  \item \url{http://cTuning.org/ae/reviewing-20201122.html}
+\end{itemize}
+

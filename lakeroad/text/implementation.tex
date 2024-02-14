@@ -1,0 +1,462 @@
+\section{Implementation}
+\label{sec:implementation}
+
+% \Cref{sec:overview,sec:formalization} 
+%   cover the core structure of \lr;
+%   it is our intent that the tool
+%   should be re-implementable
+%   from just these sections.
+% In this section,
+%   we describe implementation details
+%   that may be useful
+%   when reimplementing \lr.
+
+\lr is composed of
+  approximately 13K lines of Racket
+  plus approximately 58K lines
+  of Racket
+  automatically generated from 
+  vendor-supplied Verilog.
+Vendor-supplied Verilog
+  was obtained from Lattice Diamond,
+  Intel Quartus,
+  and Xilinx Vivado
+  sources.
+%   as well as
+% \lr uses the 
+%   Rosette synthesis 
+%   tool~\cite{torlak2014lightweight}.
+We used Vivado version v2023.1,
+  Quartus 22.1std.1 Build 917 02/14/2023 SC Lite Edition,
+  Diamond version 3.12,
+  Yosys version 0.36+42 (commit \texttt{70d3531}),
+  the cvc5~\cite{barbosa22cvc5} and Yices2~\cite{dutertre2006yices,dutertre2014yices}
+  solvers
+  included in the 2023-08-06 release of \texttt{oss-cad-suite} from YosysHQ,
+  the Bitwuzla solver at commit \texttt{b655bc0}~\cite{bitwuzla},
+  the STP solver at commit \texttt{0510509a},
+  Racket version 8.9~\cite{racket,racket:ref},
+  and Rosette version 4.1~\cite{rosette4}.
+
+\subsection{Primitive Interfaces}
+\label{sec:impl-primitive-interfaces}
+
+As described in \cref{sec:overview},
+\textit{primitive interfaces}
+  describe abstract versions
+  of common FPGA primitives,
+  which allow sketch templates
+  to be architecture-independent.
+To date, \lr declares primitive interfaces for
+  $n$-input LUTs, $w$-width carry chains, 
+  $n$-input muxes,
+  and DSPs with up to four data inputs and one clock input.
+The next section includes a concrete example
+  of \lr's LUT4 primitive interface.\tighten
+
+% Sketch templates are nearly valid
+%   \lrir expressions, but with
+%   architecture-independent
+%   primitive interfaces
+%   in place of architecture-specific
+%   primitive interfaces.
+% When \lr specializes a sketch template
+%   into a sketch,
+%   it simply converts each
+%   instance of a
+%   primitive interface
+%   into the corresponding architecture-specific
+%   counterpart.
+% The information required to do this conversion
+%   is exactly what is specified
+%   in the architecture description.
+
+
+\subsection{Architecture Descriptions}
+\label{sec:impl-arch-descs}
+
+\input{figures/sofa-arch-description}
+
+\noindent As described in \cref{sec:overview},
+  \textit{architecture descriptions}
+  convey the information
+  required to convert
+  each instance of a primitive interface
+  into the corresponding
+  architecture-specific module,
+  which occurs while converting
+  sketch templates
+  into sketches.
+The architecture description is
+  the only additional input that
+  may be required from a user
+  to support a new architecture;
+  it is a one-time effort 
+  that is reusable
+  for any designs in an architecture.
+% Each architecture description is
+%   a 20--250-line YAML file, and is
+%   an easy one-time development specification
+%   that is reusable for any designs on an architecture, and
+%   many are already provided in \lr's prototype.
+Architecture descriptions
+  are simply lists
+  (provided as YAML files)
+  of the primitive interfaces
+  that an architecture implements,
+  but, crucially,
+  also include 
+  architecture-specific
+  port and parameter values
+  in a map called \texttt{internal\_data}.
+Values in this map
+  become symbolic values
+  solvable by the SMT solver.
+%\lr also allows users to specify additional constraints
+Additional constraints can also be specified
+  in the architecture description 
+  to rule out invalid configurations
+  and minimize the solver's search space.\tighten
+
+As an example,
+  \cref{fig:sofa-architecture-description}
+  shows the architecture description
+  for the SOFA~\cite{sofa}
+  FPGA architecture.
+The description contains
+  a single primitive interface implementation, i.e., 
+  LUT4.
+\lr's LUT4 primitive interface
+  standardizes the names of a LUT4's inputs and outputs,
+  naming the inputs
+  \texttt{I0} through \texttt{I3}
+  and the output
+  \texttt{O}.
+The SOFA implementation 
+  of the LUT4 primitive interface
+  uses
+  the SOFA-specific
+  \texttt{frac\_lut4}
+  primitive.
+Primitive interface inputs \texttt{I0} through \texttt{I3}
+  are mapped to
+  the actual
+  input port of the \texttt{frac\_lut4},
+  named \texttt{in}.
+Likewise, the \texttt{frac\_lut4} output
+  \texttt{lut4\_out}
+  is mapped to the primitive interface output \texttt{O}.
+The \texttt{internal_data} field
+  declares \texttt{sram},
+  the LUT's 16-bit internal memory,
+  as an architecture-specific detail
+  to be solved during synthesis.
+ 
+If a sketch template uses a primitive interface
+  not included in the architecture description
+  (e.g., SOFA does not implement carries),
+  \lr may still be able to implement the primitive interface
+  based on primitive interfaces
+  the architecture \textit{does} implement.
+To date, \lr can implement any mux
+  with LUTs, 
+  a larger LUT from  smaller LUTs,
+  a smaller LUT from a larger LUT,
+  a carry from LUTs,
+  and a smaller DSP from a larger DSP;
+  it handles these conversions during sketch generation.
+
+
+\subsection{Sketch Templates, Sketches, and Sketch Generation}
+
+\label{sec:impl-sketch-templates}
+
+As described in \cref{sec:overview},
+  \lr 
+  captures common FPGA implementation patterns
+  in reusable, architecture-independent
+  \textit{sketch templates.}
+Thus far, we have described only 
+  the relatively simple
+  \texttt{dsp} sketch template,
+  which instantiates a DSP.
+As a more complex example
+  of capturing common FPGA implementation patterns,
+  consider
+  the \texttt{bitwise-with-carry}
+  sketch template, which
+  uses $n$ LUTs and a carry chain
+  to implement designs such as 
+  addition or subtraction.
+As of the paper's publication date, 
+  \lr provides 5 sketch templates: 
+  \texttt{dsp},
+  \texttt{bitwise}, \texttt{bitwise-with-carry},
+  \texttt{comparison} (LUT- and carry-based arithmetic comparison), 
+  and
+  \texttt{multiplication} (LUT-based multiplication).
+ 
+The process of converting sketch templates
+  to sketches
+  is implemented as described in
+  \cref{sec:overview}
+  and \cref{sec:impl-arch-descs}.
+\lr iterates over every
+  primitive interface instance
+  in the sketch
+  and replaces it with
+  the concrete primitive
+  in accordance with
+  the architecture's 
+  architecture description.
+If the architecture description
+  does not implement the requested
+  primitive interface,
+  \lr checks whether it can implement
+  the primitive interface with other
+  implemented interfaces
+  (e.g., implementing a smaller LUT with
+  a larger LUT)
+  and raises an error otherwise.
+
+Sketch templates and sketches alike 
+  are written in a domain-specific language (DSL)
+  embedded into Rosette,
+  whose implementation closely mirrors the syntax
+  and semantics of \UberLang. 
+The only significant difference is that
+  the interpreter implementation
+  does not use bitvector streams natively.
+Instead, each invocation of the interpreter
+  represents a single timestep,
+  and all intermediate values from the previous timestep
+  are taken as input.
+Streams are then built up
+  using multiple invocations of the interpreter.
+
+  
+\subsection{Importing Semantics from Verilog Modules}
+\label{sec:implementation:importing-semantics}
+
+\lr uses 
+  Yosys~\cite{wolf2013yosys}
+  to convert Verilog modules
+  into the \texttt{btor2} format~\cite{btor} % Btor2 , BtorMC and Boolector 3.0
+  and then converts the resulting \texttt{btor2}
+  to Rosette/Racket code.
+
+Due to the semantics of the Verilog language
+  and the internal implementation of Yosys,
+  extracting semantics from Verilog modules
+  may require the following manual modifications
+  to accommodate semantics extraction and synthesis:
+  % some manual modifications generally
+  % need to be made
+  % to Verilog modules
+  % for them to be importable by \lr,
+  % and for their semantics to be useful:
+  
+\begin{itemize}[leftmargin=*]
+\item As Yosys converts
+  parameters from variables
+  to constant values
+  immediately upon module import,
+  module parameters should be converted to
+  ports
+  to ensure they remain variables
+  (and thus solvable by the SMT solver).
+Note that not all parameters 
+  can always be converted to ports,
+  meaning some parameters cannot be solved for.
+\item Strings should be converted to bitvectors.
+% \item Multiplication expressions
+%   may need to be coerced
+%   to generate bitvector expressions
+%   that do not cause pathological SMT solving
+%   behavior.
+\item All registers should be initialized.
+\item All instances of \texttt{x} and \texttt{z} values should be  
+  converted to 2-state logic (0 or 1).
+\end{itemize}
+Note that these caveats
+  apply only 
+  to our prototype implementation,
+  not the general technique
+  of semantics extraction from HDL.
+Once these manual modifications are made,
+  the following series of Yosys passes
+  can be used to convert the Verilog
+  into suitable \texttt{btor2}:
+\texttt{prep; flatten; pmuxtree; opt_muxtree; clk2fflogic; prep; write_btor}.
+
+We implement
+  the translation from \texttt{btor2}
+  to Rosette bitvector expressions
+  as a 1:1 translation 
+  since both languages
+  are simply operations over bitvectors.
+
+
+% \subsection{Sketch Generation}
+% \label{sec:impl:sketch-generation}
+
+% Sketch generation
+%   converts architecture-independent
+%   \textit{sketch templates}
+%   into architecture-specific
+%   \textit{sketches} on which
+%   we can perform
+%   program synthesis.
+  
+% \lrir sketches are 
+%   \lrir programs with
+%   holes.
+% A \textit{hole} is an
+%   unspecified part of
+%   a program that will be
+%   filled in by program synthesis.
+% Rosette provides
+%   utilities like
+%   \texttt{define-symbolic}
+%   for creating symbolic variables
+%   for the solver to solve for
+%   and \texttt{choose}
+%   for allowing the solver to choose
+%   between multiple potential expressions.
+
+% Sketches use \lrir's \texttt{primitive} construct
+%   which represents a architecture-specific
+%   FPGA primitive.
+% These primitives often need to
+%   be configured (e.g., a LUT's memory
+%   or a DSPs parameters),
+%   and rather than requiring the user to
+%   configure these manually we rely on Rosette's
+%   program synthesis to automatically
+%   discover configuration.
+
+% While sketches are architecture-specific,
+%   their general shape is often shared
+%   between architectures.
+% To prevent users
+%   from having to write
+%   new sketches
+%   for every new architecture,
+%   \lr
+%   provides \textit{sketch templates,}
+%   which capture high-level design patterns
+%   common across many 
+%   FPGA architectures.
+
+% \subsubsection{Sketch Templates}
+% \label{sec:templates}
+
+% Sketch templates abstract away concrete
+%   computational units with primitive interfaces
+%   that describe a class of computation
+%   (e.g., a carry chain, or a LUT, or a DSP)
+%   at a high level.
+% Users of \lr need to specify how their
+%   FPGA's hardware components map to these
+%   primitive interfaces in an architecture
+%   description.
+
+% \lr provides a number of architecture-independent
+%   sketch templates,
+%   which capture common implementation
+%   patterns
+%   useful across FPGA architectures.
+% Sketches are \lrir programs
+%   with instances of 
+%   architecture-specific
+%   \texttt{primitive} expressions
+%   replaced with 
+%   architecture-independent
+%   \textit{primitive interface}
+%   expressions.
+% When a template is instantiated,
+%   \lr replaces
+%   each primitive interface instance
+%   with an architecture-specific
+%   primitive interface---%
+%   a process described in detail
+%   in \cref{sec:interfaces}.
+% Once all primitive interfaces
+%   are instantiated
+%   to architecture-specific primitives,
+%   the template has been converted to an
+%   architecture-specific \lrir
+%   sketch.
+% The sketch can then be interpreted
+%   with the
+%   \lrir interpreter
+%   and run through synthesis
+%   with Rosette.
+
+% We will describe \lr's implemented templates
+%   in \cref{implementation:implemented-templates}.
+% However, before we do that,
+%   we will explain primitive interfaces
+%   in detail,
+%   as they lie at the core of
+%   sketch templates.
+
+
+\subsection{Program Synthesis and Compilation to Verilog}
+\label{sec:implementation:program-synthesis}
+
+We implement
+  the synthesis procedure
+  defined in \cref{subsec:lr-correctness-and-completeness}
+  with Rosette.
+Multiple clock cycle guarantees,
+  as described in \cref{subsec:lrfn-bmc},
+  are implemented simply by making $c+1$
+  total assertions,
+  asserting the output of the input design
+  and the sketch are equal
+  after each of the $c+1$ timesteps.
+We use a portfolio solving
+  method, running
+  Bitwuzla~\cite{niemetz2020bitwuzla},
+  cvc5~\cite{barbosa22cvc5},
+  Yices2~\cite{dutertre2006yices,dutertre2014yices},
+  and STP~\cite{stp}
+  in parallel
+  and using results from the first
+  solver to terminate.
+To produce Verilog,
+  \lr compiles the program from its internal DSL
+  to the JSON format defined
+  by Yosys using a straightforward translation 
+  and then uses Yosys to output Verilog.
+% Compilation from \lrir
+%   to Yosys's JSON format
+%   is a straightforward translation.
+
+
+\subsection{Integration with Other Tools}
+
+This paper describes \lr
+  as a standalone tool,
+  but the core \lr implementation
+  could be integrated directly into
+  existing tools.
+Though out of scope for this paper,
+  we have early,
+  encouraging results
+  integrating \lr
+  as a Yosys pass
+  that lets users tag modules
+  with annotations similar to 
+  (and much richer than) Xilinx's
+  \texttt{use\_dsp} annotation.
+We then map annotated modules 
+  to primitives using \lr,
+  which let us easily apply \lr to
+  many fragments within a larger design.
+We plan to more fully
+  integrate \lr into Yosys in future work,
+  which should radically improve the completeness
+  of Yosys's DSP mapping ability,
+  as shown in \cref{fig:xilinx-completeness}.\looseness-1

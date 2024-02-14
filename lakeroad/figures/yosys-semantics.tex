@@ -1,0 +1,201 @@
+% Stateful
+% $ff
+% OR should we do $dff?
+% Probably $dff. The difference is that one gets a clock and the other doesn't. That is, dff takes D and CLK inputs and has Q output, ff has just D and Q.
+
+% Combinational:
+% $add        
+% $and        
+% $eq         
+% $eqx        
+% $logic_and  
+% $logic_not  
+% $logic_or   
+% $mul        
+% $mux        
+% $ne         
+% $not        
+% $or         
+% $reduce_and 
+% $reduce_bool
+% $reduce_or  
+% $reduce_xor 
+% $sub        
+% $xor        
+
+\begin{figure*}
+
+\mbox{
+\inference{
+e \Downarrow (v, s)
+}{
+\texttt{not}(e) \Downarrow (\sim{} v, s)
+}[\textbf{not}]
+}
+% \mbox{
+% \inference{
+% e \Downarrow (v, s)
+% }{
+% \texttt{neg}(e) \Downarrow (-v, s)
+% }[\textbf{neg}]
+% }
+\mbox{
+\inference{
+e \Downarrow \left(\langle b_0, \dots, b_n \rangle, s\right)
+}{
+\texttt{reduce\_or}(e) \Downarrow \left(\langle b_0 \:|\: \dots \:|\: b_n \rangle, s\right)
+}[\textbf{redor}]
+}
+\quad
+\mbox{
+\inference{
+e_0 \Downarrow (v_0, s_0)
+\quad
+e_1 \Downarrow (v_1, s_1)
+& 
+s = s_0 \cup s_1
+}{
+\texttt{and}(e_0, e_1) \Downarrow \left(v_0 \:\&\: v_1, s\right)
+}[\textbf{and}]
+}%
+
+\bigbreak
+
+\mbox{
+\inference{
+e_0 \Downarrow (v_0, s_0)
+\quad
+e_1 \Downarrow (v_1, s_1)
+& 
+s = s_0 \cup s_1
+}{
+\texttt{eq}(e_0, e_1) \Downarrow \left(
+\langle 1 \rangle~\text{if}~v_0 = v_1~\text{else}~\langle 0 \rangle, s\right)
+}[\textbf{eq}]
+}%
+\quad
+\mbox{
+\inference{
+e_0 \Downarrow (v_0, s_0)
+\quad
+e_1 \Downarrow (v_1, s_1)
+\quad
+e_s \Downarrow (v_s, s_s)
+& 
+s = s_0 \cup s_1 \cup s_s
+}{
+\texttt{mux}(e_s, e_0, e_1) \Downarrow \left(
+v_0~\text{if}~v_s = \langle 0 \rangle~\text{else}~v_1, s\right)
+}[\textbf{mux}]
+}%
+
+% \mbox{
+% \inference{
+% e_0 \Downarrow (v_0, s_0)
+% & 
+% e_1 \Downarrow (v_1, s_1)
+% & 
+% s = s_0 \cup s_1
+% }{
+% \texttt{or}(e_0, e_1) \Downarrow \left(v_0 \:|\: v_1, s\right)
+% }[\textbf{or}]
+% }%
+\quad
+
+\bigbreak
+
+% DFF without clock tick
+\mbox{
+\inference{
+    e =
+    \texttt{dff}(e_\mathit{clk}, e_d)
+    &
+    e_\mathit{clk} \Downarrow 
+        \left(\mathit{clk},
+        s_\mathit{clk}\right)
+    &
+    e_d \Downarrow 
+        \left(d, s_d\right)
+    \\
+    s = s_\mathit{clk} \cup s_d
+    % &
+    % \left(q', d', \mathit{clk}'\right)
+    %     =
+    %     \left(
+    %     s[e], s[e_d], 
+    %         s[e_\mathit{clk}]
+    %     \right)
+    % \\
+    &
+    \left(s[e_\mathit{clk}],
+            \mathit{clk} \right)
+    \neq
+    \left( 0, 1 \right)
+}{
+    e 
+    \Downarrow
+    \left(
+        s[e],
+        s[
+            e := s[e],
+            e_\mathit{clk} :=
+            \mathit{clk},
+            e_d := d]
+    \right)
+}
+[\textbf{dff-hold}]
+}%
+\quad
+% DFF with clock tick
+\mbox{
+\inference{
+    e =
+    \texttt{dff}(e_\mathit{clk}, e_d)
+    &
+    e_\mathit{clk} \Downarrow 
+        \left(\mathit{clk},
+        s_\mathit{clk}\right)
+    &
+    e_d \Downarrow 
+        \left(d, s_d\right)
+    \\
+    s = s_\mathit{clk} \cup s_d
+    &
+    % \left(q', d', \mathit{clk}'\right)
+    %     =
+    %     \left(
+    %     s[e], s[e_d], 
+    %         s[e_\mathit{clk}]
+    %     \right)
+    % \\
+    \left( s[e_\mathit{clk}],
+            \mathit{clk} \right)
+    =
+    \left( 0, 1 \right)
+}{
+    e 
+    \Downarrow
+    \left(
+       s[e_d],
+        s[
+            e :=s[e_d],
+            e_\mathit{clk} :=
+            \mathit{clk},
+            e_d := d]
+    \right)
+}
+[\textbf{dff-tick}]
+}
+
+\caption{
+A representative set
+  of the semantics rules
+  for the subset of Verilog
+  supported by \lr.
+$s_0\cup s_1$ and $s[k:=v]$ 
+  represent state map merging
+  and updating, respectively.
+}\label{fig:verilog-semantics}
+
+\end{figure*}
+

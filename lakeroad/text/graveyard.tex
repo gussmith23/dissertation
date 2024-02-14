@@ -1,0 +1,1374 @@
+\section{Related Work}
+\label{sec:background-and-related-work}
+
+% \hl{Vector Instruction Selection for Digital Signal Processors using Program Synthesis}
+
+% \hl{metasketches bornholt}
+
+% \hl{Synthesizing an instruction selection rule library from semantic specifications}
+
+% \hl{TODO: find papers
+% where people automatically synthesize
+% implementations
+% of LLVM or other ISAs
+% for specific CPU architectures.}
+
+% People keep challenging FPGA compilation; people are reinventing things; we want to do soemthing foundational. Their work can leverage our work.
+% Remember: you're giving people control of their "destiny"
+% Simplest example: how do i do an addition with or without the carry chain? the tool doesn't let them do that!
+% Or maybe a different way to think about it: we can give you a pareto curve of different instruction impls
+% https://www.csl.cornell.edu/~zhiruz/pdfs/impress-fccm2022.pdf
+
+
+% \section{Related Work from Generals, filter into above section}
+  
+\subsection{Hardware Compilation}
+\label{sec:background-hardware-compilation}
+
+Hardware compilation
+  is the process of lowering
+  a high-level hardware representation
+  into a final form, ready for
+  fabrication.
+For FPGAs,
+  this final form
+  is a binary ``bitstream''
+  which is sent to the FPGA
+  and which configures the various
+  lookup tables,
+  digital signal processors,
+  memories,
+  interconnects,
+  and other programmable components.
+Within the field
+  of hardware design,
+  hardware compilation
+  is called
+  \textit{hardware synthesis.}
+We will avoid
+  this terminology,
+  however,
+  as
+  ``synthesis''
+  has a different meaning
+  in the field of
+  programming languages,
+  where it
+  generally
+  refers to
+  solver-aided programming.
+To resolve the overloading,
+  we will refer to 
+  \textit{hardware synthesis}
+  as \textit{hardware compilation,}
+  and only use the term \textit{synthesis}
+  to refer to processes
+  which rely on solver-aided reasoning.
+
+Traditional hardware compilation
+  involves a number of stages:
+  \textit{logic synthesis}
+  (another, independent use
+    of the word \textit{synthesis!}),
+  in which the design is
+  compiled to boolean logic
+  and optimized;
+  \textit{technology mapping,}
+  in which portions of the
+  boolean logic
+  are grouped into higher-level
+  functional units;
+  and
+  \textit{placement and routing,}
+  in which gates and wires
+  are assigned to actual locations
+  on the device.
+Our work will only deal with
+  logic synthesis
+  and technology mapping.
+Furthermore,
+  we will deal specifically with
+  compilation to FPGAs.
+Hardware compilation for ASICs
+  is far more complicated,
+  and out of the scope of this thesis.
+
+Unlike software compilation
+  tools
+  in recent decades,
+  hardware compilation
+  continues to be dominated
+  by proprietary toolchains
+  controlled by each
+  target platform's vendor,
+  such as Xilinx's
+  Vivado Design Suite~\cite{vivado}.
+A number of open source tools
+  have been developed
+  in academia
+  and in industry%
+  % Catchall list of cites that we don't write
+  % about otherwise.
+  ~\cite{rose2012vtr, lavin2018rapidwright}.
+A notable example
+  with fairly widespread use
+  is Yosys~\cite{wolf2013yosys}.
+  
+A recent high-profile
+  entry into the hardware compilers space
+  is the CIRCT project~\cite{eldridge2021mlir,urbach2022hls}.
+CIRCT is part of
+  the new compiler framework
+  MLIR~\cite{lattner2021mlir},
+  whose vision
+  is to unify the growing web
+  of compilers
+  spread across different abstraction
+  levels
+  and targeting different backends
+  under one 
+  infrastructure,
+  allowing for easier translation
+  and greater sharing
+  between compiler projects.
+CIRCT seeks to treat
+  hardware compilation
+  more like software compilation,
+  by lowering hardware designs
+  through their various levels of abstraction.
+  
+A common theme
+  for experiments
+  with new hardware compilation tools
+  are attempts to bring
+  ideas from software compilation
+  into hardware compilation.
+PLD~\cite{xiao2022pld}
+  brings the idea of 
+  \texttt{-O0}
+  and
+  \texttt{-O1}
+  flags from common software
+  compilers such as
+  GCC to hardware compilation.
+Rather than recompiling
+  an entire hardware design
+  on every compilation,
+  as is the norm with current tools,
+  PLD gives users the option
+  of faster compilation
+  by trading off for
+  a
+  less-optimized placement and routing result,
+  in addition to the ability
+  to forego compilation entirely
+  and use software simulators
+  for portions of the design.
+\cite{schkufza2019cascade}
+  tackles the same issue
+  of long compilation times
+  by borrowing the idea of
+  just-in-time (JIT)
+  compilation
+  from software compilers.
+When the developer
+  initiates a test
+  on the hardware,
+  it initially launches
+  as a software simulation.
+In the background,
+  hardware compilation is running;
+  as it runs,
+  simulated
+  components of the hardware design
+  are swapped for their
+  freshly-compiled
+  real counterparts
+  on the fly.
+  
+In addition to focusing
+  on \textit{usability,}
+  there is a focus on
+  \textit{correctness}
+  in new hardware compilers.
+Those without experience
+  in software
+  might be surprised by
+  the bugs
+  and instabilities in
+  modern commercial
+  hardware compilers.
+\cite{herklotz2021empirical} finds that
+  a number of commercial HLS compilers
+  produce incorrect hardware
+  in 2.5\% of cases;
+  as a result,
+  \cite{herklotz2021formal} presents
+  the first formally-verified
+  HLS compiler from C
+  by building a Verilog backend
+  for the formally verified CompCert
+  C compiler~\cite{leroy2016compcert}.
+Works which focus on correctness
+  will be further highlighted
+  in Section%
+  ~\ref{sec:background-formal-hardware-models}
+  
+
+%\hl{Anna Goldie}
+%Researchers are experimenting
+%  with AI techniques
+%  to revolutionize
+%  hardware compilers.
+%\cite{mirhoseini2021graph}
+%  utilizes 
+%  deep reinforcement learning
+%  to implement floorplanning,
+%  a crucial step
+%  in hardware compilation.
+
+
+%\hl{heterohalide}
+%% https://vast.cs.ucla.edu/~chiyuze/publication/heterohalide/
+%I'm not sure
+%  why I don't like this; it's just not really in my taste.
+%They go from Halide
+%  to HeteroCL to FPGA?
+%One of their innovations is this lazy vs immediate
+%  application
+%  of schedule primitives,
+%  which I'm not sure I really buy.
+%They output through three
+%  backends:
+%  SODA, PolySA, and Merlin.
+  
+Another feature of software compilation
+  which has been ported
+  to hardware
+  is \textit{portability:}
+  the ability for hardware designs
+  to be compiled to 
+  multiple underlying
+  FPGA platforms.
+This is generally done by 
+  building a "virtual"
+  FPGA architecture
+  which designs can target,
+  and building an optimized
+  implementation
+  of that virtual architecture
+  for each underlying FPGA%
+  ~\cite{lysecky2005firm,brant2012zuma, landgraf2021compiler}.
+Virtual FPGA architectures
+  come with a steep resource
+  and performance overhead.
+  
+Faster and
+  more flexible
+  hardware compilation
+  is so desirable
+  that 
+  a number of approaches 
+  go so far as to
+  propose special 
+  hardware for which
+  compilation is easier%
+  ~\cite{xiao2022pld,lysecky2004configurable,sekanina2000r,lysecky2004dynamic,stitt2003dynamic}.
+
+
+%\hl{Multiplication by constant block}
+% \hl{https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.119.2295&rep=rep1&type=pdf}
+
+New approaches to compilation
+  often take issue
+  with a fundamental step
+  in traditional hardware compilation,
+  in which the input design---%
+  represented in a high-level,
+  semantically rich language
+  like behavioral SystemVerilog---%
+  is compiled all the way down
+  to a low-level representation
+  like and--inverter graphs%
+  ~\cite{callahan1998fast}.
+This makes the process of
+  technology mapping
+  for FPGAs challenging,
+  as the low-level representation
+  must be lifted up
+  to the 
+  higher level of abstraction
+  of FPGA primitives,
+  such as look-up tables (LUTs)
+  or even digital signal processors (DSPs).
+Reticle~\cite{vega2021reticle},
+  which our work builds directly off of,
+  introduces a new representation
+  which is compiled directly to
+  FPGA primitives
+  via instruction selection.
+  
+  
+%\hl{Utah prof's FPGA work, openFPGA}
+%https://github.com/lnis-uofu/OpenFPGA
+
+
+\subsection{Formal Hardware Models}
+\label{sec:background-formal-hardware-models}
+
+Given that my goal
+  is to use formal hardware models
+  to automatically generate
+  compiler components,
+  it is first important to
+  give an idea of
+  the formal hardware models
+  that are
+  in common use,
+  and others that have been proposed
+  in the literature.
+  
+Classic examples
+  of these languages
+  are VHDL~\cite{ieee20191076}
+  and Verilog/SystemVerilog~\cite{design2005ieee}.
+These languages
+  were initially designed
+  for hardware verification tasks.
+Note that
+  ``verification'' has different meanings
+  in hardware and in software,
+  as is well explained
+  in the introduction of \cite{choi2017kami}.
+The verification tasks
+  which Verilog and VHDL
+  were initially built for
+  are perhaps more appropriately
+  called ``simulation,''
+  in which the verification engineer
+  designs a model of the hardware
+  in VHDL/SystemVerilog,
+  and tests the real hardware
+  against the model
+  on test inputs.
+Eventually,
+  the languages also
+  began to be used
+  as frontend languages
+  for hardware design;
+  rather than simply simulating
+  the design,
+  why not convert the model
+  directly to hardware itself?
+SystemVerilog and VHDL
+  contain two distinct
+  levels of abstraction.
+The lowest level
+  SystemVerilog or VHDL---%
+  referred to as
+  \textit{structural}---%
+  fully describes a hardware design
+  at the 
+  \textit{register transfer level:}
+  which gates and registers
+  are present,
+  and which wires connect to
+  which ports.
+Both languages can also describe
+  designs
+  \textit{behaviorally,}
+  as well.
+Behavioral SystemVerilog and VHDL
+  describe the behavior
+  of designs
+  at each clock tick,
+  or at the change
+  of other signals.
+  
+Many or all of what I will refer to
+  as the newer hardware design
+  and modeling languages
+  fall under the umbrella term
+  \textit{high-level synthesis} (HLS).
+In general,
+  HLS refers
+  to the process of compiling
+  (or \textit{synthesizing})
+  a hardware design
+  from a
+  high-level specification.
+By this definition,
+  some may even consider
+  hardware compilation
+  from behavioral
+  SystemVerilog
+  a form of HLS.
+In practice, though,
+  the term HLS
+  is often very specifically used
+  for hardware compilers
+  which take subsets of C or C++
+  as their input languages,
+  for example,
+  Vivado HLS, Intel i++, LegUp, and Bambu.
+Much like in the case of
+  the overloading
+  of the term ``synthesis'', 
+  I will avoid using
+  ``high-level synthesis.''
+  
+Bluespec SystemVerilog~\cite{nikhil2004bluespec}
+  raises the abstraction level
+  of SystemVerilog.
+While previous attempts
+  at raising the abstraction level
+  on SystemVerilog and VHDL
+  went in the direction
+  of using C and C++,
+  Bluespec goes the opposite direction.
+Bluespec embraces
+  the massively parallel nature
+  of hardware,
+  using the abstraction of
+  guarded atomic actions
+  to express
+  the fact that 
+  many computations
+  may be happening simultaneously,
+  without a set ordering.
+Compilers of Bluespec
+  must decide on a
+  definite
+  \textit{schedule}
+  when generating hardware.
+\koika~\cite{bourgeat2020essence} introduces
+  more control over scheduling
+  which depends on dynamic analyses
+  which might incur hardware overhead
+  but can be simplified away
+  potentially by static analyses.
+Kami~\cite{choi2017kami}
+  is a recent formalization
+  of a subset of Bluespec
+  in the theorem prover Coq.
+Being embedded in Coq,
+  Kami allows for 
+  verification---%
+  in the software sense of the word,
+  that is, formal verification
+  of mathematical properties---%
+  of hardware designs
+  by stating and proving theorems
+  about them.
+Kami can also be compiled
+  to FPGAs.
+
+
+The Instruction-Level Abstraction (ILA)
+  is a representation developed
+  for verifying complex
+  systems-on-chip (SOCs),
+  in which many specialized
+  accelerators
+  exist alongside
+  the main processor~\cite{huang2018instruction}.
+It provides a useful model of accelerators
+  by assigning them
+  an ISA-like
+  set of instructions
+  as their interface.
+
+A number of recent representations
+  enrich
+   hardware design representations
+  with new semantics.
+Calyx~\cite{nigam2021compiler}
+  explicitly separates
+  datapath specification
+  from control logic.
+Dahlia~\cite{nigam2020predictable}
+  uses affine types
+  to more richly describe
+  the semantics of
+  reading to 
+  and writing from
+  memories
+  in FPGAs.
+Aetherling~\cite{durst2020type}
+  presents a
+  language
+  which captures
+  the spatial/temporal tradeoff
+  of custom hardware,
+  and uses the language
+  to build streaming accelerators.
+Reticle~\cite{vega2021reticle}
+  adds placement information
+  directly into the language
+  representation,
+  conveying useful information
+  to the underlying tools.
+  
+%VTR~\cite{rose2012vtr}
+%  allows users
+%  to model FPGA architectures
+%  in an XML-based representation.
+  
+
+%\hl{Lava}
+% https://dl.acm.org/doi/10.1145/291251.289440
+%It's a functional
+%  language for hardware design.
+%I'm not sure
+%  how much more
+%  I need to dig into it.
+  
+% \subsection{Compiler Backends and their Automated Construction}
+% \label{sec:background-constructing-compilers}
+
+% In this section,
+%   I present
+%   relevant
+%   background
+%   on compiler backends
+%   and their automatic
+%   construction.
+% First, 
+%   I cover compiler backends.
+% Then, I describe the tools
+%   useful in automating
+%   compilation
+%   and compiler generation,
+%   namely equality saturation
+%   and solver-aided programming.
+
+% Compilers
+%   are a broad topic,
+%   but specifically relevant to us
+%   are compiler
+%   \textit{backends:}
+%   the middle
+%   and bottom layers
+%   of a compiler
+%   which deal with low-level
+%   and often target-specific
+%   optimizations,
+%   and generate
+%   target-specific
+%   code.
+% Two primary components
+%   of
+%   compiler backends
+%   which we care about
+%   are
+%   the \textit{optimization pipeline}
+%   and 
+%   the \textit{code generator.}
+% The optimization pipeline
+%   for a compiler backend
+%   performs optimizations such as
+%   \textit{scheduling transformations,}
+%   which seek to make the code
+%   more performant
+%   on the target architecture.
+% The code generator
+%   converts the final, optimized program
+%   from its higher-level
+%   representation
+%   to the target-specific
+%   instruction set
+%   (often called
+%   \textit{instruction selection}
+%   or \textit{mapping})
+%   and outputs it in the format
+%   expected by the 
+%   target architecture
+%   (or by the next stage
+%   of the compilation pipeline).
+  
+  
+  
+
+%\subsection{Tensor Language Representations}
+%
+%\hl{CFDlang}
+%% https://www.cfaed.tu-dresden.de/files/Images/people/chair-cc/publications/1802_Rink_RWDSL.pdf
+%Might be comparable to \g?
+%
+%{\color{green}\hl{Gilbert's ATL paper}}
+%ATL~\cite{liu2022verified, bernstein2020differentiating}
+%  is an array-based language.
+%Recently, it has been used
+%  to
+%  enable rewriting
+%  over tensor-based
+%  programs.
+%\hl{Read more}
+
+% \subsection{Optimization Pipelines}
+
+% Tensor compilers for ML and HPC applications strive
+%   to balance clear, high-level operator semantics
+%   and support for the low-level optimizations
+%   necessary to target specialized accelerators.
+% Halide~\cite{ragan2013halide}
+%   achieves this balance by separating
+%   operator \textit{specifications} (what is computed) from
+%   \textit{schedules} (how, when, and where
+%   each output element is generated).
+% This style of separation has proven
+%   highly effective across both
+%   application domains and hardware targets;
+%   numerous compilers including TVM~\cite{chen2018tvm},
+%   FireIron~\cite{hagedorn2020fireiron},
+%   LIFT~\cite{lift}, and Accelerate~\cite{accelerate}
+%   follow variations of this strategy.
+  
+% The specification/schedule separation approach
+%   allows the same high-level program (specification)
+%   to be flexibly optimized for and mapped to
+%   different hardware targets by applying different schedules.
+% From this perspective,
+%   schedules represent different rewriting strategies
+%   to explore various loop ordering and memory layouts;
+%   in LIFT and Accelerate these
+%   take the form of functional combinators
+%   closely related to \g's approach.
+% As in classic term rewriting,
+%   experts must often carefully craft
+%   schedules for each target to achieve
+%   the best performance and mitigate
+%   phase ordering challenges~\cite{phase-ordering},
+%   though recent projects have produced promising results
+%   in automatic scheduling~\cite{
+%     chen2018autotvm, zheng2020ansor, anderson2020learning}.
+
+% Other tensor IRs like
+%   TACO~\cite{taco}, Keops~\cite{keops},
+%   and COMET~\cite{tian2021highperformance}
+%   rely on \textit{index notation}\footnote{
+%     Index notation is closely related to
+%     ``Einstein notation'' where reduction
+%     indices are implicit.}
+%   to concisely express tensor operators
+%   and simplify optimization by
+%   uniformly representing
+%   per-output-element computations.
+% These approaches also rely on
+%   rewriting passes to generate
+%   kernel implementations specialized to
+%   tensor sparsity / density,
+%   operator combinations arising in
+%   the source application, and
+%   details of the target hardware.
+ 
+% Finally, polyhedral compilers~\cite{polyhedral-survey}
+%   like Tensor Comprehensions~\cite{vasilache2018tensor}
+%   and Tiramisu~\cite{baghdadi2019tiramisu}
+%   optimize loop-filled programs
+%   by modeling loop nests as polyhedra
+%   and applying geometric transformations.
+% The polyhedral approach exploits
+%   regular loop structure,
+%   but is also restricted
+%   to geometrically affine transformations.
+% In contrast, term rewriting is
+%   neither guided nor restricted by
+%   geometric constraints, making
+%   these approaches broadly complementary.
+  
+\subsection{Mapping}
+
+% In principle, many DSLs allow for supporting custom accelerators via bespoke translations from DSL operators to specific accelerator APIs,
+% e.g., as in the original TVM~\cite{chen2018tvm} support for VTA~\cite{moreau2019hardware},
+%   and ISA mapper's~\cite{sotoudeh2019isa}
+%   support for mapping
+%   to custom hardware.
+% %
+% TVM's BYOC~\cite{chen2021byoc} interface
+% % provides a more convenient mechanism for
+% eases incorporating custom accelerators
+% %, especially for coarser-grained operations,
+% by performing syntactic pattern matching to offload computations via user-provided code generators.
+% % By building on TVM,
+% %   BYOC inherits support for multiple frontends
+% %   and additionally provides extensible pattern matching to facilitate
+% %   adding new rules for mapping DSL fragments to new accelerators.
+% %\hl{merge next two sentences?}
+% However, BYOC leaves
+%   all matters of code generation, e.g., MMIO invocations,
+%   to the user.
+% Additionally, BYOC's pattern matching
+% cannot search the space of programs equivalent to the input,
+% limiting the number of potential accelerator invocations.
+
+Past work has also explored rewrite-based techniques for
+  automatically inferring instruction selection passes
+  between ISAs~\cite{ramsey2011resourceable}.
+  
+Recent work on accelerator generation and integration~\cite{
+    bahr2020creating, truong2020fault}
+  has explored adding support in the Halide~\cite{ragan2013halide}
+  compiler flow for specialized Coarse-Grained Reconfigurable Array (CGRA) accelerators.
+That work composes an
+  impressive array of custom tools to
+  generate and verify specialized CGRA accelerators
+  and also map Halide program fragments
+  down to accelerator invocations.
+HeteroCL~\cite{lai2019heterocl} also provides
+  a similar custom flow.
+  
+%designed around the details of the HeteroCL compiler flow.
+
+%\subsection{ISA exploration}
+%
+%% 3/7/22 dreamcoder
+%\hl{dreamcoder}
+%% https://arxiv.org/pdf/2006.08381.pdf
+%
+%Creates languages, uses ML to search for programs within the language?
+%
+%Humans build from experience.
+%Wake-sleep bayesian program induction.
+%Off the bat: it feels too complicated for the task at hand.
+%
+%"Learning as program induction"---perhaps their goal really is different? They're really taking the AI angle, and just by chance making something that's interesting in the PL world?
+%
+%"Learning tasks in many different domains can be formulated as inducing a program that explains a small number of input output examles, orthat generats ano bserved sequence, image or scene.
+%
+%Wake-sle3ep: during wake te generative model is used to interpret new data (generated from where? from the model?) while during sleep the recognition model is learned from "imagined" datasets which are sampled from the generative model (ok so the first thing is not generated from the model, then?)
+%
+%Dreamcoder~\cite{ellis2018dreamcoder, ellis2020dreamcoder, ellis2021dreamcoder}
+%  aims to learn programs
+%  by building up libraries of concepts.
+%They do so in ``wake--sleep cycles",
+%  in which a generative model
+%  is alternately trained
+%  and drawn from (not sure??).
+%This is similar
+%  to our work, which also seeks
+%  to learn concepts
+%  from a corpus of hardware designs,
+%  though we do so
+%  in a more brute-force
+%  and exhaustive manner.
+
+% \subsection{Term Rewriting and Equality Saturation}
+
+% Term rewriting is a useful tool
+%   for program transformation,
+%   and surely an inevitable part
+%   of any automatic
+%   compilation pipeline.
+% Equality saturation
+%   is a specific type of term rewriting
+%   highly optimized for
+%   running many rewrites.
+
+% Term rewriting is a classic
+%   program optimization technique~\cite{baader1999term}
+%   that relies on iteratively applying
+%   rewrite rules of the form $\ell \xrightarrow{} r$:
+%   when part of a program
+%   matches the pattern $\ell$
+%   under substitution $\sigma$,
+%   it is rewritten into $\sigma(r)$.
+% This approach is ubiquitous,
+%   frequently used in both mainstream and DSL compilers
+%   to implement features including preprocessing,
+%   strength reductions, and
+%   peephole optimizations~\cite{garavel2018rewrite-context}.
+  
+% Classic term rewriting systems where
+%   rewrites are applied destructively suffer
+%   phase ordering problems~\cite{phase-ordering}:
+%   the order in which rewrites are applied can
+%   enhance or severely diminish performance.
+% Recent work has shown how program synthesis
+%   can help address this challenge in
+%   peephole optimizers like Halide's
+%   scalar expression rewriter~\cite{
+%     newcomb2020halide-rewrite}.
+  
+% Advances in alternate rewriting techniques
+%   like equality saturation~\cite{tate2009equality}
+%   also mitigate phase ordering by exploiting
+%   the e-graph data structure from SMT solvers
+%   to repeatedly apply all rewrites simultaneously,
+%   thus obviating rule ordering considerations.
+% In particular,
+%   the \tcd{egg} library~\cite{willsey2021egg}
+%   has been used to develop new synthesis and
+%   optimization tools across diverse domains~\cite{
+%     herbie, szalinski, wang2020spores},
+%   including DSP compiler vectorization~\cite{
+%     vanhattum2021vectorization} and
+%   tensor computation graphs~\cite{yang2021equality}.
+
+
+% \subsection{Constraint Programming, Solver-Aided Programming, and Synthesis}
+
+% Constraint programming
+%   is a type of programming
+%   in which,
+%   rather than developing the algorithm
+%   to solve a problem,
+%   the programmer instead develops
+%   a set of constraints
+%   which define valid solutions
+%   to the problem.
+% The programmer then feeds the constraints
+%   to a \textit{constraint solver,}
+%   which searches for
+%   a solution satisfying the constraints.
+% At base, constraint programming
+%   involves searching for solutions
+%   which satisfy the provided constraints.
+% For example, in the
+%   boolean satisfiability (SAT) problem,
+%   we seek
+%   valid assignments to boolean variables
+%   that satisfy a set of
+%   boolean constraints.
+% % GS: these sentences can be removed if 
+% % we don't talk at all about optimization.
+% % but I think lancelot uses optimization!
+% Constraint programming
+%   can also involve optimizing
+%   a cost function,
+%   subject to the provided constraints.
+% Linear programming (LP)
+%   and integer linear programming (ILP),
+%   for example,
+%   find assignments to real-valued
+%   or integer-valued variables
+%   which
+%   minimize an objective function
+%   while satisfying a set of linear constraints
+%   over the variables.
+  
+% GS: SMT/z3 paragraph
+\textit{Satisfiability modulo theories} (SMT)
+  is a generalization of the SAT problem
+  allowing for variables and constraints
+  from domains
+  (or \textit{theories})
+  other than boolean,
+  such as the bitvectors
+  and uninterpreted functions.
+Rosette~\cite{torlak2013growing,torlak2014lightweight}
+  embeds SMT solving capabilities
+  within the programming language
+  Racket,
+  enabling users to easily formulate
+  constraint problems,
+  or even use solvers
+  to write programs themselves,
+  also known as 
+  \textit{solver-aided programming}
+  or \textit{synthesis.}
+Under the hood,
+  Rosette is powered by
+  Z3~\cite{de2008z3},
+  a popular SMT solver.
+Rosette and Z3 also support
+  optimization:
+  Rosette via Z3 can produce
+  a solution which satisfies
+  the constraints
+  and which is optimal
+  relative to a given
+  cost function.
+
+
+%\subsection{traditional sw compilation}
+%
+%\hl{norman ramsey}
+%\hl{
+%what if your ISA isn't fixed?
+%why isn't norman ramsey's stuff good there?
+%granularity mismatch
+%for heterogeneous targets,
+%isas alone are not enough for your model
+%}
+%\hl{yacc and other compiler compilers}
+
+%\subsection{unsorted}
+%
+%\hl{exo compiler} % It's in our 3LA drive
+%
+%A Dynamically Scheduled HLS Flow in MLIR
+%https://infoscience.epfl.ch/record/292189
+%
+%Multi-input Serial Adders for FPGA-like Computational Fabric: Google research on invetigating luts (has a video in supplemental material)
+%
+%Direct Spatial Implementation of Sparse Matrix
+%Multipliers for Reservoir Computing (this was from the same authors as the google lut work, i think they used the above work to implement this)
+%
+%C. Wolf, J. Glaser. Yosys - A Free Verilog Synthesis Suite. In Proceedings of Austrochip 2013. [download pdf]
+%
+%
+%J. Glaser and C. Wolf. Methodology and Example-Driven Interconnect Synthesis for Designing Heterogeneous Coarse-Grain Reconfigurable Architectures. In Jan Haase, editor, Models, Methods, and Tools for Complex Chip Design. Lecture Notes in Electrical Engineering. Volume 265, 2014, pp 201-221. Springer, 2013. [download pdf]
+%
+%
+%D. Shah, E. Hung, C. Wolf, S. Bazanski, D. Gisselquist, and M. Milanovic. Yosys + nextpnr: an Open Source Framework from Verilog to Bitstream for Commercial FPGAs. In 2019 IEEE 27th Annual International Symposium on Field-Programmable Custom Computing Machines (FCCM). IEEE, 2019. [arXiv]
+%
+%Stratefied synthesis
+%
+%stoke
+%
+%Just-in-Time Compilation for Verilog
+%
+%Compiler-Driven FPGA Virtualization with SYNERGY
+%
+%FPGA Interchange format to enable interoperable FPGA tooling
+%https://opensource.googleblog.com/2022/02/FPGA%20Interchange%20format%20to%20enable%20interoperable%20FPGA%20tooling.html
+%
+%Hashing Modulo Alpha-Equivalence
+
+
+
+
+
+
+% Accelerators and parallel architectures 
+%   present many opportunities 
+%   for tuning and improving tensor operator implementations for the best performance.
+% Many systems, 
+%   including deep learning frameworks like PyTorch~\cite{pytorch},
+%   make extensive use of hand-optimized tensor operator implementations
+%   (such as those in the CuDNN library~\cite{chetlur2014cudnn}).
+% While these hand-optimized implementations
+%   achieve strong performance,
+%   various systems, including \g,
+%   have been proposed to automatically
+%   generate optimized tensor operators
+%   to reduce development time,
+%   support varied hardware platforms,
+%   and avoid reliance on a small number of experts.
+% These tensor compilers 
+%   rely on specifying tensor computations 
+%   in a form that allows for
+%   conveniently exploring options for optimizations, 
+%   such as by changing loop orderings
+%   to best utilize caches.
+
+% \hl{Surely there's a better summary/gloss here.}
+% Many tensor operator compilers 
+%   use index notation
+%   to specify tensor operators
+%   (defining how each element of the output
+%   is to be computed
+%   based on corresponding elements 
+%   of the input).
+% TACO~\cite{taco} uses index notation 
+%   for automatically generating and optimzing both sparse and dense tensor computations,
+%   permitting particular dimensions 
+%   to be specified as dense or sparse,
+%   introducing various structures for reasoning about how 
+%   to iterate over sparse dimensions.
+% %Tensor operators in TACO
+%   %are described using index notation, 
+%   %with particular tensor dimensions 
+%   %being either dense or sparse.
+% %\cite{taco} initially 
+%   %focused on compiling for CPU, 
+%   %while subsequent work~\cite{senanayake2020}
+%   %has extended TACO to target
+%   %GPUs and vector units.
+% %  is a compiler notable for its handling
+% %  of computations over sparse tensors.
+% %\hl{unsure how to draw any connection here, but i feel like i need to at least mention taco}
+% Keops~\cite{keops} also uses
+%   index notation to describe tensor operations
+%   for both dense and spare matrices,
+%   but introduces another matrix representation
+%   called symbolic matrices, 
+%   in which each element of the symbolic matrix
+%   is computed from two smaller data matrices.
+% Computations on symbolic matrices 
+%   can more easily be deployed to GPUs and other accelerators 
+%   than sparse computations
+%   but require less data movement than dense computations.
+% %% I think MLIR isn't relevant in this discussion: IRs built _in_ MLIR might be
+% %MLIR~\cite{mlir} is a general-purpose compiler framework intended to facilitate the development of IRs.
+% %While MLIR itself does not have a built-in notion of tensorization, it has been used to implement polyhedral IRs and other tensor operator representations.
+% COMET~\cite{tian2021highperformance} is another
+%   CPU-focused sparse tensor algebra IR,
+%   implemented using MLIR~\cite{mlir},
+%   that additionally uses information about sparse storage formats 
+%   in its representation 
+%   to increase temporal and spatial locality.
+
+% Halide~\cite{ragan2013halide}
+%   %while not a machine learning compiler
+%   has been influential
+%   in using a representation
+%   that separates
+%   an tensor operator's specification (what it computes)
+%   from its schedule (what order elements are computed),
+%   allowing many optimizations
+%   to be described as different schedules
+%   for the same specification
+%   and facilitating operator fusion.
+% As discussed in~\cite{newcomb2020halide-rewrite},
+%   Halide applies a term rewriting system
+%   for producing optimized code.
+%   \hl{Any insight for why Halide is amenable to a rewrite system?}
+% TVM~\cite{chen2018tvm}
+%   uses a similar specification-schedule split
+%   for describing its tensor operators.
+% FireIron~\cite{hagedorn2020fireiron} is another system
+%   using a split between a computation specification 
+%   and its realization
+%   (using a decompositions, rather than Halide-style schedules,
+%   for scheduling parts in a top-down style).
+% \g can be understood
+%   as a further refinement
+%   on an algorithm's specification,
+%   disambiguating
+%   how data is accessed
+%   from the computation being performed
+%   over the data,
+%   enabling transformations
+%   like mapping to hardware
+%   before the program is scheduled.
+%   \hl{What does it mean
+%   that mapping to hardware
+%   is done before the program is scheduled?}
+
+% Like \g, several other systems 
+%   use functional representations
+%   of tensor operators.
+% LIFT~\cite{lift}
+%   separates specifications from schedules
+%   using combinators like maps and reductions to specify schedules,
+%   an idea further explored in~\cite{hagedorn2020func-high-perf}.
+% \hl{anything else to say about LIFT? Contrast with Halide/TVM's scheduling languages?}
+% Accelerate~\cite{accelerate} 
+%   uses functional combinators 
+%   to map Haskell code 
+%   to GPU programming primitives.
+% \hl{Discussion comparing these to \g?}
+
+% The polyhedral representation~\cite{polyhedral-survey} 
+%   has also proven useful
+%   for expressing tensor operators.
+% %Polyhedral compilation~\cite{polyhedral-survey}
+%   %is a powerful alternative
+%   %to term rewriting-based compilers.
+% Polyhedral compilers optimize
+%   loop-filled programs
+%   by modeling loop nests
+%   as polyhedra
+%   and transforming them geometrically.
+% Tensor Comprehensions~\cite{vasilache2018tensor}
+%   and Tiramisu~\cite{tiramisu}
+%   are examples of machine learning compilers
+%   powered by the polyhedral framework.
+% \hl{Need note about deploying to accelerators?}
+% \hl{Implications for term rewriting?}
+% Multidimensional homomorphisms~\cite{multidimensional-homomorphism} 
+%   are another mathematical representation 
+%   of tensor operations
+%   that has been amenable to automatic parallelization 
+%   and allows for hierarchical composition.
+%   \hl{any comment in relation to \g?}
+
+%There are at least as many
+  %tensor IRs
+  %as there are
+  %deep learning frameworks,
+  %and many frameworks
+  %use more than one.
+%TVM \cite{chen2018tvm},
+  %for example,
+  %uses the high-level
+  %Relay IR~\cite{relay}
+  %for optimizations
+  %in the sequencing of tensor kernels,
+  %while it uses low-level TIR
+  %to optimize kernels themselves.
+%\hl{If you're going to complain about TIR not being pure, you need to establish that purity is a requirement before this. Maybe discuss this later}
+%Relay and TIR
+  %are a perfect example
+  %of our impedance mismatch problem:
+  %Relay is pure but too high-level,
+  %while
+  %TIR is low-level but impure.
+
+
+% Should we talk about BYOC here?
+%Recently,
+%  the Bring Your Own Codegen
+%  (BYOC)
+%  framework
+%  was merged into TVM \cite{byoc}.
+%BYOC
+%  is novel,
+%  as it allows for the 
+%  fast implementation
+%  of a full compiler
+%  for deep learning models
+%  down to custom hardware backends
+%  with fairly little additional code,
+%  assuming the users
+%  have written a codegen
+%  for their hardware
+%  already.
+%BYOC includes
+%  a matching framework,
+%  for matching
+%  user-specified
+%  patterns
+%  of Relay code.
+%As we will see
+%  in Section \ref{sec:case-study-tensorization},
+%  one of our primary case studies
+%  of \g{}
+%  is as a pattern matcher
+%  for matching such computational patterns---%
+%  in fact,
+%  it was the original
+%  intended use case
+%  of \g{}!
+%In some sense,
+%  the two pattern matchers
+%  are incomparable,
+%  because,
+%  as we've described above,
+%  \g{}
+%  and Relay
+%  operate at different levels
+%  of abstraction.
+%Yet if we ignore the differences
+%  in the levels of abstraction,
+%  we can compare
+%  the matchers
+%  in how they operate.
+%In this comparison,
+%  \g{} shines through
+%  with the help of
+%  the \egr{}.
+%Because rewrites
+%  are so cheap and easy
+%  within the \egr{},
+%  we can run a huge number
+%  of exploratory rewrites,
+%  potentially finding places
+%  to map in user-defined
+%  patterns.
+%BYOC,
+%  on the other hand,
+%  expects the user to provide
+%  multiple equivalent patterns
+%  to cover the numerous ways
+%  their pattern might appear 
+%  in the program
+%  \hl{(verify this)}.
+
+%Named tensors \cite{chiang2021named}
+%  are a primary inspiration
+%  for the access pattern data structure
+%  at the core of \g.
+%%Tensors have a specific layout
+%%  in memory,
+%%  a hardware detail
+%%  that often bubbles up
+%%  even to the highest levels
+%%  of tensor abstractions.
+%%For example,
+%%  in both TVM and TensorFlow,
+%%  the \tcd{conv2d} operator
+%%  requires the user to specify
+%%  the layout of the activation tensor---%
+%%  \tcd{NCHW} or \tcd{NHWC},
+%%  where \tcd{N} is the batch dimension,
+%%  \tcd{C} is the channels dimension,
+%%  and \tcd{H} and \tcd{W} are the spatial
+%%  (height and width)
+%%  dimensions.
+%%Rather than pass layout information
+%%  externally,
+%%  named tensors
+%%  incorporate dimension names
+%%  directly into the tensor abstraction.
+%%Named tensors
+%%  acknowledge the fact
+%%  that
+%%  not all dimensions
+%%  are made the same,
+%%  and that different dimensions
+%%  have different functions.
+%Named tensors
+%  assign names
+%  to the dimensions of a tensor,
+%  increasing code readability
+%  and acknowledging that different dimensions
+%  have different functions.
+%Though
+%  we do not actually adopt
+%  this notation
+%  in \g{}---%
+%  the dimensions of tensors
+%  are still just indexed
+%  with integers---%
+%  this core idea
+%  is reflected
+%  in the design
+%  of access patterns,
+%  which encode the fact that
+%  some dimensions are
+%  for
+%  \textit{iterating over,}
+%  while others are meant to be 
+%  \textit{computed upon.}
+
+%Many machine learning frameworks
+  %have an optimization step
+  %in which they match program patterns
+  %to efficient low-level implementations,
+  %whether that be offloading to hardware
+  %or calling into a tuned library.
+%TVM \cite{chen2018tvm}, 
+%% Steve: I would say Latte is not very relevant here
+%% It provides AD, but it requires the user to manually implement just about everything else
+  %Latte \cite{latte},
+
+
+%% Steven: Not clear it's relevant to this context
+%Norman Ramsey instruction selection~\cite{dias2010instruction-selection}
+
+%\hl{even further back:} apl?~\cite{apl-survey} % probably no
+
+%\subsection{Term Rewriting, Equality Graphs, and Equality Saturation}
+
+% {\color{red} \noindent\rule{8.5cm}{10pt}}
+
+% \g utilizes
+%   the power of equality saturation
+%   in
+%   low-level tensor program
+%   transformation---%
+%   namely, mapping programs
+%   to custom hardware.
+  
+% Term rewriting
+%   is a classic technique
+%   in program optimization
+%   in which rewrite rules of the form
+%   $\ell \xrightarrow{} r$
+%   are applied over a program.
+% When an expression in the program
+%   matches
+%   the pattern $\ell$,
+%   it is rewritten
+%   into the pattern $r$.
+% In classic term rewriting systems,
+%   the ordering
+%   in which rewrites are applied
+%   can affect whether optimizations
+%   are found,
+%   as some rewrites
+%   may reverse or muddle
+%   the effects
+%   of other rewrites.
+% Equality saturation
+%   is a technique
+%   developed to sidestep
+%   this 
+%   phase ordering problem.
+% The technique
+%   has recently re-emerged
+%   with the development
+%   of the \tcd{egg} library
+%   \cite{willsey2021egg},
+%   and with the successful application
+%   of equality saturation
+%   to floating point optimization \cite{herbie}
+%   and CAD program simplification \cite{szalinski},
+%   among other varied fields.
+
+% %A primary feature
+% %  of equality saturation
+% %  is its ability to
+% %  efficiently store
+% %  all previously discovered
+% %  versions 
+% %  of the program
+% %  being transformed.
+% %The data structure which enables this
+% %  is the
+% %  \textit{equality graph}
+% %  (\egr),
+% %  which resembles
+% %  a standard program graph (\hl{not sure on words to use here?}),
+% %  except
+% %  each node in the program
+% %  is replaced with a \textit{set} of nodes,
+% %  called an \textit{equivalence class}
+% %  or \textit{eclass.}
+% %All nodes within an eclass
+% %  are equivalent, and thus 
+% %  can be substituted for one another
+% %  to produce an equivalent program.
+% %This property is only possible
+% %  when the language used
+% %  within the \egr
+% %  is pure,
+% %  which thus becomes a requirement
+% %  for any language
+% %  we'd like to transform
+% %  with equality saturation.
+  
+% Diospyros \cite{vanhattum2021vectorization}
+%   is a vectorizing compiler
+%   for DSPs
+%   which uses equality saturation
+%   to match program fragments
+%   to hardware primitives.
+% Diospyros
+%   starts from scalar programs
+%   and, via symbolic evaluation
+%   and equality saturation,
+%   lifts them to vectorized
+%   expressions,
+%   while \g starts
+%   from a higher level of abstraction
+%   and searches downwards.
+  
+% SPORES \cite{wang2020spores}
+%   and Tensat \cite{yang2021equality}
+%   utilize equality saturation
+%   to optimize
+%   linear algebra expressions
+%   and tensor computation graphs,
+%   respectively.
+% While both
+%   show the potential
+%   of equality saturation
+%   for tensor program transformation,
+%   both of their IRs
+%   are too high-level
+%   for the task of mapping to hardware.
+
+% TODO mention somewhere in here that lambdas (which a lot of langs will use) are a problem for first-order rewrite systems
+
+
+Chlorophyll~\cite{phothilimthana2014chlorophyll}
+  is a prime example
+  of how solvers can be used
+  in compilers.
+Chlorophyll
+  uses Z3
+  to compile programs
+  for a unique
+  architecture:
+  an array of power-efficient
+  processors.
+It does so by
+  expressingt he particular,
+  architecture-specific concerns
+  of code compilation
+  as constraints
+  to Z3.

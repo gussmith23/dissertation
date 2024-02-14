@@ -1,0 +1,98 @@
+\begin{figure}
+
+% Vishal's version before gus's renamings
+% let rec eval prog env rt t = 
+%   match prog[t]:
+%   | BV v -> v
+%   | Var x -> env[x][t]
+%   | Op (op, ids) ->
+%      op (map (fun id -> eval prog env id t) ids)
+%   | Reg (idC, idD, init) ->
+%      if t = 0:
+%       init
+%      else:
+%       let v_oldC = eval prog env idC (t - 1) in
+%       let v_oldQ = eval prog env id (t - 1) in
+%       let v_oldD = eval prog env idD (t - 1) in
+%       let v_curC = eval prog env idC t in
+%       if (v_oldC, v_curC) = (0, 1):
+%         v_oldD
+%       else:
+%         v_oldQ
+%   | Prim (varIdMap, primProg) -> 
+%       let env' x t =
+%         eval prog env varIdMap[x] t in
+%       eval primProg env' primProg.rt t
+
+
+% Types
+% Prog: (id, id -> Node)
+% Var = str
+% Env: var -> Time -> Value
+% Id = int
+% Time = Nat
+% Value = BV
+% interp: Prog -> Env -> Id -> Time -> Value
+% op argument of Op: [Value] -> Value
+% var_map: Var -> Id
+% body: Prog
+\small
+% \begin{minted}{ocaml}
+% let rec interp prog env id t = 
+%  (* Helper to recursively call interpreter. *)
+%  let interp' = interp prog env in
+%  let (_, nodes) = prog in
+%  match nodes id with
+%  | BV v -> v
+%  | Var x -> env x t
+%  | Op (op, ids) ->
+%     op (map (fun id -> interp' id t) ids)
+%  | Reg (id_d, init) -> 
+%     if t = 0 then init else interp' id_d (t - 1)
+%  | Prim (var_map, body) -> 
+%     let env' x = interp' (var_map x) in
+%     interp body env' body.root t
+% \end{minted}
+
+% \begin{align*}
+%   &\text{interp env (BV v) t }&&\text{= v} \\
+%   &\text{interp env (Var x) t }&&\text{= env x t} \\
+%   &\text{interp env (Op op ids) t }&&\text{= op (map (interp env p) ids)} \\
+%   &\text{interp env (Reg id_d init) 0 }&&\text{= init} \\
+%   &\text{interp env (Reg id_d _) t }&&\text{= interp env p id_d (t - 1)} \\
+%   &\text{interp env (Prim vmap body) t }&&\text{=}\\
+%   &\text{interp ($\lambda$ x . interp env p (var_map x))} \\
+%   &\text{body body.root}
+% \end{align*}
+
+\begin{flalign*}
+  & \Time \hspace{0.2cm} t\in\mathbb{N} \hspace{1cm}  \textsf{Env} \hspace{0.2cm} e \in (\SynVar \rightharpoonup \Time \to \SynBv) \\
+  &\vspace{0.5cm} \\
+  &\textsc{Interp}\ :\ \SynProg \to \textsf{Env} \to \Time \to \SynNode \to \SynBv\\
+  &\textsc{Interp}\ p\ e\ t\ (\SynBv\ b)\ = b&& \\
+  &\textsc{Interp}\ p\ e\ t\ (\SynVar\ x)\ = e\ x\ t&& \\
+  &\textsc{Interp}\ p\ e\ 0\ (\text{\IRReg}\ \_\ init)\ = init&& \\
+  &\textsc{Interp}\ p\ e\ (t + 1)\ (\text{\IRReg}\ id\ \_)\ = \textsc{Interp}\ p\ e\ t\ p[id]&& \\
+  &\textsc{Interp}\ p\ e\ t\ (\Op\ \mathsf{op}\ ids)\ = \llbracket op\rrbracket \ (\text{map}\ (\lambda id \ .\ \textsc{Interp}\ p\ e\ t\ p[id])\ ids)&& \\
+  &\textsc{Interp}\ p\ e\ t\ (\text{\IRPrim}\ bs\ p')\ =&& \\
+  %&\quad \text{let}\ \text{Interp}' = (\lambda\ i\ .\ \text{Interp}\ p\ e\ t\ p[i])\ \text{in}&&\\
+  &\quad \text{let}\ e' = \lambda x, t'\ .\ \textsc{Interp}\ p\ e\ t' \left(p[bs\ x] \right) \text{in}\\
+ % &\quad \text{let}\ e' = \text{fold}\ (\lambda\ (v, i),\  acc\ .\ acc[v \mapsto  \text{Interp}'\ i])\ \{\}\ vs\ \text{in}&& \\
+  % &\quad \text{let}\ e' = \text{map} (\lambda \ .\ \text{Interp}\ p\ e\ t)\ ids\ \text{in}&& \\
+  &\quad \textsc{Interp}\ p'\ e'\ t\ p'[p'.root]
+\end{flalign*}
+
+
+ %| Reg (id_clk, id_d, _) ->
+ %   let clk = interp' id_clk t in
+ %   let old_clk = interp' id_clk (t - 1) in
+ %   if (old_clk, clk) = (0, 1)
+ %    then interp' id_d (t - 1)
+ %    else interp' id (t - 1)
+
+% \begin{algorithmic}
+% \end{algorithmic}
+
+\caption{\lr's semantics as pseudocode.}
+\label{fig:lr-interpreter-pseudocode}
+\end{figure}

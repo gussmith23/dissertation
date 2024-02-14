@@ -1,0 +1,46 @@
+\documentclass{standalone}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\pgfplotsset{compat=1.17}
+\begin{document}
+\begin{figure}
+\centering
+\begin{tikzpicture}
+  \pgfplotstableread[col sep=comma]{
+,tool,num_experiments,num_successful,num_unsuccessful,num_lr_unsat,num_lr_timeout,total_experiments,percentage_successful,percentage_unsuccessful,percentage_lr_unsat,percentage_lr_timeout
+3,Anaxi,264,216,0,0,48,264,81.81818181818183,0.0,0.0,18.181818181818183
+4,SOTA$_X$,264,88,176,0,0,264,33.33333333333333,66.66666666666666,0.0,0.0
+5,Yosys,264,44,220,0,0,264,16.666666666666664,83.33333333333334,0.0,0.0
+}\datatable
+
+  \begin{axis}[
+    ybar stacked,
+    title = Lattice ECP5,
+    bar width = 25pt,
+    width=7cm,
+    height=6cm,
+    ylabel={Percentage (\%)},
+    symbolic x coords={Anaxi, SOTA$_X$, Yosys},
+    xtick=data,
+    try min ticks = 5
+    % nodes near coords,
+    % nodes near coords align={vertical},
+    legend style={
+      at={(0.5,-0.3)},
+      anchor=north,
+      legend columns=-1,
+    },
+    x tick label style={rotate=45,anchor=east},
+    ymajorgrids,
+  ]
+    \addplot table[y=percentage_successful,x=tool] {\datatable};
+    \addplot table[y=percentage_unsuccessful,x=tool] {\datatable};
+    \addplot table[y=percentage_lr_timeout,x=tool] {\datatable};
+    \legend{Successful,Unsuccessful, Timeout}
+    % \node at (axis cs:SOTA Lattice,110) {ECP5};
+  \end{axis}
+\end{tikzpicture}
+\caption{Caption}
+\label{fig:enter-label}
+\end{figure}
+\end{document}

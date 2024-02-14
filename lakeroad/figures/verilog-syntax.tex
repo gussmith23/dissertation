@@ -1,0 +1,32 @@
+\begin{figure}
+% This line is causing a font error.
+%\small
+\setlength{\grammarparsep}{3pt plus 1pt minus 1pt} % increase separation between rules
+\setlength{\grammarindent}{5em} % increase separation between LHS/RHS 
+\small{}
+\begin{grammar}
+
+<expr> ::= signal-const | signal-var  
+\alt <unop> <expr> 
+        \alt <binop> <expr> <expr>
+        \alt <ternop> <expr> <expr> <expr>
+        
+<unop> ::=  `not' | `neg' | `reduce_and' | `reduce_xor'
+    
+<binop> ::= `and'  | `or' | `xor'
+    \alt  `eq' | `ne' | `logic_and' | `logic_not' | `logic_or' 
+    \alt  `mul' | `add' | `sub' 
+    \alt  `dff'
+    \alt `concat'
+
+<ternop> ::=  `mux'  | `extract'
+
+\end{grammar}
+
+\caption{
+Syntax for imported Verilog.
+This syntax is largely drawn from
+  Yosys's~\cite{wolf2013yosys} internal syntax.
+}
+\label{fig:verilog-syntax}
+\end{figure}

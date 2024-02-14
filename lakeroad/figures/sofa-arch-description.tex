@@ -1,0 +1,38 @@
+\begin{figure}
+\begin{minted}[fontsize=\footnotesize]{YAML}
+implementations:
+  - interface: { name: LUT, num_inputs: 4 }
+    internal_data: { sram: 16 }
+    modules:
+      - module_name: frac_lut4
+        filepath: SOFA/frac_lut4.v
+        ports:
+          - { name: in, direction: in, width: 4, 
+              value: (concat I3 I2 I1 I0) }
+          - { name: mode, direction: in,
+              width: 1, value: (bv 0 1) }
+          - { name: lut4_out, direction: out,
+              width: 1 }
+        parameters: [{ name: sram, value: sram }]
+    outputs: { O: lut4_out }
+    \end{minted}
+    \caption{
+SOFA architecture description.
+% The SOFA architecture
+%   description uses
+%   the SOFA \texttt{frac\_lut4}
+%   primitive to implement
+%   \lr's 4-input LUT 
+%   primitive interface. 
+% Inputs 
+%   and outputs of the primitive
+%   interface are mapped to the 
+%   ports of the \texttt{frac\_lut4}. 
+% The LUT's configurable inputs
+%   are also specified: \texttt{frac\_lut4}
+%   allows programming 
+%   the LUT function by defining
+%   its memory input \texttt{sram}.
+  }
+    \label{fig:sofa-architecture-description}
+\end{figure}

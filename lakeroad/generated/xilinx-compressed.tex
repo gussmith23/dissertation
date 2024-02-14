@@ -1,0 +1,23 @@
+\rotatebox{\titletilt}{ Instr } & \rotatebox{\titletilt}{ Template } & \rotatebox{\titletilt}{ Runtime in sec } & \rotatebox{\titletilt}{ \#LUTs } & \rotatebox{\titletilt}{ \#CARRY8s } & \rotatebox{\titletilt}{ DSP? (sec) } & \rotatebox{\titletilt}{ Runtime } & \rotatebox{\titletilt}{ \#LUTs } & \rotatebox{\titletilt}{ \#MUXs } & \rotatebox{\titletilt}{ \#CARRY4s } & \rotatebox{\titletilt}{ \#INVs } & \rotatebox{\titletilt}{ \#DSP } & \rotatebox{\titletilt}{ Runtime in sec } & \rotatebox{\titletilt}{ \#LUTs } & \rotatebox{\titletilt}{ \#CARRY8s } & \rotatebox{\titletilt}{ \#DSP } & \rotatebox{\titletilt}{ Support } \\\midrule
+and16 & BW    & 1.6  & 16 & -- & \checkmark (4.8) & 2.6 & 16 & -- & -- & -- &--   & 36 & 10 & -- &--   & $\times$ \\
+and32 & BW    & 1.9  & 32 & -- &                  & 2.6 & 32 & -- & -- & -- &--   & 35 & 17 & -- &--   & $\times$ \\
+or16  & BW    & 1.8  & 16 & -- & \checkmark (7.1) & 2.6 & 16 & -- & -- & -- &--   & 34 & 10 & -- &--   & $\times$ \\
+or32  & BW    & 1.7  & 32 & -- &                  & 2.6 & 32 & -- & -- & -- &--   & 31 & 17 & -- &--   & $\times$ \\
+xor16 & BW    & 1.9  & 16 & -- & \checkmark (4.4) & 2.7 & 16 & -- & -- & -- &--   & 32 & 10 & -- &--   & $\times$ \\
+xor32 & BW    & 2.2  & 32 & -- &                  & 2.5 & 32 & -- & -- & -- &--   & 33 & 17 & -- &--   & $\times$ \\
+not16 & BW    & 1.8  & 16 & -- & \checkmark (3.6) & 2.6 & -- & -- & -- & 16 &--   & 32 & 10 & -- &--   & $\times$ \\
+not32 & BW    & 1.7  & 32 & -- &                  & 2.6 & -- & -- & -- & 32 &--   & 33 & 17 & -- &--   & $\times$ \\
+mux16 & BW    & 8.5  & 16 & -- & \checkmark (6.3) & 2.6 & 16 & -- & -- & -- &--   & 31 & 16 & -- & -- & $\times$ \\
+mux32 & BW    & 12.7 & 32 & -- &                  & 2.8 & 32 & -- & -- & -- &--   & 22 & 32 & -- & -- & $\times$ \\
+add16 & Carry & 2.3  & 16 & 2 & \checkmark (4.8) & 2.8 & 16 & -- & 4 & -- &  -- & 34 & 16 & 2 & -- & $\times$ \\
+add32 & Carry & 2.3  & 32 & 4 &                  & 2.7 & 32 & -- & 8 & -- &  -- & 34 & 32 & 4 & -- & $\times$ \\
+sub16 & Carry & 1.9  & 16 & 2 & \checkmark (3.9) & 2.7 & 16 & -- & 4 & -- &  -- & 34 & 16 & 2 & -- & $\times$ \\
+sub32 & Carry & 1.9  & 32 & 4 &                  & 2.7 & 32 & -- & 8 & -- &  -- & 34 & 32 & 4 & -- & $\times$ \\
+mul16 & --   & 2.4  & -- & -- & \checkmark (2.4) & 3.4 & -- & -- & -- & -- & 1 & 32 & -- & -- & 1  & $\times$ \\
+mul32 & --    & --   & -- & -- &                  & 3.6 & -- & -- & -- & -- & 3  & 22 & -- & -- & 3  & $\times$ \\
+eq32  & Comp  & 3.3  & 32 & 4 &                   & 2.6 & 24 & 1 & -- & -- &  -- & 36 & 11 & 2 &--    & $\times$ \\
+neq32 & Comp  & 3.5  & 32 & 4 &                   & 2.7 & 24 & 1 & -- & -- &  -- & 33 & 11 & 2 &--    & $\times$ \\
+ugt32 & Comp  & 3.4  & 32 & 4 &                   & 2.7 & 22 & -- & 3 & -- &  -- & 32 & 16 & 2 &--    & $\times$ \\
+ult32 & Comp  & 3.7  & 32 & 4 &                   & 2.7 & 22 & -- & 3 & -- &  -- & 34 & 16 & 2 &--   & $\times$ \\
+uge32 & Comp  & 2.8  & 32 & 4 &                   & 2.8 & 22 & -- & 3 & -- &  -- & 33 & 16 & 2 &--   & $\times$ \\
+ule32 & Comp  & 2.5  & 32 & 4 &                   & 2.8 & 22 & -- & 3 & -- &  -- & 32 & 16 & 2 &--  & $\times$

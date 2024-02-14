@@ -1,0 +1,56 @@
+\documentclass[pageno,inline]{jpaper}
+
+\usepackage{lineno}
+\linenumbers
+
+\input{imports-and-macros}
+
+
+%replace XXX with the submission number you are given from the ASPLOS submission site.
+\newcommand{\asplossubmissionnumber}{XXX}
+
+\usepackage[normalem]{ulem}
+
+\begin{document}
+
+\title{FPGA Technology Mapping\\Using Sketch-Guided Program Synthesis}
+\date{}
+\maketitle
+
+\thispagestyle{empty}
+
+\section{Evaluation}
+\begin{table}
+    \caption{Lattice Runtimes (s)}
+    \centering
+    \begin{tabular}{|l|l|l|}
+    \hline
+        tool & median time & stddev \\ \hline
+        lakeroad & 6.43 & 59.51 \\ \hline
+        diamond & 0.72 & 0.05 \\ \hline
+        yosys & 0.53 & 0.05 \\ \hline
+    \end{tabular}
+\end{table}
+\begin{table}[!ht]
+    \centering
+    \caption{Xilinx Runtimes (s)}
+    
+    \begin{tabular}{|l|l|l|}
+    \hline
+        tool & median time & stddev \\ \hline
+        lakeroad & 8.48 & 71.18 \\ \hline
+        vivado & 128.59 & 6.72 \\ \hline
+        yosys & 3.36 & 0.17 \\ \hline
+    \end{tabular}
+\end{table}
+\begin{table}[!ht]
+    \centering
+    \multicolumn{0}{2}{Xilinx} & \multicolumn{3}{5}{Lattice}
+    \begin{tabular}{|l|l|l::l|l|l|} \hline
+         tool & median time & stddev & tool & median time & stddev \\ \hline
+         lakeroad & 8.48 & 71.18 & lakeroad & 6.43 & 59.51 \\ \hline
+         vivado & 128.59 & 6.72 & diamond & 0.72 & 0.05 \\ \hline
+         yosys & 3.36 & 0.17 & yosys & 0.53 & 0.05 \\ \hline
+    \end{tabular}
+\end{table}
+\end{document}

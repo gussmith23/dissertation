@@ -1,0 +1,130 @@
+\section{Motivating Example: 8-bit Add}
+\label{sec:motivating-example}
+
+
+\begin{figure}
+\begin{minted}{systemverilog}
+module add8(input [7:0] a, b, output [7:0] y);
+  assign y = a + b;
+endmodule
+\end{minted}
+\caption{Behavioral SystemVerilog implementation of 8-bit add.}
+\label{fig:8-bit-add-behavioral}
+\end{figure}
+  
+\begin{table}
+    \centering
+    \begin{tabular}{c|ccc}
+        & LUTs & CARRY8s & Datapath Delay (ns)  \\
+        \hline
+         first attempt& 11 & 0 & {\color{red}{0.799}}  \\
+         second attempt& 8 & 1&  {\color{OliveGreen}{0.410}}  \\
+    \end{tabular}
+    \caption{Vector add statistics}
+    \label{tab:vector-add-stats}
+\end{table}
+  
+\begin{figure}
+\begin{minted}{systemverilog}
+module add8(input [7:0] a, b, output [7:0] y);
+  impl _impl (a, b, y);
+endmodule
+
+module impl(input [7:0] a, b, output [7:0] y);
+  wire [7:0] p;
+  LUT2 #(.INIT(4'h6)) l0 (a[0], b[0], p[0]);
+  // ...7 LUT2s omitted...
+  CARRY8 carry0 (.CI(1'b0), .DI(a), .S(p), .O(y));
+endmodule
+\end{minted}
+\caption{Structural Xilinx UltraScale+ SystemVerilog implementation of 8-bit add.}
+\label{fig:8-bit-add-structural}
+\end{figure}
+
+To motivate the use
+  of solver-aided programming
+  to generate ISA instruction implementations,
+  let's walk through an example
+  of implementing an 8-bit add instruction
+  for Xilinx UltraScale+ FPGAs.
+As a first pass,
+  we will attempt to 
+  generate an UltraScale+ implementation
+  of 8-bit add
+  using the traditional flow.
+In the traditional flow, we start with 
+  a high-level,
+  behavioral SystemVerilog implementation
+  of 8-bit add,
+  shown in \cref{fig:8-bit-add-behavioral},
+  and use Xilinx'x Vivado toolchain
+  to synthesize%
+  \footnote{Note that we use the term ``synthesis'' here to specifically represent the step in traditional hardware compiler flows in which the design is compiled into logic gates, optimized, and then mapped to FPGA primitives.}
+  , place, and route the design
+  for an UltraScale+ board.
+
+The result,
+  recorded in the first row of
+  \cref{tab:vector-add-stats},
+  uses 11 LUTs,
+  and has a datapath delay of 0.799ns.
+At first glance,
+  this may seem just fine.
+However, those familiar with
+  Xilinx FPGAs
+  will notice that the implementation
+  doesn't use a single CARRY8---%
+  a specialized fast carry chain unit
+  designed specifically for speeding up
+  addition.
+Noticing that,
+  we attempt a more brute-force implementation,
+  shown in
+  \cref{fig:8-bit-add-structural}.
+In this implementation,
+  we manually implement the 8-bit addition
+  using the UltraScale+ primitives
+  \texttt{LUT2} and \texttt{CARRY8}.
+This requires more intimate
+  knowledge of the FPGA backend.
+In the first place, we need to know
+  the FPGA contains
+  specialized carry logic.
+Knowing that,
+  we are then required to connect the wires by hand,
+  and to determine the \texttt{INIT}
+  values for the LUTs.
+But our effort pays off:
+  when we synthesize, place, and route
+  our new implementation,
+  the resulting design
+  has a datapath delay of
+  0.410ns---an improvement of nearly 2x!
+  
+This example clearly illustrates the problem:
+  even on simple designs---indeed,
+  just a single 8-bit add,
+  traditional hardware compilers behave
+  in unexpected ways,
+  and users need backend-specific knowledge
+  to extract maximum performance.
+Note that we can also recover the performance
+  of our behavioral implementation
+  by explicitly clocking the result of
+  \texttt{a + b}
+  into a register, using an
+  \texttt{always_ff}
+  block,
+  but an inexperienced user is unlikely
+  to figure this out
+  without first scouring the internet
+  for help.
+Furthermore,
+  whether or not a design uses a register
+  is irrelevant
+  to the carry;
+  this gives a clear example of the
+  underlying heuristics
+  producing unexpected results.
+
+

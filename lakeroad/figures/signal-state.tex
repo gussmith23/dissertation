@@ -1,0 +1,70 @@
+\begin{figure} 
+\begin{minted}[fontsize=\footnotesize]{python}
+def merge(state0, ...):
+  new_s = {}
+  for s in [state0, ...], key in s:
+    (new_val, new_vers) = s.get(key)
+    (_, old_vers) = new_s.get_or_default(key, (_, -1))
+    if new_vers > old_vers:
+      new_s[key] = (new_val, new_vers)
+  return new_s
+
+def update(state, key, val):
+  new_state = state.copy()
+  (_, old_vers) = state.get_or_default(key, (_, -1))
+  new_state[key] = (val, old_vers + 1)
+  return new_state
+
+def register(clk, d):
+  # look up previous values
+  s = merge(clk.state, d.state)
+  (old_clk_val, _) = s.get_or_default("clk", (0, _))
+  (old_d_val, _) = s.get_or_default("d", (0, _))
+  (old_q_val, _) = s.get_or_default("q", (0, _))
+
+  # compute the output
+  clock_ticked = old_clk_val == 0 and clk.value == 1
+  new_q_val = old_d_val if clock_ticked else old_q_value
+  new_state = s.update("clk", clk.value)
+               .update("d", d.value)
+               .update("q", new_q_value)
+  
+  return signal(new_q_val, new_state)
+
+>>> v0 = register(signal(0), signal(0xa)); v0
+signal(0, {"clk": (0, 0), "d": (0xa, 0), "q": (0, 0) })
+>>> register(signal(1, v0.state), signal(0xa, v0.state))
+signal(0xa, {"clk": (1, 1), "d": (0xa, 1), "q": (0xa, 1) })
+\end{minted}
+    \caption{
+Pseudocode implementation 
+  of the core \signal operations
+  (\texttt{merge} and \texttt{update}),
+  and a demonstration of how \signal{}s
+  can be used to implement the semantics
+  of a simple register. 
+The register takes two \texttt{signal}s as input:
+  \texttt{clk} and \texttt{d}.
+The states from the two inputs are first merged
+  into a single map,
+  which is used to look up old values of
+  \texttt{clk}, \texttt{d},
+  and the output \texttt{q}. 
+Version numbers in the state maps
+  help resolve potential merge conflicts.
+Finally, we compute
+  the new value of \texttt{q}
+  based on whether or not
+  the clock ticked. 
+Note that this is just an example;
+  \lrir does not include
+  a register primitive.
+Rather, registers are contained within
+  the Verilog models
+  we import, and their semantics
+  are captured in 
+  \cref{fig:verilog-semantics}
+  (see \textbf{dff-hold} and \textbf{dff-tick}).
+}
+    \label{fig:signal-complete}
+\end{figure}

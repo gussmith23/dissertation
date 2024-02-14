@@ -1,0 +1,33 @@
+
+%%%%%%%%%%%%%%%%%%%% LR DSL INTERPRETER %%%%%%%%%%%%%%%%%%%%
+\begin{figure}
+\begin{lstlisting}
+(define (interpret expr)
+ (match expr
+  ;;; Lakeroad DSL
+  [`(logical->physical ,_ ...)
+   (interpret-log->phys interpret expr)]
+  [`(physical->logical ,_ ...)
+   (interpret-phys->log interpret expr)]
+  
+  ;;; FPGA Functions
+  [`(ecp5-lut4 ,_ ...)
+   (interpret-ecp5 interpret expr)]
+ 
+  ;;; Racket functions lifted to Lakeroad DSL
+  [`(append ,l0 ,l1)
+   (append (interpret l0) (interpret l1))]
+   ... 
+   
+  ;;; Rosette functions lifted to our language.
+  [`(zero-extend ,v ,bv)
+   (zero-extend (interpret v) bv)]
+  [`(extract ,high ,low ,v)
+   (extract high low (interpret v))]
+  [`(concat ,v0 ,v1)
+   (concat (interpret v0) (interpret v1))]
+\end{lstlisting}
+\caption{{\em The \lr DSL interpreter}}
+\label{fig:lakeroad-dsl-interpreter}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%% END LR DSL INTERPRETER %%%%%%%%%%%%%%%%%%%%

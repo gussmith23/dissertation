@@ -1,0 +1,46 @@
+
+%%%%%%%%%%%%%%%%%%%% Lakeroad DSL Grammar %%%%%%%%%%%%%%%%%%%%
+\begin{minipage}{.35\textwidth}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 1st Column %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\footnotesize{}
+\begin{tabular}{l@{\hspace{.5em}}l}
+$\SynProg$     & $\defn$ $\langle$ $\SynId$, $\seq{\SynId, \SynNode}*\rangle$\\[0.5em]
+$\SynNode$       & $\defn \SynBv\ b$  | $\SynVar\ x$ \\
+                 & \ \   | $\Op\ op\ \SynId$* \\
+                 & \ \   | \IRReg{} $\SynId$ $(\SynBv~b)$ \\
+                 & \ \   | \IRPrim{} $\mathsf{binds}$ $\SynProg$ \\
+                 & \ \   | $\blacksquare_x$ \\[0.5em]
+    
+% $e\ \defn$       & $\seq{i, \hat{e}}$ \\[1em]
+%
+% $\hat{e}\ \defn$ & 
+%   $b \vbar x \vbar$ 
+%   \lstinline[language=thelang,mathescape]!let $x$ := $e$ in $e$! $\vbar$ 
+% $o\ e^{*} \vbar$ \\
+%   & \lstinline[language=thelang,mathescape]!Reg $e$ $e$ $b$! $\vbar$ 
+%     \lstinline[language=thelang,mathescape]!Prim $x^{*}$ $e^{*}$ $e$! $\vbar$ 
+% $\blacksquare_x$
+\end{tabular}
+\end{minipage}%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 2nd Column %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{minipage}{.25\textwidth}
+\footnotesize{}
+\begin{tabular}{l l}
+$\SynId$  & $id  \in \mathbb{N}$ \\  
+Bitvectors  & $b  \in \mathbb{BV}$ \\
+Variables & $x  \in \text{LegalVarNames}$\\[0.5em]
+Operators     & $op \in$ $\OpBv  \cup  \OpWire$\\[0.5em]
+$\mathsf{binds}$ & $bs \in (\text{Variables} \rightharpoonup \SynId)$
+\end{tabular}
+\end{minipage}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 3rd Column %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{minipage}{.4\textwidth}
+\footnotesize{}
+\begin{tabular}{l l}
+\;\;\; Wire op & $\OpWire =$ \lstinline[language=thelang,mathescape]!$\{$concat$,$extract$, \ldots \}$! \\
+\;\;\; Non-wire op & $\OpBv =$ \lstinline[language=thelang,mathescape]!$\{+, -, \times, \ldots \}$! \\
+\end{tabular}
+\end{minipage}
+
+
+%%%%%%%%%%%%%%%%%%%% END LR DSL GRAMMAR %%%%%%%%%%%%%%%%%%%%

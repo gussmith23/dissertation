@@ -1,0 +1,335 @@
+% Commented out for ASPLOS because causes compile errors (bib generates runaway
+% argument errors). I think this is because the `acmart` package defines the
+% \cite{} command and there was a conflict
+
+% \usepackage{cite}
+% Commented out for ASPLOS because causes compile error (something involving \Bbbk)
+%
+\DeclareMathAlphabet{\altmathcal}{OMS}{cmsy}{m}{n}
+\let\Bbbk\relax
+\usepackage{amsmath,amsfonts,amssymb}
+% Gus swapping algorithmic for algorithmicx/algpseudocode
+%\usepackage{algorithmic}
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{adjustbox}
+\usepackage[htt]{hyphenat} % to break \texttt with hyphens
+\usepackage{semantic} % for semantics
+\usepackage{soul}
+% \usepackage{todonotes}
+\usepackage{xspace}
+% https://github.com/gpoore/minted/issues/113#issuecomment-223451550
+%\usepackage[frozencache,cachedir=.]{minted}
+\usepackage[cachedir=.]{minted}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\pgfplotsset{compat=1.17}
+\usepackage{catchfile}
+\usepackage{ragged2e}
+\usepackage{caption}
+% Causing error
+\usepackage{subcaption} 
+\usepackage[utf8]{inputenc}
+%\usepackage{syntax} % for grammar
+\usepackage{tabularx}
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage{xspace}
+%\usepackage{courier}
+\usepackage{float}
+\usepackage{microtype}
+\usepackage[T1]{fontenc}
+%\usepackage{inconsolata}
+\usepackage{booktabs}
+\usepackage{color}
+\usepackage{enumerate}
+%\usepackage[inline]{enumitem}
+\usepackage{multirow}
+\usepackage{syntax}
+\usepackage[referable]{threeparttablex}
+\usepackage[title]{appendix}
+% \usepackage{geometry}
+\usepackage{stmaryrd} % for denotation brackets
+\usepackage{siunitx} % to align decimal places
+\usepackage{enumitem}
+%% Added packages
+\usepackage{caption}
+\usepackage{arydshln}
+\usepackage{dashrule}
+
+% Commutative Diagram
+\usepackage{tikz-cd}
+\usepackage{tikz}
+
+% For ::=
+\usepackage{mathtools}
+% For inference rules
+\usepackage{mathpartir}
+
+\usepackage[capitalize,noabbrev]{cleveref}
+
+%%%% UNCOMMENT TO TURN OFF HIGHLIGHTING
+%\renewcommand\hl[1]{}
+
+\newcommand{\sm}[1]{\textbf{\color{blue}[SM: #1]}}
+\newcommand{\koika}{Kôika\xspace}
+\newcommand{\g}{Glenside\xspace}
+%\newcommand{\g}{Lakeroad\xspace}
+\newcommand{\hwsw}{hardware--software}
+\newcommand{\accesspatternshape}[2]{$($$\left( #1 \right)$, $\left( #2 \right)$$)$}
+%\newcommand{\accesspatternshape}[2]{$( ( #1 ) , ( #2 ) )$}
+\newcommand{\itc}{\texttt{im2col}\xspace}
+\newcommand{\ctd}{\texttt{conv2d}\xspace}
+\newcommand{\egr}{egraph\xspace}
+\newcommand{\egrs}{\egr{}s\xspace}
+\newcommand{\Egr}{Egraph\xspace}
+\newcommand{\Egrs}{\Egr{}s\xspace}
+
+% "codeword" ie im2col and conv2d
+\newcommand{\tcd}[1]{\texttt{#1}}
+\newcommand{\mcd}[1]{\mathrm{\tcd{#1}}}
+
+% The following macros capture high-level ideas
+\newcommand{\ThePlatonicApproach}{Solver-Aided FPGA ISA Implementation\xspace}
+\newcommand{\theplatonicapproach}{solver-aided FPGA ISA implementation\xspace}
+\newcommand{\Theplatonicapproach}{Solver-aided FPGA ISA implementation\xspace}
+\newcommand{\note}[1]{{\color{red}{\bf Note:} \textit{#1}}}
+% Make a Suggestion
+\newcommand{\sug}[2]{{\color{red}\st{#1}}\xspace{} {\color{teal}#2}\xspace{}}
+\newcommand{\lookupt}{look-up table\xspace}
+\newcommand{\Lookupt}{Look-up table\xspace}
+\newcommand{\lut}{LUT\xspace}
+
+% For denotational Semantics
+\newcommand{\denote}[1]{\llbracket {#1} \rrbracket}
+% The following commands represent the three lakeroad components
+\newcommand{\SketchGeneration}{Sketch Generation\xspace}
+\newcommand{\HDLCompilation}{HDL Compilation\xspace}
+
+
+% \newcommand{\lr}{Lakeroad\xspace}
+% \newcommand{\lowercaselr}{lakeroad\xspace}
+% \newcommand{\lrfn}{\text{$f_{\text{LR}}$}\xspace}
+% \newcommand{\lrir}{\textsc{LRIR}\xspace}
+% \newcommand{\LRSynthesis}{Lakeroad Synthesis\xspace}
+% \newcommand{\LRSynth}{\textsc{LrSynth}\xspace}
+% \newcommand{\lowlrir}{lrir}
+
+\newcommand{\lr}{Lakeroad\xspace}
+\newcommand{\lowercaselr}{lakeroad\xspace}
+\newcommand{\lrfn}{\text{$f_{\textsc{lr}}$}\xspace}   % Lakeroad as a function
+\newcommand{\lrfnbmc}{\text{$f_{\textsc{lr}}^{*}$}\xspace}   % Lakeroad as a function
+\newcommand{\lrir}{\textsc{LRIR}\xspace}
+\newcommand{\LRSynthesis}{Lakeroad Synthesis\xspace}
+\newcommand{\LRSynth}{\textsc{LrSynth}\xspace}
+\newcommand{\lowlrir}{lrir}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%% Syntax and Semantics Macros %%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%% Declaring some syntax variables.
+\newcommand{\SynProg}{\mathsf{Prog}\xspace}
+\newcommand{\SynId}{\mathsf{Id}\xspace}
+\newcommand{\SynBv}{\mathsf{BV}\xspace}
+\newcommand{\SynVar}{\mathsf{Var}\xspace}
+\newcommand{\SynNode}{\mathsf{Node}\xspace}
+\newcommand{\SynPrim}{\mathsf{Prim}\xspace}
+\newcommand{\Op}{\mathsf{OP}\xspace}
+\newcommand{\OpBv}{\Op_{bv}}
+\newcommand{\OpWire}{\Op_{w}}
+\newcommand{\IRReg}{\lstinline[language=thelang]{Reg}\xspace}
+\newcommand{\IRPrim}{\lstinline[language=thelang]{Prim}\xspace}
+
+\newcommand{\Time}{\textsf{Time}\xspace}
+
+
+\newcommand{\Spec}{\textsc{Desg}\xspace}
+\newcommand{\VendorSemantics}{\textsc{Sems}\xspace}
+\newcommand{\Impl}{\textsc{Impl}\xspace}
+\newcommand{\HDL}{\textsc{HDL}\xspace}
+\newcommand{\SketchTemplate}{\textsc{Template}\xspace}
+\newcommand{\Sketch}{\textsc{Sketch}\xspace}
+\newcommand{\ArchDescr}{\textsc{ArchDescr}\xspace}
+\newcommand{\HDLCompile}{\textsc{HDLComp}\xspace}
+\newcommand{\Design}{\textsc{Desg}\xspace}
+\newcommand{\Semantics}{\textsc{Sems}\xspace}
+
+% 3LA placeholder
+\newcommand{\TLA}{3LA\xspace}
+\newcommand{\AppNum}{six\xspace}
+\newcommand{\egg}{\texttt{egg}\xspace}
+% instruction name
+\newcommand{\instrInText}[1]{\texttt{\small #1}}
+% variable name
+\newcommand{\varInText}[1]{$\texttt{#1}$}
+% markers
+\newcommand{\cmark}{{\color{deepgreen}$\boldsymbol\vee$}}
+\newcommand{\xmark}{{\color{deepred}$\boldsymbol\times$}}
+\newcommand{\diy}{{\color{deepblue}$\boldsymbol\thicksim$}}
+\definecolor{navy}{HTML}{0f1566}
+\newcommand{\asplos}[1]{{\color{navy}#1}}
+%% inline enumerating style
+% \newlist{inlinelist}{enumerate*}{1}
+% \setlist*[inlinelist,1]{%
+%   label=(\arabic*),
+% }
+%% paragraph no indent
+\newcommand{\para}[1]{\paragraph{\hspace{-1em}#1}}
+
+%% norm expression in math equation
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+
+\newcommand{\gs}[1]{\todo[color=gray!60]{\sf #1}}
+
+%%%%%%%%%%% Theorem Macro %%%%%%%%%%%%
+% \newtheorem{theorem}{Theorem}
+\newtheorem{property}{Property}
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\lstdefinestyle{lispstyle}{
+  backgroundcolor=\color{white},
+  basicstyle=\ttfamily\footnotesize,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  commentstyle=\color{mygreen},
+  % escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+  extendedchars=true,
+  keepspaces=true,
+  keywordstyle=\color{black},
+  language=Lisp,
+  morekeywords={*,...},
+  numbers=none,
+  numbersep=5pt,
+  numberstyle=\tiny\color{mygray},
+  rulecolor=\color{black},
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  stringstyle=\color{black},
+  tabsize=2,
+  title=\lstname
+}
+\lstdefinestyle{pystyle}{
+  backgroundcolor=\color{white},
+  basicstyle=\ttfamily\footnotesize,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  commentstyle=\color{mygreen},
+  % escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+  extendedchars=true,
+  keepspaces=true,
+  keywordstyle=\color{blue},
+  language=Python,
+  morekeywords={*,...},
+  numbers=none,
+  numbersep=5pt,
+  numberstyle=\tiny\color{mygray},
+  rulecolor=\color{black},
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  stringstyle=\color{black},
+  tabsize=2,
+  title=\lstname
+}
+
+% Our default style will be lispstyle
+\lstset{style=lispstyle}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%% YAML syntax highlighting %%%%%%%%%%%%%%%%%
+
+% http://tex.stackexchange.com/questions/152829/how-can-i-highlight-yaml-code-in-a-pretty-way-with-listings
+
+% here is a macro expanding to the name of the language
+% (handy if you decide to change it further down the road)
+\newcommand\YAMLcolonstyle{\color{black}\mdseries}
+\newcommand\YAMLkeystyle{\color{black}\bfseries}
+\newcommand\YAMLvaluestyle{\color{black}\mdseries}
+
+\makeatletter
+
+\newcommand\language@yaml{yaml}
+
+\expandafter\expandafter\expandafter\lstdefinelanguage
+\expandafter{\language@yaml}
+{
+  keywords={true,false,null,y,n},
+  keywordstyle=\color{darkgray}\bfseries,
+  basicstyle=\color{black}\linespread{0.8}\ttfamily\footnotesize,
+  comment=[l]{\#},
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{purple}\ttfamily,
+  stringstyle=\YAMLvaluestyle\ttfamily,
+  moredelim=[l][\color{orange}]{\&},
+  moredelim=[l][\color{magenta}]{*},
+  moredelim=**[il][\YAMLcolonstyle{:}\YAMLvaluestyle]{:},   % switch to value style at :
+  morestring=[b]',
+  morestring=[b]",
+  literate =    {---}{{\ProcessThreeDashes}}3
+                {>}{{\textcolor{red}\textgreater}}1     
+                {|}{{\textcolor{red}\textbar}}1 
+                {\ -\ }{{\mdseries\ -\ }}3,
+}
+
+% switch to key style at EOL
+\lst@AddToHook{EveryLine}{\ifx\lst@language\language@yaml\YAMLkeystyle\fi}
+\makeatother
+
+\newcommand\ProcessThreeDashes{\llap{\color{cyan}\mdseries-{-}-}}
+
+%%%%%%%%%%% YAML syntax highlighting %%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \newcommand{\qed}{\blacksquare}
+
+% Concatenation
+\newcommand\mdoubleplus{\mathbin{+\mkern-10mu+}}
+
+% Signal
+\newcommand{\signal}{\texttt{signal}\xspace}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\DeclareMathOperator{\defn}{\Coloneqq}
+\DeclareMathOperator{\vbar}{\, |\, }
+\lstdefinelanguage{thelang}{
+  basicstyle=\ttfamily,
+  keywordstyle=\color{black}\bfseries,
+  morekeywords=[1]{let,in,:=,Reg,Prim,Op},
+  morekeywords=[2]{},
+  morekeywords=[3]{},
+  alsoletter={:=},
+  morestring=[b]",
+  morecomment=[l]{\#},
+  morecomment=[s]{(*}{*)},
+  moredelim=**[is][\color{white}]{(&}{&)},
+}
+\newcommand{\nterm}[1]{\langle#1\rangle}
+\newcommand{\seq}[1]{\langle#1\rangle}
+\newcommand{\set}[1]{\{#1\}}
+
+\newcommand{\smallStepSymbol}{\to}
+\newcommand{\bigStepSymbol}{\downarrow}
+\newcommand{\smallStep}[5]{\ensuremath{#1,#2,#3,#4 \smallStepSymbol #5}}
+\newcommand{\bigStep}[4]{\ensuremath{#1, #2, #3 \bigStepSymbol #4}}
+\newcommand{\evalsTo}[4]{\ensuremath{#1, #2, #3 \to^{+} #4}}
+\newcommand{\multiEvalsTo}[5]{\ensuremath{#1, #2, #3 \to^{+} #4, #5}}
+
+
+\DeclareMathOperator{\defaultop}{\ \triangleright\ }
+
+\newcommand{\UberLang}{\ensuremath{\altmathcal{L}_\textsc{lr}}\xspace}
+\newcommand{\SpecLang}{\ensuremath{\altmathcal{L}_\textsc{beh}}\xspace}
+\newcommand{\ImplLang}{\ensuremath{\altmathcal{L}_\textsc{struct}}\xspace}
+\newcommand{\SketchLang}{\ensuremath{\altmathcal{L}_\textsc{sketch}}\xspace}
+
+\newcommand{\separatingline}{{\color{gray}\hrule}}
+
+\newcommand{\tighten}{\looseness=-1}

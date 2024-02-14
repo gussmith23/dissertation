@@ -1,0 +1,174 @@
+\begin{figure*}
+
+\tikz{
+
+\node[minimum width=3cm] at (0, .1) {\large\textsf{\textbf{Sketch Template}}};
+\node[minimum width=3cm] at (6, 2.5) {\large\textsf{\textbf{Architecture Descriptions}}};
+\node[minimum width=3cm] at (12, 2.1) {\large\textsf{\textbf{Sketches}}};
+
+\node[rectangle,rounded corners, draw, minimum width=4.5cm]
+at (0,-1)
+(sketch-template)
+{\begin{minipage}{.2\textwidth}
+\begin{minted}[fontsize=\footnotesize,xleftmargin=-12pt]{python}
+def dsp_sketch_template(
+    clk, I0, I1, I2, I3):
+  o = dsp(clk, I0, I1, I2, I3)
+  return o
+\end{minted}
+\end{minipage}};
+
+% Xilinx arch desc
+\node[rectangle,rounded corners, draw, minimum width=5.3cm]
+at (6,1)
+(xilinx-arch-desc)
+{\begin{minipage}{.25\textwidth}
+\begin{minted}[fontsize=\footnotesize,xleftmargin=-5pt]{YAML}
+# Xilinx
+dsp:
+- { module_name: DSP48E2,
+    ports: {A: I0, ...},
+    params: {AREG: <AREG>, ...},
+    symbolics: {<AREG>: 32, ... }}
+\end{minted}
+\end{minipage}};
+
+% lattice arch desc
+\node[rectangle,rounded corners, draw, minimum width=5.9cm]
+at (6,-2)
+(lattice-arch-desc)
+{\begin{minipage}{.25\textwidth}
+\begin{minted}[fontsize=\footnotesize,xleftmargin=-10pt]{YAML}
+# Lattice
+dsp:
+- { id: mul, module_name: MULT18X18C,
+    ports: {A: I0, ... },
+    params: {CMREG: <CMREG>, ...},
+    symbolics: {<CMREG>: 5, ...},
+- { module_name: ALU54A,
+    ports: {B: mul.o, C: I2, ... },
+    params: {RFCLK: <RFCLK>, ... },
+    symbolics: {<RFCLK>: 5, ... }}
+\end{minted}
+\end{minipage}};
+
+
+
+\node[rectangle,rounded corners, draw, minimum width=5.7cm]
+at (12,1)
+(xilinx-sketch)
+{\begin{minipage}{.25\textwidth}
+\begin{minted}[fontsize=\footnotesize,xleftmargin=-11pt]{python}
+def sketch_xil(clk, I0, I1, I2, I3):
+    o = DSP48E2(clk=clk, A=IO,
+                AREG=<AREG>, ...)
+    return o
+\end{minted}
+\end{minipage}};
+
+\node[rectangle,rounded corners, draw, minimum width=5.7cm]
+at (12,-2)
+(lattice-sketch)
+{\begin{minipage}{.25\textwidth}
+\begin{minted}[fontsize=\footnotesize,xleftmargin=-11pt]{python}
+def sketch_lat(clk, I0, I1, I2, I3):
+    o1 = MULT18X18C(clk=clk, A=I0,
+            CMREG=<CMREG>, ...)
+    o2 = ALU54A(clk=clk, B=o1,
+            C=I2, RFCLK=<RFCLK>, ...)
+    return o2
+\end{minted}
+\end{minipage}};
+
+\draw[->] (sketch-template) edge (xilinx-arch-desc);
+\draw[->] (sketch-template) edge (lattice-arch-desc);
+\draw[->] (xilinx-arch-desc) edge (xilinx-sketch);
+\draw[->] (lattice-arch-desc) edge (lattice-sketch);
+
+
+
+
+}
+
+% \begin{subfigure}{0.32\textwidth}
+% \centering
+% \begin{minted}[frame=single,fontsize=\footnotesize]{python}
+% def dsp_sketch_template(
+%     clk, a, b, c, d):
+%   (o, ...) = dsp(clk, a, b, c, d)
+%   return o
+% \end{minted}
+% \vspace{2cm}
+% \end{subfigure}
+
+% \hspace{5mm}%
+% \begin{subfigure}{0.25\textwidth}
+
+
+% % # Xilinx
+% % - module_name: DSP48E2
+% %   ports: 
+% %    [{name: A, dir: in, val: ...},
+% %     {name: B, dir: in, val: ...}, ...]
+% %   parameters: 
+% %    [{name: MREG, val: ...}, ...]
+% % # Lattice
+% % - module_name: MULT18X18C
+% %   ports:
+% %   [{name: A, dir: in, val: ...},
+% %    {name: B, dir: in, val: ...}, ...]
+% %   parameters:
+% %   [{name: MULT_BYPASS, val: ...}, ...]
+% % - module_name: ALU45A
+% %   ports:
+% %   [{name: MA, dir: in, val: ...},
+% %    {name: MB, dir: in, val: ...}]
+% %  parameters:
+% %   [{name: REG_FLAG_CLK, dir: in, val: ...}, ...]
+
+% \begin{minted}[frame=single,fontsize=\footnotesize]{YAML}
+% # Xilinx
+% dsp:
+% - { module_name: DSP48E2,
+%     ports: ..., params: ... }
+% \end{minted}
+  
+% \begin{minted}[frame=single,fontsize=\footnotesize]{YAML}
+% # Lattice
+% dsp:
+% - { module_name: MULT18X18C,
+%     ports: ..., params: ... }
+% - { module_name: ALU54A,
+%     ports: ..., params: ... }
+% \end{minted}
+% \end{subfigure}
+% \hspace{5mm}%
+% \begin{subfigure}{0.32\textwidth}
+% \begin{minted}[frame=single,fontsize=\footnotesize]{python}
+% def sketch_xilinx(clk, a, b, c, d):
+%     (o, ...) = DSP48E2(clk, a, b, c,
+%         d, MREG=..., ...)
+%     return o
+% \end{minted}
+
+% \begin{minted}[frame=single,fontsize=\footnotesize]{python}
+% def sketch_lattice(clk, a, b, c, d):
+%     (o0, ...) = MULT18X18C(clk, a,
+%         b, MULT_BYPASS=..., ...)
+%     (o1, ...) = ALU54A(clk, c, 
+%         o0, REG_FLAG_CLK=..., ...)
+%     return o1
+% \end{minted}
+% \end{subfigure}
+
+    \caption{
+    The inputs/outputs of \lr's sketch generation flow.
+    The first column is the abstract DSP sketch template.
+    The second column contains condensed architecture descriptions for Xilinx UltraScale+ and Lattice ECP5, which are used to specialize the sketch template.
+    % Observe that although Lattice's DSP is comprised of
+    % two hardware primitives, the overall approach remains the same for each primitive.
+    The third column represents the specialized sketches on each architecture.
+}
+    \label{fig:sketch-generation}
+
+\end{figure*}

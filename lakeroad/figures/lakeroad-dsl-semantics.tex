@@ -1,0 +1,314 @@
+\begin{figure*}
+
+\newcommand{\lrirSemanticsVspace}{5mm}
+
+% \inference{\textrm{bv} ~ v}{v}[\lrir-bv]
+% 
+% \vspace{\lrirSemanticsVspace}
+
+% \begin{subfigure}{0.32\textwidth}
+%   \centering
+  
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% LRIR-list
+\mbox{
+\inference{e_0 \Downarrow v_0 
+   ~ \cdots ~ e_n \Downarrow v_n
+}
+          {     \left[ e_0,\, \ldots,\, e_n\right] 
+                \Downarrow 
+                \left[ v_0,\, \ldots,\, v_n\right] }
+          [{\bf list}]}%
+\quad
+\mbox{\inference{l \Downarrow \lbrack v_0 \ldots v_i \ldots v_n\rbrack}
+          {\texttt{list-ref}\ l\ i 
+           \Downarrow 
+           v_i}
+          [{\bf list-ref}]
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% LRIR-prim
+\quad
+\mbox{
+\inference%
+  {e \Downarrow v 
+  }
+  {\texttt{prim}\ \rho\ \kappa\ e \Downarrow \Gamma(\rho)(\kappa)(v)}
+  [{\bf prim}]
+}
+
+  \vspace{\lrirSemanticsVspace}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% LRIR-extract
+\mbox{
+\inference{e \Downarrow \left(\langle b_0 \ldots b_i \ldots b_j \ldots b_n\rangle, s \right)}
+          {\texttt{extract}\ i\ j\ e \Downarrow \left( \langle b_i \ldots b_j \rangle, s \right)}
+          [{\bf extract}]
+}%
+\quad
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% LRIR-concat
+\mbox{
+\inference{   e_0 \Downarrow \left(\langle b^0_0\ldots b^0_{n_1}\rangle, s_0 \right)
+              ~ \cdots ~
+              e_k \Downarrow \left( \langle b^k_0\ldots b^k_{n_k} \rangle, s_n\right)
+& s = \bigcup^i s_i
+              }
+          {\texttt{concat}\ e_0,\,\ldots,\, e_k
+           \Downarrow 
+           \left(\langle b^0_0 \ldots b^0_{n_1} 
+           \ldots
+           b^k_0 \ldots b^k_{n_k} \rangle, 
+           s\right)}
+          [{\bf concat}]
+}
+
+
+% \end{subfigure}%
+% \hspace{5mm}%
+% \begin{subfigure}{0.25\textwidth}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% LRIR-take
+% \inference{l \Downarrow \lbrack v_0 \ldots  
+%                                 v_n\rbrack
+%             & 0 \leq i \leq n+1}
+%           {\texttt{take}\ l\ i 
+%            \Downarrow 
+%            \lbrack v_0,\, \ldots,\, v_{i-1} \rbrack}
+%           [{\bf take}]
+% \vspace{\lrirSemanticsVspace}
+
+% \end{subfigure}\hspace{5mm}%
+% \begin{subfigure}{0.32\textwidth}
+%   \centering
+
+          
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% LRIR-drop
+% \inference{l \Downarrow \lbrack v_0 \ldots v_n\rbrack
+%            & 0 \leq i \leq n+1 }
+%           {\texttt{drop}\ l\ i 
+%            \Downarrow 
+%            \lbrack v_i,\, \ldots,\, v_{n} \rbrack}
+%           [{\bf drop}]
+% \vspace{\lrirSemanticsVspace}
+
+
+          
+% \end{subfigure}%
+
+
+% \begin{subfigure}{.5\textwidth}
+% \end{subfigure}%
+% \hspace{5mm}%
+% \begin{subfigure}{0.4\textwidth}
+% \centering
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% LRIR-bitwise-phys-to-log
+% \inference%
+%   {l \Downarrow 
+%          \lbrack 
+%           \langle bv^0_0,\, \ldots,\,  bv^0_k\rangle,\,
+%           \cdots,\,
+%           \langle bv^n_0,\, \ldots,\,  bv^n_k\rangle
+%          \rbrack}
+%   {\texttt{wire}\ \ \texttt{bitwise}\ \ l
+%    \Downarrow
+%       \lbrack 
+%        \langle bv^0_0,\, \ldots,\,  bv^n_0\rangle,\,
+%        \cdots,\,
+%        \langle bv^0_k,\, \ldots,\,  bv^n_k\rangle
+%       \rbrack}
+%   [{\bf bw-wire}]
+% \vspace{\lrirSemanticsVspace}
+
+% \end{subfigure}
+
+\hspace{30mm}\begin{subfigure}{0.9\textwidth}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% LRIR-bwrev-phys-to-log
+% \inference%
+%   {l \Downarrow 
+%          \lbrack 
+%           \langle bv^0_0,\, \ldots,\,  bv^0_k\rangle,\,
+%           \cdots,\,
+%           \langle bv^n_0,\, \ldots,\,  bv^n_k\rangle
+%          \rbrack}
+%   {\texttt{wire}\ \ \texttt{bitwise-reverse}\ \ l
+%    \Downarrow
+%       \lbrack 
+%        \langle bv_k^0,\, \ldots,\,  bv_k^n\rangle,\,
+%        \cdots,\,
+%        \langle bv_0^0,\, \ldots,\,  bv_0^n\rangle
+%       \rbrack}
+%   [{\bf bwrev-wire}]
+% \vspace{\lrirSemanticsVspace}
+
+\end{subfigure}
+\caption{\lrir semantics. Angled brackets indicate bitvector literals, while square brackets indicate list literals.}
+\label{fig:lrir-semantics}
+\end{figure*}
+
+
+
+% %%%% TRY 2 %%%%%
+% \begin{figure*}
+% \newcommand{\lrirSemanticsVspace}{5mm}
+
+% \begin{subfigure}{0.3\textwidth}
+%   \centering
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % LRIR-list
+% \inference{e_0 \Downarrow v_0 & \cdots & e_n \Downarrow v_n}
+%           {     \left[ e_0,\, \ldots,\, e_n\right] 
+%                 \Downarrow 
+%                 \left[ v_0,\, \ldots,\, v_n\right]}
+%           [{\bf list}]
+% \vspace{\lrirSemanticsVspace}
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % LRIR-extract
+% \inference{e \Downarrow \langle b_0 \ldots b_i \ldots b_j \ldots b_n\rangle}
+%           {\texttt{extract}\ i\ j\ e \Downarrow \langle b_i \ldots b_j \rangle}
+%           [{\bf extract}]
+% \vspace{\lrirSemanticsVspace}
+% \end{subfigure}
+% \begin{subfigure}{0.3\textwidth}
+%   \centering
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% % LRIR-prim
+% \inference%
+%   {e \Downarrow v 
+%   }
+%   {\texttt{prim}\ \rho\ \kappa\ e \Downarrow \Gamma(\rho)(\kappa)(x)}
+%   [{\bf prim}]
+% \vspace{\lrirSemanticsVspace}
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % LRIR-list-ref
+
+% \inference{l \Downarrow \lbrack v_0 \ldots v_i \ldots v_n\rbrack}
+%           {\texttt{list-ref}\ l\ i 
+%           \Downarrow 
+%           v_i}
+%           [{\bf list-ref}]
+% \vspace{\lrirSemanticsVspace}
+% \end{subfigure}
+% \begin{subfigure}{0.3\textwidth}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % LRIR-take
+% \inference{l \Downarrow \lbrack v_0 \ldots  
+%                                 v_n\rbrack
+%             & 0 \leq i \leq n+1}
+%           {\texttt{take}\ l\ i 
+%           \Downarrow 
+%           \lbrack v_0,\, \ldots,\, v_{i-1} \rbrack}
+%           [{\bf take}]
+% \vspace{\lrirSemanticsVspace}
+          
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % LRIR-drop
+% \inference{l \Downarrow \lbrack v_0 \ldots v_n\rbrack
+%           & 0 \leq i \leq n+1 }
+%           {\texttt{drop}\ l\ i 
+%           \Downarrow 
+%           \lbrack v_i,\, \ldots,\, v_{n} \rbrack}
+%           [{\bf drop}]
+% \vspace{\lrirSemanticsVspace}
+% \end{subfigure}
+% \begin{subfigure}{\textwidth}
+% \centering
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % LRIR-concat
+% \inference{   e_1 \Downarrow \langle b^1_0\ldots b^1_{n_1}\rangle
+%               & \cdots &
+%               e_k \Downarrow \langle b^k_0\ldots b^k_{n_k} \rangle}
+%           {\texttt{concat}\ e_1,\,\ldots,\, e_k
+%           \Downarrow 
+%           \langle b^1_0 \ldots b^1_{n_1} 
+%           \ldots
+%           b^k_0 \ldots b^k_{n_k} \rangle }
+%           [{\bf concat}]
+% \vspace{\lrirSemanticsVspace}
+% \end{subfigure}
+% \begin{subfigure}{\textwidth}
+% \centering
+% \inference%
+%   {l \Downarrow 
+%          \lbrack 
+%           \langle bv^0_0,\, \ldots,\,  bv^0_k\rangle,\,
+%           \cdots,\,
+%           \langle bv^n_0,\, \ldots,\,  bv^n_k\rangle
+%          \rbrack}
+%   {\texttt{wire}\ \ \texttt{bitwise}\ \ l
+%   \Downarrow
+%       \lbrack 
+%       \langle bv^0_0,\, \ldots,\,  bv^n_0\rangle,\,
+%       \cdots,\,
+%       \langle bv^0_k,\, \ldots,\,  bv^n_k\rangle
+%       \rbrack}
+%   [{\bf bw-wire}]
+% \vspace{\lrirSemanticsVspace}
+% \end{subfigure}
+% %\hspace{30mm}\begin{subfigure}{0.9\textwidth}
+% %\centering
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % LRIR-bitwise-phys-to-log
+% \begin{subfigure}{0.9\textwidth}
+% \centering
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % LRIR-bwrev-phys-to-log
+% \inference%
+%   {l \Downarrow 
+%          \lbrack 
+%           \langle bv^0_0,\, \ldots,\,  bv^0_k\rangle,\,
+%           \cdots,\,
+%           \langle bv^n_0,\, \ldots,\,  bv^n_k\rangle
+%          \rbrack}
+%   {\texttt{wire}\ \ \texttt{bitwise-reverse}\ \ l
+%   \Downarrow
+%       \lbrack 
+%       \langle bv_k^0,\, \ldots,\,  bv_k^n\rangle,\,
+%       \cdots,\,
+%       \langle bv_0^0,\, \ldots,\,  bv_0^n\rangle
+%       \rbrack}
+%   [{\bf bwrev-wire}]
+% \vspace{\lrirSemanticsVspace}
+% \end{subfigure}
+% \caption{\lrir semantics.}
+% \label{fig:lrir-semantics}
+% \end{figure*}
+
+
+% \inference{l \in [\textrm{BV}], \textrm{logical-to-physical}~\textrm{bitwise}~l}
+% {
+% [(\textrm{concat}~(\textrm{extract}~0~0~l[0])~%
+% (\textrm{extract}~0~0~l[1])~\dots)~%
+% (\textrm{concat}~(\textrm{extract}~1~1~l[0])~%
+% (\textrm{extract}~1~1~l[1])~\dots)~\dots ]
+% }
+% [\lrir-ltop-bitwise]
+
+% \vspace{\lrirSem\lrirSemanticsVspace}
+
+% \inference{l \in [\textrm{BV}], \textrm{logical-to-physical}~\textrm{bitwise-reverse}~l}
+% {
+% \begin{array}{@{}c@{}}
+% [(\textrm{concat}~(\textrm{extract}~n~n~l[0])~%
+% (\textrm{extract}~n~n~l[1])~\dots)   \\
+% (\textrm{concat}~(\textrm{extract}~n-1~n-1~l[0])~%
+% (\textrm{extract}~n-1~n-1~l[1])~\dots)~\dots ]
+% \end{array}
+% }
+% [\lrir-ltop-bitwise-reverse]
+
+% \vspace{\lrirSem\lrirSemanticsVspace}
+
+% \inference
+% {\textrm{primitive}~n~e}
+% {\textrm{look up primitive semantics for $n$, run on $e$}}

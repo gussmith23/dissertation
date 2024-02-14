@@ -1,0 +1,42 @@
+\begin{figure}
+\begin{minted}[fontsize=\footnotesize]{python}
+def register(clk, d):
+  # look up previous values
+  s = merge(clk.state, d.state)
+  (old_clk_val, _) = s.get_or_default("clk", (0, _))
+  (old_d_val, _) = s.get_or_default("d", (0, _))
+  (old_q_val, _) = s.get_or_default("q", (0, _))
+
+  # compute the output
+  clock_ticked = old_clk_val == 0 and clk.value == 1
+  new_q_val = old_d_val if clock_ticked else old_q_value
+  new_state = s.update("clk", clk.value)
+               .update("d", d.value)
+               .update("q", new_q_value)
+  
+  return signal(new_q_val, new_state)
+
+>>> v0 = register(signal(0), signal(0xa)); v0
+signal(0, {"clk": (0, 0), "d": (0xa, 0), "q": (0, 0) })
+>>> register(signal(1, v0.state), signal(0xa, v0.state))
+signal(0xa, {"clk": (1, 1), "d": (0xa, 1), "q": (0xa, 1) })
+\end{minted}
+    \caption{
+Pseudocode implementation 
+  of a simple register 
+  using the \texttt{signal} data structure.
+The register takes two \texttt{signal}s as input:
+  \texttt{clk} and \texttt{d}.
+The states from the two inputs are first merged
+  into a single map,
+  which is used to look up old values of
+  \texttt{clk}, \texttt{d},
+  and the output \texttt{q}.
+Finally, we compute
+  the new value of \texttt{q}
+  based on whether or not
+  the clock ticked.
+}
+    \label{fig:signal-example}
+\hl{explain: register is a very simple examplke, and we dont' actually have a register primitive, but registers are contained within many of our complex primitives}
+\end{figure}

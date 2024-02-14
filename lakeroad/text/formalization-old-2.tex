@@ -1,0 +1,307 @@
+\section{Formalization}
+\label{sec:formalization}
+
+\input{figures/syntax}
+
+
+In this section we formalize
+  the syntax and semantics of \lr,
+  and then state and prove
+  soundness and completeness properties (assuming the correctness of the underlying program synthesis tool and HDL compiler).
+%We begin by stating the soundness and
+  %and completeness properties, and then
+  %build up the necessary machinery to prove
+  %them bottom up.
+
+%\hl{TODO: State soundness and completeness theorems}
+
+%\hl{Note: This is a rough narrative pass/overview of formalization. It should be compiled town to paper-worth latex.
+%}
+
+%To talk about correctness and completeness we need to construct an abstract mathematical model of Anaxi. So, the outline of this writeup is:
+
+% \begin{enumerate}
+% \item Syntax and Semantics
+% \item Mathematical Model of Anaxi
+% \item Correctness of Anaxi
+% \item Completeness of Anaxi
+% \end{enumerate}
+
+\subsection{Syntax and Semantics}
+
+%\input{figures/lakeroad-dsl-grammar}
+
+%\input{figures/lakeroad-dsl-semantics}
+
+\lr uses the \lr Intermediate Representation (\lrir) to represent
+  wire operations and computations on FPGAs, the grammar for which is given in Figure~\ref{fig:lakeroad-dsl-grammar}.
+Sketches use the \texttt{hole} construct
+  to indicate where
+  program synthesis should be used
+  to find a replacement AST subtree
+  for that hole 
+  (either finding a bitvector to substitute or choosing between a list of alternatives).
+Otherwise, the grammar consists
+  of constructs corresponding to
+  what can be implemented on the FPGA.
+Wire operations are performed
+  by direct
+  bitvector manipulations
+  like \texttt{concat}
+  and \texttt{extract},
+  and by high-level manipulations
+  via the \texttt{wire} construct;
+  these are all architecture-independent.
+\lrir supports
+  only these simple bitvector operations directly.
+More complex manipulations
+  are supported through calls 
+  to \textit{hardware primitives} (e.g., LUTs and DSPs).
+These hardware module invocations
+  are captured in \lrir
+  by \texttt{prim} terms,
+  which refer to primitives
+  by name (e.g., ``\texttt{LUT4}'')
+  and pass in a configuration.
+These constructs can all be lowered
+  straightforwardly to HDL code
+  that can in turn be compiled
+  to an FPGA configuration.
+
+\subsubsection{Combinational Semantics}
+
+The basic operations in \lrir%
+  ---all other than \texttt{prim}---%
+  have stateless (combinational) semantics.
+Namely, they are defined over
+  bitvectors and lists,
+  taking bitvectors or lists of bitvectors as arguments
+  and returning a new bitvector or list of bitvectors,
+  without any other changes
+  to the program state.
+The semantics for these constructs 
+  is given in Figure~\ref{fig:lrir-semantics}.
+
+
+% At its core,
+%   \lrir is
+%   an IR for manipulating
+%   bitvectors and lists, where \lrir expressions should convert directly to low-level, FPGA-specific Verilog
+%   code.
+% % A primary design goal of \lrir
+% %   is that expressions
+% %   should convert directly
+% %   to low-level, FPGA-specific
+% %   Verilog code.
+% This means that
+%   \lrir directly supports only a limited subset
+%   of possible bitvector operations
+%   (e.g., bit extraction
+%   or bitvector concatenation).
+% More complex manipulations,
+%   including computations
+%   over bitvectors,
+%   are supported only through calls to
+%   \textit{hardware primitives} (e.g., LUTs and DSPs)
+%   by using a \texttt{prim} expression;
+%   these \texttt{prim} expression
+%   can be directly converted
+%   to Verilog module instantiations.
+% Its leaf expressions
+%   are bitvector constants
+%   and variables,
+%   where variables
+%   represent the inputs
+%   to the program.
+
+\hl{The semantics define an interpreter $\mathcal{I}$}
+
+We need to define the semantics for:
+
+1. \textit{Combinational evaluation (w/out state...state is elided)}
+2. \textit{Sequential evaluation (w/ state)}
+
+
+\subsubsection{Combinational Semantics}
+\hl{Update and reference figure 7 in paper; discuss}
+
+\subsubsection{Sequential Semantics}
+\hl{Update and reference figure 5 in paper; discuss}
+
+\subsection{Mathematical Model of Anaxi}
+
+In this section formalize Anaxi by modelling it a function 
+
+$$f_A : Sketch \times Design \times Sems \to HDL$$
+$$f_A := f_{HDL} \circ f_{Synth}$$
+
+where
+$$f_{Synth} : Sketch \times Design \times Sems \to IR$$
+and
+$$f_{HDL} : IR \to HDL.$$
+
+We do not include sketch generation
+  as part of our formalization, and treat
+  it as a preprocessing step.
+
+
+\subsubsection{Anaxi Synthesis: $f_{Synth}$}
+
+The synthesis step takes a sketch $s$, a design $d$, and some interpreter $\mathcal{I}$, and queries Rosette to find an implementation $p$ of sketch $s$ such that for all inputs $i$, $p(i) = d(i)$. Here our design $d$ is being used as a specification.
+
+We need to be able to
+  synthesize \textit{combinational}
+  and \textit{sequential} programs. 
+
+\begin{itemize}
+\item \textbf{Synthesizing a Combinational Program:}
+  To synthesize a combinational
+    program we pass the sketch
+    $s$ to Rosette,
+    along with an interpreter
+    defined by the combinational
+    semantics described in the
+    \hl{Combinational Semantics}
+    section.
+  No state (e.g., clock cycles,
+    etc) are used here.
+
+  We then issue a query to Rosette:
+  
+  $$\forall i\ \in Inputs\ \exists p \in AxIR\ s.t. p(i) = d(i)$$
+
+  Rosette performs exhaustive
+    search to find
+    a $p$ that satisfies
+    these constraints
+    if one exists.
+    
+\item \textbf{Synthesizing Sequential Programs:}
+  To synthesize a sequential
+    program we need to
+    implement the semantics of
+    multiple clock cycles.
+  We do this by treating
+    a program $p$ as a
+    function from $k$ input
+    bits and an input
+    state to $\ell$ output
+    bits and an output
+    state $\Sigma$:
+
+  $$p : \mathbb B^k \times \Sigma \to \mathbb B^\ell \times \Sigma.$$
+
+  We represent $n$ 
+    sequential applications
+    of program $p$ with
+    the function
+    
+  \[ p^{*}: \left(\mathbb{B}^k\right)^n \times \Sigma \to \mathbb{B}^\ell \times \Sigma,\]
+
+  where
+
+  \[p^{*}( \langle b_1, b_2, \ldots, b_n\rangle,\ \sigma_0)\]
+  
+  is defined to be
+  
+  $$p(b_1,\ \sigma_0)$$
+  
+  if $n = 1$, and
+  \[p^{*}(\langle b_2, \ldots, b_n\rangle,\ \pi_\Sigma(s(b_1, \sigma_0)))\]
+  
+  if $n > 1$.
+
+
+
+  Each $b_i \in \mathbb{B}^k$ 
+    is the input bits 
+    being wired to the
+    circuit at time step $i$,
+    and $\pi_\Sigma: \mathbb{B}^\ell \times \Sigma \to \Sigma$
+    is the projection 
+    function that drops
+    the output bits and
+    returns only the
+    resulting state.
+
+\hl{NOTE: we can model this in two ways: as a vectorized notation, or as an inductive definition. Both are usable; the above is inductive.}
+
+  We then issue a query to Rosette:
+
+  $$\forall \hat{b} \ \in \left(\mathbb{B}^k\right)^n,\ \exists p \in AxIR\ s.t.\ \pi_{Val} (p(\hat{b}, \sigma_0)) = \pi_{Val}(d(\hat{b}, \sigma_0)),$$
+
+  where $\hat{b} = \langle b_1, \ldots, b_n\rangle$.
+
+\end{itemize}
+
+\subsubsection{Anaxi Compilation: $f_{HDL}$}
+\hl{TODO: Discuss the process of compilation (Gus will need to do this!)}
+
+\subsection{Program Synthesis}
+
+The definition of program synthesis is
+
+$$\exists p\,\, \forall \hat{i} \quad Spec(\hat{i}) = p(\hat{i})$$
+
+
+\subsection{Correctness of Anaxi}
+
+Correctness of Anaxi is decomposed into correctness of synthesis and correctness of compilation.
+
+\hl{TODO: add commutative diagram!}
+
+\subsubsection{Correctness of Compilation}
+
+Correctness of compilation states that whenever $f_{HDL}$ maps an IR program $p$ to an HDL program $v$, this transformation preserves the semantics of the IR program: $\llbracket p\rrbracket = \llbracket v \rrbracket$.
+
+We claim that compilation is correct. While we do not have a formal proof (e.g., from a proof assistant), compilation is a simple process and we have tested it extensively.
+
+\subsubsection{Correctness of Synthesis}
+
+\begin{itemize}
+\item \textbf{Our TCB}
+  \begin{itemize}
+	\item Rosette/Solvers
+	\item Interpreter $\mathcal{I}$ , which in turn depends on
+     \begin{itemize}
+		\item Vendor-supplied semantics
+		\item Translation of semantics into an interpreter
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+
+Correctness of synthesis states that whenever $f_{Synth}$ maps a sketch $s$, a design $d$, and an interpreter $\mathcal{I}$ to an IR program $p$, then the semantics of the original design are preserved: $[|d|] = [|p|]$.
+
+We get correctness of synthesis from Rosette: by the definition of program synthesis, as long as our query that we have constructed is correct then the resulting. Correctness of synthesis relies on the correctness of Rosette. We construct a query
+
+\subsection{Completeness of Anaxi}
+
+Anaxi cannot claim full completeness, but it can claim \textit{sketch completeness:} if there is a sketch that can be instantiated to a program that implements a design $d$, then up to timeouts Anaxi will find it. We break sketch completeness down into \textit{Sketch Completeness of Synthesis} and \textit{Completeness of Compilation}.
+
+\subsubsection{ Sketch-Completeness of Synthesis}
+
+We argue that $f_{Synth}$
+  is sketch-complete: that is,
+  if there exists a program $p'$
+  that can be formed by
+  implementing a sketch 
+  $s$ such that
+  $\llbracket p'\rrbracket = \llbracket d \rrbracket$
+  then $f_{Synth}$ will
+  produce some program 
+  $p$ (where $p \equiv p'$).
+
+Stated another way,
+  sketch-completeness of
+  synthesis states that $f_{Synth}$
+  is total on the restricted 
+  domain of 
+  $Sketch \times Design \times Sems$.
+This follows from the
+  definition of program
+  synthesis \hl{(todo: elaborate)}.
+
+\subsubsection{Completeness of Compilation}
+
+Completeness of compilation says that $f_{HDL}$ is a total function (i.e., compilation never fails).
+

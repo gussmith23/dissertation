@@ -1,0 +1,1155 @@
+\section{Formalization}
+\label{sec:formalization}
+
+% These are necessary so that we can
+% use listings to typeset Reg/Prim/etc
+% as code within the semantics.
+\newsavebox\boxlet
+\newsavebox\boxassign
+\newsavebox\boxin
+\newsavebox\boxreg
+\newsavebox\boxprim
+\savebox{\boxlet}{\lstinline[language=thelang]!let!}
+\savebox{\boxassign}{\lstinline[language=thelang]!:=!}
+\savebox{\boxin}{\lstinline[language=thelang]!in!}
+\savebox{\boxreg}{\lstinline[language=thelang]!Reg!}
+\savebox{\boxprim}{\lstinline[language=thelang]!Prim!}
+
+\newcommand{\Prim}[0]{\lstinline[language=thelang]{Prim}\xspace}
+
+\newcommand{\Reg}[0]{\lstinline[language=thelang]{Reg}\xspace}
+
+\newcommand{\Let}[0]{\lstinline[language=thelang]{let}\xspace}
+
+
+\begin{figure*}
+\input{figures/syntax}
+\caption{Syntax of $\UberLang$. $\blacksquare_x$ is a syntactic hole, labeled with variable $x$. $A \rightharpoonup B$ denotes the set of partial functions from $A$ to $B$.}
+\label{fig:syntax}
+\end{figure*}
+
+% \begin{figure*}
+% \input{figures/semantics}
+% \caption{Semantics of Core \UberLang.
+%    Note that we do not give semantics for $\blacksquare_x$
+%    since these holes will be filled prior to interpretation.}
+
+% \label{fig:semantics}
+% \end{figure*}
+
+%\sandy{Does the following mean that LR has "with" functions, as grammar suggests, or simply "functions"?}
+We now formalize \lr{} 
+  with functions $\lrfn$ and
+  $\lrfnbmc$,
+  and use these models
+  to argue for the correctness
+  and partial completeness of \lr{}. 
+We first define  
+  $\lrfn$ (\cref{subsec:the-lr-function}) and then 
+motivate and define
+  the language $\UberLang{}$,  
+  specify its syntax and semantics,
+  and define behavioral ($\SpecLang$), structural ($\ImplLang$), and sketch ($\SketchLang$) sublanguages (\cref{subsec:lrir-syntax-and-semantics}).
+%
+{% \color{blue}
+We next explain the
+  underlying queries
+  \lr{} uses to
+  synthesize hardware programs
+  that meet the desired specification
+} (\cref{sec:formalization-program-synthesis}).
+  We demonstrate the correctness
+  and partial completeness of $\lrfn$,
+  enumerate our Trusted Computing Base
+  (\cref{subsec:lr-correctness-and-completeness}) and 
+extend $\lrfn$ to $\lrfnbmc$,
+    which ensures the generated program's
+    semantics matches the design over multiple
+    timesteps (\cref{subsec:lrfn-bmc}).
+%
+Finally,
+ we highlight potential future
+ applications that could be
+ built on this section's formalization
+ (\cref{sec:sem-beyond}).
+ 
+
+\subsection{The \lr Function $\lrfn$}
+\label{subsec:the-lr-function}
+
+We model the execution of \lr
+  with the partial function
+  \small
+%
+\[\lrfn: \Sketch \times \SpecLang \times \Time \rightharpoonup \ImplLang,\]
+%
+\normalsize
+where $\lrfn(\Psi, d, t)$
+  invokes Rosette
+  to synthesize a $t$-cycle
+  implementation
+  of behavioral design $d$ 
+  using sketch $\Psi$ to guide
+  the search,
+  where a $t$-cycle
+  implementation of $d$ is a program
+  that is equivalent to $d$ at clock cycle
+  $t$.
+By not requiring program equivalence before
+    clock cycle $t$ we allow the
+    synthesized program's semantics to
+    differ from the design during 
+    an initialization period
+    (e.g., as the pipeline is being filled).
+To get guarantees beyond a single
+    point in time $t$, we generalize
+    $\lrfn$ to $\lrfnbmc$,
+    which synthesizes a program
+    that is equivalent to the design
+    from time $t$ to $t + n$.
+We formalize a sketch $\Psi \in \Sketch$  as a tuple
+  $(\psi, h)$,
+  where $\psi$ is a program in $\SketchLang$ 
+  and $h$ is a map
+  from the holes in $\psi$
+  to a finite set of valid hole-free
+  nodes in $\ImplLang$
+  that can be used to fill
+  the mapped hole.
+This mapping $h$ is handled implicitly by Rosette's
+  \texttt{choose} and \texttt{hole} constructs and
+  need not be explicitly specified by the
+  sketch writer.
+We write $\lrfn(\Psi, d, t) = p$ to 
+    indicate that synthesis succeeded and produced
+    \lr{} program $p$.
+However, it is possible that sketch $\Psi$
+    cannot implement $d$, in which case
+    the synthesis fails
+    (i.e., returns UNSAT)
+    and
+    $\lrfn$ does not return anything.
+Design $d$ belongs to 
+  $\UberLang$'s behavioral fragment,
+  $\SpecLang$ (see
+  \cref{subsec:lrir-syntax-and-semantics}).
+%
+When $t = 0$, $\lrfn$ 
+  synthesizes a 
+  \textit{combinational design}; when 
+$t > 0$, $\lrfn$ 
+  synthesizes a \textit{sequential design}
+  over $t$ clock cycles.
+The rest of this section 
+  considers sequential design synthesis 
+  since its combinational counterpart is 
+  a special case covered
+  by our general approach.
+  
+  
+\subsection{Defining $\UberLang$}
+\label{subsec:lrir-syntax-and-semantics}
+
+\lr uses the 
+  $\UberLang$ language to
+  translate behavioral
+  HDL programs
+  to structural, 
+  hardware-specific
+  HDL programs.
+To facilitate this
+  translation, we
+  designed $\UberLang$
+  to satisfy the
+  following properties:
+\begin{enumerate}[label=\textbf{P\arabic*}.]
+    \item \textit{Easy translation to/from HDLs:}
+        we must be able
+        to translate
+        designs from 
+        a behavioral HDL
+        to $\UberLang$
+        and translate
+        synthesized implementations
+        to a structural HDL.
+        
+    \item \textit{Support parallel stateful execution:}
+        FPGA designs
+        consist of
+        potentially stateful elements
+        executing in parallel.
+        $\UberLang$ must
+        allow unambiguous
+        parallel execution.
+        % (i.e., subexpression
+        % evaluation order
+        % does not matter).
+
+    \item \textit{Support graph-like program structures:}
+        An FPGA component's outputs
+        can be wired to
+        multiple other components,
+        including back
+        to itself.
+        This means that 
+        FPGA programs can
+        form arbitrary
+        graphs, and $\UberLang$ must
+        be able to express this.
+        % In practice,
+        % cycles should
+        % be \textit{sequential},
+        % meaning every
+        % cycle is
+        % interrupted by a register.
+        % Our language should
+        % capture this restriction.
+        
+    \item \textit{Support for sequential designs:}
+        $\UberLang$ must handle designs
+        that run over multiple clock cycles.
+        
+    \item \textit{Support for different architectures:}
+        $\UberLang$ must handle FPGA components
+        from different architectures.
+\end{enumerate}
+%
+We describe how $\UberLang$ satisfies
+  P1-P5 when we 
+  define its syntax and semantics
+  in the following subsections. 
+
+
+\subsubsection{$\UberLang$'s Syntax}
+\label{subsubsec:syntax}
+
+\Cref{fig:syntax} shows the $\UberLang$ syntax.
+An $\UberLang$ program $\SynProg$
+  consists of a root node ID
+  and a graph of nodes,
+  each of which is
+  referred to by its ID.
+A \textit{node} 
+  can be 
+  a constant bitvector,
+  input variable,
+  combinational (pure) operator,
+  sequential (stateful) register,
+  primitive,
+  or hole.
+Given a program 
+  $p = (r, \langle id_1, {node}_1\rangle
+           \ldots
+           \langle id_n, {node}_n\rangle)$, 
+  we use the notation 
+  $p.root = r$, 
+  $p.ids = \left\{id_1, \ldots, id_n\right\}$,
+  and
+  $p[id_i] = {node}_i$.
+We define the free variables of a program $p.fv = \{x_i\}$ as the set of variable names occurring in $p$'s nodes of the form $(\SynVar\ x_i)$.\footnote{Note that this does not include variables of sub-programs occurring recursively inside of \IRPrim nodes.}  Finally, we use the notation $p.all\_ids$ for $p.ids$ together with $p'.all\_ids$ of any subprogram $p'$ of $p$ ($p'$ is a subprogram of $p$ if $\exists j, node_j = \textrm{\IRPrim}~bs~p'$).
+
+%\hl{Given time, would be good to replace SynBv and SynVar with new IRBv and IRVar macros with appropriate typesetting}
+Given a node $n$,
+  we specify its inputs
+  with the following function:
+  \small
+\begin{align*}
+  %\hl{space per line}
+  &\textsc{inputs}(\SynBv\ b) = \{\}, \\
+  &\textsc{inputs}(\SynVar\ x) = \{\}, \\
+  &\textsc{inputs}(\Op\ op\ i_1 \ldots i_n)
+     = \{i_1,\, \ldots,\, i_n\} \\
+  &\textsc{inputs}(\text{\IRReg}\ i\ b_{init})
+     = \{i\} \\
+  &\textsc{inputs}(\text{\IRPrim}\ 
+                     bs\ p')
+                = \{bs[x]\ |\ x \in \textrm{domain}(bs)\}
+\end{align*}
+\normalsize
+Note that we use 
+    $A \rightharpoonup B$ 
+    to denote the set
+    of partial functions
+    from $A$ to $B$;
+    given 
+    $bs \in A \rightharpoonup B$, 
+    we write $\textrm{domain}(bs)$
+    to denote
+    the set of 
+    $x\in A$ s.t.
+    $bs[x]$ is defined.
+
+%\hl{Define free variables function and update W5 to use this.}
+
+A program $p$ is well-formed
+  if and only if
+  all the following
+  conditions hold:
+
+% Well Formedness
+\begin{enumerate}[label=\bfseries{W\arabic*}.]
+  \item $p.root \in p.ids$;
+
+  \item All ids are unique and distinct. (i.e. for any sub-program $p'$, $p.ids$ and $p'.all\_ids$ are disjoint, and for any two sub-programs $p'$ and $p''$, $p'.all\_ids$ is disjoint from $p''.all\_ids$.)
+  
+  \item The inputs of all nodes in $p$ are ids of other nodes in $p$:
+     $\forall id \in p.ids$, 
+     $\text{inputs}(p[id]) \subseteq p.ids$;
+
+  \item All primitive nodes contain 
+      well-formed programs;
+  \item All primitive nodes bind exactly their free variables; i.e., for $\text{\IRPrim}\ bs\ p'$, $\textrm{domain}(bs) = p'.fv$; and
+        
+  \item Program $p$ is free of combinational loops (formalized below in \cref{property:free-of-combinational-loops}).
+  % After expanding and inlining all primitive nodes
+  %       in $p$, the resulting inlined program
+  %       is free of combinational loops, meaning that 
+  %       all \hl{self-dependencies} for any non-register node
+  %       must be broken by a register.
+        %
+%         \footnote{
+% Formally, a program $p$ is free of combinational
+% loops if there exists a function
+% $w : p.all\_ids \to \mathbb{N}$ 
+% defined on the ids of $p$ and all 
+% sub-programs that satisfies the following properties:
+% (1) if $p[id] = \text{\IRReg{}}~\_~\_$, then $w(id) = 0$;
+% (2) if $p[id] = \text{\IRPrim{}}~bs~p'$, 
+% then $w(id) = w(p'.root)$ and $w(id') = w(bs[x])$ when $p'[id'] = Var~x$; 
+% (3) otherwise, ($p[id] = OP~op~\_$) 
+% $w(id) > w(id')$ for all $id' \in inputs(p[id])$.  
+% The function $w$ acts as a witness to the 
+% absence of combinational loops 
+% because it is impossible to define a strictly monotonic function without acyclicity.
+%         }
+\end{enumerate}
+
+\begin{property}[Free of Combinational Loops]
+\label{property:free-of-combinational-loops}
+Formally, a program $p$ is free of combinational
+loops if there exists a function
+$w : p.all\_ids \to \mathbb{N}$, that satisfies the following properties (collectively ``monotonicity''):
+\begin{enumerate}
+\item If $p[id] = \text{\IRReg{}}~\_~\_$, then $w(id) = 0$;
+\item If $p[id] = \text{\IRPrim{}}~bs~p'$, then $w(id) > w(p'.root)$;
+\item if $p[id] = \text{\IRPrim{}}~bs~p'$ and $p'[id'] = Var~x$, \\ then $w(id') > w(bs[x])$; and
+\item Otherwise (e.g., $p[id] = \Op~op~ids^{*}$), \\
+    if $id' \in \textsc{inputs}(p[id])$,
+    then $w(id) > w(id')$. 
+\end{enumerate}
+\end{property}
+\noindent The function $w$ acts as a witness to the 
+absence of combinational loops because it is
+impossible to define a strictly monotonic function without acyclicity.
+We consider only well-formed
+  $\UberLang$ programs.
+
+% The following paragraph
+% describes how each part
+% of our syntax satisfies
+% properties P1-P5.
+% 
+
+$\SynBv$, $\SynVar$, and $\Op$ nodes
+  encode bitvectors, variables, and
+  operators.
+
+\Reg $i_{data}\ b_{init}$ nodes
+  let \UberLang implement
+  sequential designs (P4).
+$i_{data}$ is the 
+  register's data input,
+  which updates the stored
+  value at the positive edge
+  of each clock cycle,
+  and $b_{init}$ is the
+  register's initialization value.
+
+\IRPrim{} $bs\ p$ nodes
+  let \UberLang programs
+  use hardware-specific components
+  from different architectures (P5).
+The $bs$ component is a \textit{variable map},
+  mapping $\SynVar$s to input $\SynId$s.
+The $p$ component is an $\UberLang$ program
+  that defines the semantics of the
+  hardware primitive.
+A \Prim node also carries some metadata 
+  % describing the hardware primitive's name
+  used during compilation
+  to a structural
+  HDL, which we omit 
+  for clarity.\tighten
+
+$\SpecLang$ is the concrete
+  \textit{behavioral}
+  fragment of $\UberLang$ used for
+  writing specifications; it 
+  is formed by
+  excluding \Prim
+  nodes and holes
+  from $\UberLang$.
+  
+$\ImplLang$ is the concrete
+  \textit{structural}
+  fragment of $\UberLang$ used
+  for lowering $\UberLang$
+  to structural HDLs; it 
+  is formed
+  by excluding \Reg nodes, $\Op$ nodes,
+  and holes from $\UberLang$,
+  with the following
+  exception:
+  the $p$ term
+  in $\usebox{\boxprim}\ bs\ p$ must
+  always be from the $\SpecLang$ since it 
+  is used to specify the semantics
+  of the \Prim node
+  to the synthesis engine.
+The behavioral node $p$
+  is not used during
+  compilation to HDL,
+  and this behavioral
+  expression does not 
+  propagate to the
+  structural HDL output.
+
+$\SketchLang$ is another sublanguage of $\UberLang$ that is $\ImplLang$ but also including holes. 
+Let $s$ be a program in $\SketchLang$
+  with holes 
+  $\blacksquare_{x_1}, \ldots, \blacksquare_{x_k}$.
+These holes can be \emph{filled}
+  with nodes $n_1, \ldots, n_k$
+  in $\ImplLang$ by replacing
+  each hole $\blacksquare_{x_i}$ 
+  with its 
+  corresponding node $n_i$
+  to obtain a complete
+  $\ImplLang$ program,
+  denoted by $s[\blacksquare_{x_1} \mapsto n_1, \ldots]$.
+
+The simplicity of this syntax
+  makes translating to and from
+  HDLs straightforward (P1).
+\cref{sec:implementation}
+  describes how \lr{} implements the
+  translations to and from HDLs.
+
+\subsubsection{$\UberLang$'s Semantics}
+\label{subsubsec:semantics}
+
+\input{figures/interpreter.tex}
+
+Before discussing the formal
+  semantics of \UberLang,
+  we present key 
+  definitions.
+We assume 
+  a \textit{bitvector type}
+  and, for simplicity,
+  we elide bitvector
+  widths.
+We represent \textit{time} as a
+  natural number.
+A \textit{stream} is a function from $\Time$
+  to bitvectors.
+An \textit{environment} is
+  a map from
+  variable names
+  to streams.
+
+
+We give the semantics 
+  for $\UberLang$ as an interpreter in 
+  \cref{fig:lr-interpreter-pseudocode}.
+We define the function \textsc{Interp} to interpret a program $p$ in environment $e$ at time $t$ and node $n$.
+We do not define semantics for holes,
+  as they are intended to be replaced
+  by other constructs with well-defined semantics.
+
+Most of the rules are straightforward.
+A bitvector $\SynBv\ b$
+  evaluates to
+  its backing bitvector value $b$.
+A variable node $\SynVar\ x$ 
+  in an environment $e$
+  at time $t$
+  evaluates to
+  the value returned 
+  by the stream associated
+  with $x$ in $e$
+  at time $t$; 
+using function notation, this is
+  denoted by $e\ x\ t$.
+A $k$-ary operator node
+  $\Op{}\ op\ i_1\ldots i_k$ recursively
+  interprets each operand in the current
+  environment at the current time 
+  and then applies $op$'s semantics,
+  denoted $\llbracket op \rrbracket$,
+  to the resulting values.
+A register \IRReg $id\ b_{init}$ has two cases 
+  depending on the current time: 
+at time $t = 0$, a register evaluates
+  to its initial bitvector value $b_{init}$; 
+at nonzero times $t + 1$, a register evaluates
+  to the value produced by the input $i$
+  at the \textit{previous} timestep $t$.
+A primitive \IRPrim{} $bs\ p'$
+  in environment $e$ at time $t$
+  is evaluated by interpreting
+  the program $p'$ under
+  the fresh environment $e'$
+  formed by the binding map $bs$.
+  
+% \paragraph{Semantics of Registers}
+
+% Registers capture and store
+%   values for later use.
+% A register has a \textit{clock input stream},
+%   a \textit{data input stream},
+%   and an \textit{initialization value}.
+% We say that a register \textit{ticks}
+%   at the \textit{positive edge} of the signal,
+%   or simply that the register \textit{ticks},
+%   when the clock signal transitions
+%   from 0 to 1.
+% Otherwise, we say
+%   that the register \textit{holds}.
+% When a register ticks, it updates its stored value
+%   to whatever value is on the its data input stream.
+%s foll
+%Thus, a register will output a constant value
+%   until it ticks, at which point it outputs
+%   its previously stored value.\hl{TODO: This is not well written,
+%   but info is here}
+
+% Rather than store and pass around state
+%   to track data from a previous time step,
+%   \UberLang's semantics uses streams, indexed
+%   by time, to access this data.
+% In our stream semantics, 
+%   we say that a register \textit{ticks} at time $t > 0$ when 
+%   the clock stream is 0 at time $t - 1$ and 1 at time $t$.
+% Otherwise the register holds at time $t$.
+
+% Register semantics are broken into three rules:
+% \textsc{RegZero},
+% \textsc{RegHold}, and \textsc{RegTick}
+
+% \textsc{RegZero} gives semantics for a register at time $t = 0$;
+% it simply evaluates to its initialization value.
+% \textsc{RegHold} gives semantics
+%   for a register that holds,
+%   at which point the register
+%   outputs its previous
+%   evaluation from time $t-1$.
+% \textsc{RegTick} gives semantics
+%   for a register that ticks rule describes the behavior
+%   of a register when its clock ticks:
+%   when the clock ticks, a register
+%   evaluates to whatever data was passed into
+%   the register at the previous time step $t-1$
+
+% First, the subexpressions for computing the
+%   clock and data inputs are evaluated.
+% The state is threaded sequentially through
+%   these recursive evaluations,
+%   but recall that the order does not
+%   matter because each rule only
+%   accesses state for its expression's
+%   unique identifier---%
+%   thus the semantics faithfully models
+%   the results of a parallel evaluation.
+% Given the new inputs $v_{clk}$ and $v_{data}$
+%   for clock and data respectively to this register,
+%   the \textsc{RegHold} rule states that
+%   the register continues to hold its old value
+%   $v_{q'}$ but updates its state to
+%   save the new clock and data input values,
+%   i.e., to $(v_{clk}, v_{q'}, v_{data})$.
+% The \textsc{RegTick} rule is similar,
+%   but handles the case where the clock
+%   is transitioning from low to high (0 $\rightarrow$ 1).
+% In this case, the clock and data
+%   subexpressions are recursively evaluated as before,
+%   but the \textsc{RegTick} rule states that
+%   the register updates its value to
+%   $v_{data'}$ (the most recently seen data input)
+%   and updates its state to
+%   save the new clock and data input values,
+%   i.e., to $(v_{clk}, v_{data'}, v_{data})$.
+
+% \paragraph{Semantics of \textsc{Prim}}
+
+% The \textsc{Prim} rule specifies how
+%   an instance of a primitive
+%   $\seq{i,\usebox{\boxprim}\ x_1\ x_2\ \ldots\ x_n\ e_1\ e_2\ \ldots\ e_n\ e_s}$
+%   evaluates.
+% The \textit{primitive input variables}
+%   $x_1, x_2, \ldots, x_n$
+%   model both the inputs to this primitive
+%   (including the clock if this is a sequential primitive)
+%   as well as parameter and port values
+%   necessary to configure this primitive.
+% The \textit{primitive argument expressions}
+%   $e_1, e_2, \ldots, e_n$
+%   represent the expressions that
+%   flow into the input variables:
+%   for configuration parameters,
+%   they will be set to holes ($\blacksquare$)
+%   in the sketch used for synthesis
+%   which will then typically be
+%   filled in by constants;
+%   for inputs coming from other
+%   components, these expressions
+%   will be other parts of the design.
+% Finally,
+%   the expression $e_s \in \SpecLang$
+%   encodes the semantics for this
+%   primitive as extracted from
+%   the vendor-provided HDL.
+% The \textsc{Prim}  rule states that first
+%   all the primitive argument expressions
+%   are evaluated to get their updated outputs
+%   $v_1, v_2, \ldots, v_n$ and the state map
+%   resulting from their recursive evaluation.
+% Again, although the formal semantics
+%   sequentially threads the state
+%   through these evaluations,
+%   the actual order does not matter ---
+%   unique identifiers for each subexpression
+%   ensures that evaluating
+%   subexpressions within a clock cycle
+%   commutes.
+% Given the results of evaluating all
+%   the primitive argument expressions,
+%   the rule next evaluates $e_s$,
+%   i.e., the semantics for this primitive,
+%   under the environment $E$
+%   extended so that each
+%   primitive input variable maps to
+%   its corresponding argument,
+%   $E[x_1 := v_1][x_2 := v_2]\ldots[x_n := v_n]$.
+% Finally, $e_s$ is evaluated under this extended environment
+%   and the state map $S_n$ resulting from evaluating all
+%   the argument expressions to get a final
+%   output $v_s$ for this primitive and
+%   state map $S'$ which additionally
+%   includes any updates to the internal
+%   state of this primitive.
+  
+% \subsection{Interpreting Designs Over Inputs}
+% \hl{This is a previous definition of Interp, and is now out of date. however, we use this version later in this section so I am preserving it so that we can be careful about how we update future things}
+
+% We specify a function
+%   $\textsc{interp} : \mathsf{Env}^{*} \to \UberLang \to \mathsf{BV}$
+%   for interpreting a well-formed design $e$ 
+%   (i.e., where all subexpression identifiers are unique)
+%   on inputs $[E_1, E_2, \ldots, E_n]$
+%   such that $\textsc{interp}$ respects $\rightarrow^{+}$.
+  
+% That is,
+%   $\textsc{interp}([E_1, E_2, \ldots, E_n], e) = v$
+%   if and only if
+%   \multiEvalsTo{[E_1, E_2, \ldots, E_n]}{e}{S_{init}}{v}{S_{ignore}} and
+%   $S_{init}[i] = (1, b, 0)$ 
+%   for any 
+%   $\seq{i, \usebox{\boxreg}\ e_{clk}\ e_{data}\ b}$
+%   that occurs as a subexpression in $e$.
+% In other words,
+%   we set the initial state $S_{init}$ so that
+%   the identifier for each
+%   \lstinline[language=thelang]{Reg} subexpression
+%   maps to its default value $b$.
+% This ensures that all subsequent state lookups will succeed.
+
+% We can interpret a program on an input with $\textsc{interp} : \mathsf{Env}^{*} \to \UberLang \to \mathsf{BV}$  where $\textsc{interp}([E_1, E_2, \ldots, E_n], e) = v$, given that \multiEvalsTo{[E_1, E_2, \ldots, E_n]}{e}{S_{init}}{v}{S_{ignore}} and $S_{init}[i] = (1, b, 0)$ whenever $\seq{i, \lstinline[language=thelang]{Reg}\ e_{clk}\ e_{data}\ b} \in e$.
+% In other words, we initialize the initial state where the ID of each \lstinline[language=thelang]{Reg} subexpression maps to its default value.
+% This ensures that all subsequent state lookups will succeed.
+
+\subsection{Program Synthesis}
+\label{sec:formalization-program-synthesis}
+
+% $\lrfn$ performs sketch-based program
+%   synthesis~\cite{solar2008program}.
+% Recall that an invocation of $\lrfn$ 
+%   requires three arguments:
+%   a sketch $\Psi\in\Sketch$,
+%   a design fragment $d\in\SpecLang$,
+%   and a time value $t\in\Time$.
+% Further, recall that
+%   sketch $\Psi = (\psi, h)$ is 
+%   the program $\psi \in \SketchLang$ whose
+%   holes will be
+%   filled by synthesis,
+%   along with map
+%   $h$ which maps each hole
+%   in $\psi$ to a finite set
+%   of valid hole-free nodes in $\ImplLang$
+%   that can be used to fill the mapped hole.
+% $\lrfn$ synthesizes a program
+%   by filling each hole $\blacksquare_{x_i}$ in $\psi$
+%   with a node $n_i \in h[\blacksquare_{x_i}]$,
+%   such that the result
+%   is equivalent to $d$
+%   after running for
+%   $t$ clock cycles.
+%The holes represent the configuration
+%  space of a sketch and
+%  are filled during synthesis.
+%The design specification $d \in \SpecLang$ 
+%  provides the semantics that the
+%  result of synthesis should have.
+%Lastly, $t$ indicates the
+%  number of clock cycles.
+% The objective of 
+%   the sketch-based 
+%   program synthesis is 
+%   to fill in all holes
+%   of $\Psi$ with 
+%   expressions from $\ImplLang$ such
+%   that the semantics of the
+%   resulting program is equivalent
+%   to that of $d$ after $t$ clock cycles
+%   have run.
+% In \cref{subsec:lrfn-bmc} we
+%   use bounded model checking to
+%   extend $\lrfn$'s guarantees
+%   beyond the single timestep
+%   at clock cycle $t$.
+
+%%%%%%%%%%%%% BEGIN EDIT
+$\lrfn$ performs sketch-based program
+  synthesis~\cite{solar2008program}.
+%%%%%%%%%%%%%% END EDIT
+Operationally, we implement
+  the \textsc{Interp} function from 
+  \Cref{fig:lr-interpreter-pseudocode}
+  in Rosette, a solver-aided host
+  language~\cite{torlak2014lightweight}.
+Let sketch $\Psi = (\psi, h) \in \Sketch$, where
+  $\psi \in \SketchLang$ has holes
+  $\blacksquare_{x_{i}}$
+  and $h$ maps $\psi$'s holes
+  to the set of structural nodes
+  that can legally fill the mapped hole.
+Given a design $d$,
+  we query Rosette if there
+  are nodes 
+  $n_1, n_2, \ldots n_k$ 
+  such that 
+  $n_i \in h[\blacksquare_{x_i}]$
+  and
+  $p = \Psi[\blacksquare_{x_1} \mapsto n_1, \ldots]$
+   is well-formed and equivalent to $d$
+   (i.e., we ask Rosette to fill
+   each hole with a node associated with the node in $h$).
+Program equivalence between well-formed
+  programs $p$ and $d$ at time
+  $t$, written $p\cong_t d$, is defined as
+  \begin{align*}
+    & p.fv = d.fv\ \wedge \\
+    &\forall e\ s.t.\ \textrm{domain}(e) = p.fv, \\
+    &\quad\textsc{Interp}\ p\ e\ t\ p.root =
+   \textsc{Interp}\ d\ e\ t\ d.root.
+  \end{align*}
+% {\color{blue}
+% \lr{} captures the quantification $\forall e$ by creating an initial environment
+%     $e_0$
+%     for a program $p$ in which all free variables
+%     of $p$ are mapped to symbolic constant
+%     streams:
+%     $$e_0 = \lambda x,t.~bv_x,$$
+%     where $bv_x$ is a unique
+%     symbolic bitvector constant associated
+%     with free variable $x$.
+% }
+In \cref{subsec:lrfn-bmc}, we
+  use bounded model checking to
+  extend $\lrfn$'s guarantees
+  beyond the single timestep
+  at clock cycle $t$.
+  
+
+\subsection{Correctness and Completeness of $\lrfn$}
+\label{subsec:lr-correctness-and-completeness}
+
+Recall that the synthesis
+  function $\lrfn$ is partial.
+We say that $\lrfn$
+  is \emph{correct} if
+  it 
+  returns a program
+  $\lrfn(\Psi,d,t) = p$  where
+  $p$ is
+  a well-formed
+  completion of $\Psi = (\psi, h)$,
+  meaning $p = \Psi[\blacksquare_{x_1} \mapsto n_1, \ldots]$
+            such that $n_i \in h[\blacksquare_i]$ for all $i$
+  and $p\cong_t d$.
+
+% For a sequential design, $\lrfn$ is \emph{correct}, 
+%   by which we mean
+%   that for a sketch $\Psi$,
+%   design $d\in \SpecLang$,
+%   and $t \in \Time$,
+%   if $\lrfn(\Psi, d, t)$ successfully
+%   synthesizes an implementation
+%   $p \in \ImplLang$,
+%   then after $t$ clock cycles
+%   $d$ and $p$ evaluate to the same
+%   value under every possible
+%   environment:
+%   \begin{align*}
+%       & \forall\ \Psi \in \Sketch,\, d \in \SpecLang, e \in \ImplLang, t \in \Time \\
+%       & \lrfn(\Psi, d, n) = e \Rightarrow  e.fv = d.fv \wedge \\
+%       &\forall\ env \in Env(d), \ 
+%       \textsc{Interp}(d, env, n) = \textsc{Interp}(e, env, n)
+%   \end{align*}
+%   % \begin{align*}
+%   % & \textsc{Interp}(d, env, n) = \textsc{Interp}(e, env, n)
+%   % \end{align*}
+  
+% This follows directly from the program synthesis definition that Rosette implements\footnote{The actual Rosette synthesis query is stronger than the formula shown here in order to rule out trivial solutions~\cite{rosette:synthesis,rosette4}. We show the weaker variant here for simplicity.}.
+
+% Let $d, e \in \UberLang$ without holes, we say that $e$ \emph{implements} $d$ after $t$ clock cycles, $\textsc{Impl}(d,e,t)$ when
+% \[\begin{array}{rl}
+% \forall env \in Env, &
+% valid(env,d) \implies valid(env,e)\; \wedge \\
+% &\textsc{Interp}(e_1, env, n) = \textsc{Interp}(e_2, env, n)
+% \end{array}\]
+
+% \hl{Define function $Env(d)$ for valid envs of $d$}
+
+% Formally,
+
+%   \begin{align*}
+%   & \lrfn(\Psi, d, n) = e \implies \\
+%   & \quad\exists e_1, e_2, \ldots, e_k \in \ImplLang,\\
+%   & \quad\quad e = \Psi[\blacksquare_{x_i} \mapsto e_i]\ \wedge \\
+%   & \quad\quad \forall\ env \in Env(d), \textsc{Interp}(d, env, n) = \textsc{Interp}(e, env, n)
+%   \end{align*}
+
+% Correctness for combinational designs
+%   also follows, but is a special case
+%   where the output results do not
+%   depend on cycling the clock signal,
+%   elided here for simplicity.
+
+Furthermore, we say
+  that $\lrfn$ is
+  \emph{sketch-complete}
+  if $\lrfn(\Psi,d,t)$
+  is defined whenever
+  there exists a
+  well-formed completion
+  $p$ of $\Psi$
+  such that $p\cong_t d$.
+That is, synthesis is
+  correct if it never
+  returns an erroneous result
+  and sketch-complete
+  if it returns a
+  correct result
+  whenever one exists.
+
+{%\color{blue}
+% From Gilbert
+We have implemented $\lrfn$
+    with Rosette 
+    (see \cref{sec:formalization-program-synthesis}),
+    which guarantees our system is correct and complete
+    under the following assumptions:
+\begin{enumerate}
+    \item Correctness of Rosette and underlying SMT solvers;
+    \item That our encoding of \lr{} is bug-free;
+    \item That the lowering of \textsc{Interp}
+    to SMT formulas by  Rosette always terminates.
+    This is possible when partial evaluation of \textsc{Interp} on arguments $p$, $t$ and $n$ terminates (independently of the value of $e$).
+    %   This is implemented in Rosette by
+    %   partially evaluating \textsc{Interp} on
+    %   inputs $p$, $t$, and $n$ without evaluating $e$,
+    %   the environment.
+    %   Below, we prove that this partial evaluation
+    %   (which eliminates the recursion) terminates
+    %   \emph{and} does not structurally depend on
+    %   the value of $e$.
+\end{enumerate}
+
+        %unconditional of the input,
+        %yielding a finite
+        %unquantified SMT problem
+        %(which is necessarily decidable).
+}
+
+\begin{lemma}
+\label{lemma:interp-is-primitive-recursive}
+Let $p$ be a well-formed program, 
+    $e$ an environment,
+    $t$ a \Time,
+    and $n$ be a node belonging to $p$.
+Then \textsc{Interp} is primitive recursive 
+    (i.e. terminates) in the arguments $p$, $t$, and $n$.\tighten
+    % p comes up in the penultimate case discussed, so I think it's appropriate
+    %\hl{Should we remove $p$?}
+\end{lemma}
+
+\begin{proof}[Proof of Lemma~\ref{lemma:interp-is-primitive-recursive}]
+Recall that a function $f(x,y,z)$ is
+    primitive recursive in arguments $x$ and $y$
+    (under a lexicographic ordering) 
+    if in the definition of $f$ every
+    recursive call $f(x',y',z')$ is made
+    with values $(x',y')$ such that $x' < x$ 
+    or $x' = x \wedge y' < y$.
+    If $x$ and $y$
+    are drawn from the natural numbers 
+    (or another well-ordered set),
+    then the recursion is guaranteed to terminate.
+
+Under what order is 
+  \textsc{Interp} primitive recursive?
+Because our program
+    is well-formed, it must be free
+    of combinational loops (see \cref{property:free-of-combinational-loops}).
+Formally, this means we have an acyclicity
+    witness function $w : p.all\_ids \to \mathbb{N}$
+    that monotonically increases in the direction of
+    dataflow in our circuit.
+Each node $n$ argument passed to \textsc{Interp}
+    has an \textsf{Id} that is unique and distinct
+    from the \textsf{Id}s used in $p$ or any of $p$'s
+    subprograms (\textbf{W2});
+    we denote this \textsf{Id} as $id_n$.
+We can associate each $n$ argument
+    to a recursive call of \textsc{Interp}
+    with a number $w(id_n)$.
+We claim that \textsc{Interp} is
+    primitive recursive under
+    the lexicographic ordering on $(t, w(id_n))$.
+    
+To prove this claim we need to demonstrate that
+    if \textsc{Interp} with time and node
+    arguments $t'$ and $n'$ makes a recursive
+    call to  \textsc{Interp} with time and
+    node arguments $t''$ and $n''$, then the following
+    condition holds:
+    \small
+\begin{equation}
+\label{eqn:primitive-recursion-condition}
+    t'' < t' \vee \left(t'' = t' \wedge w(id_{n''}) < w(id_{n'})\right).
+\end{equation}
+\normalsize
+To do this it suffices to examine each case of \textsc{Interp}'s definition.
+
+When $n'$ is a $\SynBv$ constant,
+    \textsc{Interp} makes no recursive calls,
+    and the condition in \cref{eqn:primitive-recursion-condition}
+    holds vacuously.
+    
+When $n'$ is a \IRReg{} node \textsc{Interp} either terminates
+  (when $t'=0$) or makes a
+  recursive call with time value $t'' = t' - 1$,
+  maintaining the condition in \cref{eqn:primitive-recursion-condition}.
+  
+When $n'$ is an operator node, 
+  \textsc{Interp} recursively interprets
+  the operands with time arguments $t'' = t'$.
+However, each operand's id $id''$ belongs to $\textsc{inputs}(n')$,
+    and, by~\cref{property:free-of-combinational-loops},
+    $w(id_{n'}) > w(id'')$,
+    so our condition holds.
+  
+This leaves us with the less obvious
+  cases in which $n'$ is either a \IRPrim or $\SynVar$,
+  which work together in tandem.
+When $n' = \text{\IRPrim{}}~bs~p'$,
+    \textsc{Interp} makes a recursive
+    call with node argument $p'.root$
+    and time argument $t$.
+By ~\cref{property:free-of-combinational-loops},
+    $w(p'.root) < w(id_{n'})$,
+    and the condition in \cref{eqn:primitive-recursion-condition} holds.
+\textsc{Interp} also defines a new environment for execution
+    of $p'$ via $\lambda$-abstraction, and this in turn
+    will recursively invoke \textsc{Interp}.
+These environments are only invoked by the rule for variables,
+    which we handle presently.
+    
+When $n' = \SynVar~x$, the environment is 
+    invoked on variable $x$.
+Here, there are two possible cases.
+First, we are interpreting the
+    top-level program $p$. 
+As this is the initial, top-level environment, there is no further recursion.
+Second, we are
+    interpreting a sub-program $p'$
+    and $e'~x~t = \textsc{Interp}~p~e~t~(p[bs~x])$
+    is actually a recursive call into the
+    program $p$ one level up,
+    with its environment $e$.
+In this latter case,
+    note that $w$ is defined such that
+     $w(id_{p[bs~x]}) = w(bs~x) < w(id_{\SynVar~x})$
+    (item 3 of \cref{property:free-of-combinational-loops}),
+    satisfying our property.
+All cases are complete.
+\end{proof}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% END PROOFS
+
+
+From this, we conclude that
+  all possible substitutions for $\Psi$
+  are attempted, and $\lrfn$ is sketch-complete.
+%Furthermore, $\lrfn{}$ is \emph{sketch-complete},
+%  by which we mean that
+%  if there are nodes $n_1, n_2, \ldots, n_k \in \ImplLang$
+%  such that 
+%  $\Psi[\blacksquare_{x_1} \mapsto n_1,
+%  \blacksquare_{x_2} \mapsto n_2,
+%  \ldots, \blacksquare_{x_k} \mapsto n_k]$
+%  implements design $d$, then
+%  $\lrfn(\Psi, d, t)$
+%  will find some implementation
+%  assignment of holes in $\Psi$
+%  to implement $d$.
+%This, again, follows directly from the definition
+%  of program synthesis and the fact that
+%  our queries to Rosette require only 
+%  the theory of bitvectors,
+%  which is decidable~\cite{Jonas2019thesis, BradleyDecidability}.
+%Formaly, if 
+
+%  \begin{align*}
+%  & \exists e_1, e_2, \ldots, e_k \in \ImplLang,
+%    \forall\ env \in Env, \\
+%  & \quad \textsc{Interp}(d, env, n) = \textsc{Interp}(\Psi[\blacksquare_{x_i} \mapsto e_i], env, n)
+%  \end{align*}
+%then 
+%\begin{align*}
+%& \exists\ e' \in \ImplLang,\ \forall\ env \in Env, \\
+%& \quad \lrfn(\Psi, d, n) = e'\ \wedge 
+%  \textsc{Interp}(d, env, n) = \textsc{Interp}(e', env, n).
+%\end{align*}
+
+
+\paragraph{Trusted Computing Base.}
+
+The \textit{trusted computing base} (TCB) of a
+  system is the set of components
+  it assumes to be correct~\cite{MacKenzieComputingTrust}.
+A bug anywhere in the TCB
+  could cause the guarantees
+  made by that system to be violated.
+\lr's  TCB includes:
+  Rosette and the underlying
+      SAT/SMT solvers that Rosette queries
+      (Bitwuzla, cvc5, Yices2, and STP);
+  the internal Yosys passes \lr
+      uses to extract primitive semantics
+      and translate design specifications
+      from behavioral Verilog into
+      $\SpecLang$;
+  the semantics for $\UberLang$,
+    which we assume conservatively
+    models non-cyclic (DAG) designs;
+  our code to translate from
+      the $\ImplLang$ to
+      structural Verilog; and
+  the vendor-provided Verilog
+    simulation models for FPGA primitives.
+Each TCB component 
+  has also been thoroughly tested,
+  as described in \cref{sec:evaluation}.
+Importantly,
+  sketches and sketch generation
+  are \textit{not} in \lr's TCB: %
+  even if there were a
+  bug in \lr's sketch-related components,
+  it would not violate
+  \lr's correctness guarantees.
+
+
+\subsection{Multiple Clock Cycle Guarantees with $\lrfnbmc$}
+\label{subsec:lrfn-bmc}
+
+
+The preceding completeness and 
+    correctness properties for
+    $\lrfn$ 
+    guarantee that
+    running the
+    synthesized program
+    $p$ and the design $d$
+    for $t$ clock cycles
+    produces the same output.
+To extend this guarantee, \lr supports
+    a form of
+    bounded model checking, 
+    where
+    synthesis ensures that
+    $p$ is semantically equivalent
+    to $d$ for $c$ additional clock cycles
+    starting at time $t$.
+We formalize this
+    with the function $\lrfnbmc$,
+    which takes a sketch $\Psi$,
+    a behavioral design $d$,
+    a number of clock cycles $t$,
+    and a model checking
+    time bound $c \geq 0$
+    and returns an implementation
+    $p \in \ImplLang$
+    that is equivalent to $d$
+    at time steps $t, t+1, \ldots, t + c$.
+    
+
+Our correctness and completeness guarantees are
+    similar to those for $\lrfn$:
+
+    \small
+  \begin{align*}
+    & p.fv = d.fv\ \wedge \\
+    &\forall e\ s.t.\ \textrm{domain}(e) = p.fv, \\
+    &\quad\bigwedge_{i=t}^{i=t+c}
+      {\textsc{Interp}\ p\ e\ i\ p.root = \textsc{Interp}\ d\ e\ i\ d.root}.
+  \end{align*}
+  \normalsize
+
+\subsection{Beyond \lr}
+\label{sec:sem-beyond}
+
+%This section formalized \lr's domain-specific language for designs and its overall synthesis process. However, 
+$\UberLang$, its semantics,
+  and the synthesis approach we describe here 
+  are useful for applying program synthesis
+  to other hardware design problems.
+For example,
+  the synthesis problem detailed above could be ``flipped''
+  to decompile structural designs back 
+  to higher-level behavorial designs,
+  i.e., synthesizing from $\ImplLang$
+  to an expression in $\SpecLang$.
+Such decompilation has seen recent
+  interest for
+  recovering equivalent but faster-to-simulate
+  models and for porting models across
+  different architectures~\cite{sisco2023loop}.
+As another example,
+  the synthesis approach could be
+  adapted to help port designs by
+  synthesizing expressions in
+  $\ImplLang$ that use one set of primitives
+  on one architecture from 
+  other designs in $\ImplLang$ that use
+  a different set of primitives from
+  a different architecture.
+Thus, the formalization in this section
+  transcends the particular challenges
+  of FPGA technology and provides
+  a reusable foundation for exploring
+  a much broader range of hardware design challenges
+  from a program synthesis perspective.
+  

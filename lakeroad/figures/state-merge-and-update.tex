@@ -1,0 +1,47 @@
+\begin{figure}
+\begin{minted}[fontsize=\footnotesize]{python}
+def merge(state0, ...):
+  new_s = {}
+  for s in [state0, ...], key in s:
+    (new_val, new_vers) = s.get(key)
+    (_, old_vers) = new_s.get_or_default(key, (_, -1))
+    if new_vers > old_vers:
+      new_s[key] = (new_val, new_vers)
+  return new_s
+
+def update(state, key, val):
+  new_state = state.copy()
+  (_, old_vers) = state.get_or_default(key, (_, -1))
+  new_state[key] = (val, old_vers + 1)
+  return new_state
+\end{minted}
+% In case we want to add examples
+% >>> v0 = register(signal(0), signal(0xa)); v0
+% signal(0, {"clk": 0, "d": 0xa, "q": 0 })
+% >>> register(signal(1, v0.state), signal(0xa, v0.state))
+% signal(0xa, {"clk": 1, "d": 0xa, "q": 0xa })
+    \caption{
+% Pseudocode implementation 
+%   of a simple register 
+%   using the \texttt{signal} data structure.
+% The register takes two \texttt{signal}s as input:
+%   \texttt{clk} and \texttt{d}.
+% The states from the two inputs are first merged
+%   into a single map,
+%   which is used to look up old values of
+%   \texttt{clk}, \texttt{d},
+%   and the output \texttt{q}.
+% Finally, we compute
+%   the new value of \texttt{q}
+%   based on whether or not
+%   the clock ticked.
+Pseudocode implementation
+  of merging two state
+  maps.
+Versioning guarantees
+  resolution in the case
+  of state merge conflict.
+}
+
+    \label{fig:state-merge-and-update}
+\end{figure}

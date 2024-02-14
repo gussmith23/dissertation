@@ -1,0 +1,836 @@
+\section{Formalization}
+\label{sec:formalization}
+
+% SpecIR example:
+% (bvand a b) (a and b are (bitvector 8))
+% LRIR:
+% (hash-ref
+%  (hw-module-instance 
+%   "LUT2"
+%   memory = 4'b1000,
+%   i0 = a,
+%   i1 = b)
+%  'O)
+
+% (rosette-synthesize SpecIR-program LRIR-program)
+% -> assert SpecIR-program == LRIR-program
+% -> solve
+
+% I_S : SpecIR -> bitvector
+%  --> "just" Rosette/Racket. (bvand a b) evals automatically.
+%  we don't have to do (interpret (bvand a b))
+% I_LR : LRIR -> bitvector
+%  (lr:hash-ref ...)
+%  (interpret (lr:hash-ref ...))
+
+% exists M, 
+%  forall inputs, I_S(P_S, inputs, M) 
+%                   == I_LR(P_LR, inputs, M).
+% synthesis: find M
+
+% in the past/in the current version of the paper:
+% I_S and I_LR -> bitvectors
+%
+% New thing:
+% I_S and I_LR -> signals
+
+% This will change the synthesis problem
+% Old problem:
+% exists M, 
+%  forall inputs, I_S(P_S, inputs, M) 
+%                   == I_LR(P_LR, inputs, M).
+% synthesis: find M
+
+% now we have multiple possible synthesis problems
+% exists M, 
+%  forall inputs, (signal-value I_S(P_S, inputs, M))
+%                   == (signal-value I_LR(P_LR, 
+%                                     inputs, M)).
+% synthesis: find M
+
+% exists M, 
+%  forall inputs, 
+%   (let o0 = I_S(P_S, inputs + clk=0, M);
+%    let o1 = I_S(P_S, inputs + clk=1 + state(o0), M);
+%    let o2 = I_S(P_S, inputs + clk=0 + state(o1), M);
+%    ...
+%    (signal-value oN))
+%   == 
+%   (let o0 = I_LR(P_LR, inputs + clk=0, M);
+%    let o1 = I_LR(P_LR, inputs + clk=1 + state(o0), M);
+%    let o2 = I_LR(P_LR, inputs + clk=0 + state(o1), M);
+%    ...
+%    (signal-value oN))
+% synthesis: find M
+
+In this section, we formalize \lr
+  and provide a mathematical argument
+  for its correctness.
+We start by introducing and 
+  formalizing the semantics used in \lr,
+  beginning with introducing
+  its base value type:
+  the \signal datatype (\cref{sec:signal}).
+Then, we define syntax and semantics
+  of the imported Verilog (\cref{sec:verilog-semantics})
+  and of the \lr IR, \lrir (\cref{subsec:spec-ir-and-lrir}).
+Finally, we present
+  a mathematical model
+  of the \lr workflow
+  (formalized via the \lrfn function)
+  and prove its correctness
+  (assuming the correctness of the underlying program synthesis tool and HDL compiler) in \cref{sec:correctness-argument}.
+%Then we introduce the \lrfn function
+  %to formalize the \lr workflow
+  %introduced in \cref{sec:overview}
+  %and argue for its correctness
+  %via stating the \lr-Correct property
+  %(\cref{sec:correctness-argument}).
+
+  
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+% Subsection: Signals
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+\subsection{The \texttt{signal} Datatype}
+\label{sec:signal}
+
+To formalize
+  expressions
+  in both the
+  imported Verilog 
+  and \lrir,
+  we first introduce their base value type:
+  the \signal datatype.
+\signal{}s are fundamental to \lr's ability
+  to synthesize sequential designs.
+While bitvectors alone are expressive enough
+  to capture the semantics of 
+  \textit{combinational} expressions,
+  they are not expressive enough to capture
+  \textit{sequential} expressions.
+Thus, we introduce \signal{}s
+  as a more expressive datatype
+  for capturing hardware expressions.
+  
+A \signal represents
+  the value on an $n$-bit
+  wire and
+  the current state
+  of the stateful elements
+  in the context where the \signal
+  was produced.
+Consequently, we represent a
+  \signal{} as a pair $(v,m)$,
+  where $v$ is a bitvector
+  capturing the value on the wire
+  and $m$ is a map
+  capturing the current state.
+
+% \input{figures/state-merge-and-update}
+\input{figures/signal-state}
+The state map $m$
+  maps keys (which uniquely identify
+    an expression's internal state elements)
+  to a tuple $(\mathit{sv}, \mathit{vers})$,
+  where $\mathit{sv}$
+  is the value of the state
+  and $\mathit{vers}$ is
+  its version number 
+  (necessary for handling conflicts during merging).
+Beyond indexing into a state map,
+  we define two core operations of state maps:
+  \textit{merging} and \textit{updating,}
+  both defined via pseudocode
+  in \cref{fig:signal-complete}.
+Merging two state maps
+  simply unions the two maps together,
+  while handling conflicts by taking the value
+  with the highest version number.
+Updating a state map
+  involves setting a key to a value
+  while incrementing the version (or defaulting to 0).
+  
+  
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+% Subsection: Verilog Semantics
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+\subsection{Imported Verilog Semantics}
+\label{sec:verilog-semantics}
+
+\input{figures/verilog-syntax}
+
+\input{figures/yosys-semantics}
+
+\lr extracts semantics from Verilog,
+  both from the user-provided Verilog file
+  to be compiled,
+  and the vendor-supplied FPGA primtive
+  simulation models.
+The process for extracting these semantics
+  is described in detail in
+  \cref{sec:implementation:importing-semantics}.
+In this section, we formalize 
+  the semantics
+  which result from this extraction process.
+While this formalization
+  is a contribution of this paper,
+  the underlying semantics
+  of the subset of Verilog
+  \lr supports
+  are designed and implemented by
+  the Yosys synthesis tool~\cite{wolf2013yosys}.
+
+\cref{fig:verilog-syntax}
+  lists the syntax for the subset of Verilog 
+  supported for import by \lr,
+  while \cref{fig:verilog-semantics}
+  defines its semantics.
+Imported Verilog expressions evaluate to \signal{}s.
+In general, the imported Verilog expressions
+  cover a wide swath
+  of bitvector operations,
+  including bitwise operations,
+  arithmetic operations,
+  comparisons,
+  and muxes.
+
+\texttt{dff} represents
+  a D flip-flop: a state element
+  with a clock and data input,
+  which stores the value on the data input
+  when the clock changes from low to high.
+The semantics for this expression
+  are given by \textbf{dff-hold}
+  and \textbf{dff-tick}.
+\textbf{dff-hold}
+  describes 
+  the case when the clock doesn't tick,
+  i.e., there's no \textit{positive edge}
+  going from 0 to 1.
+In this case,
+  the flip flop expression holds
+  its previous value $q'$,
+  which it gets from the state map.
+\textbf{dff-tick}
+  describes the case in which
+  the clock ticks,
+  and thus the expression
+  takes on the new value $d'$.
+Note, crucially,
+  that the value becomes $d'$
+  (the \textit{previous} value of $d$,
+  read from the state map)
+  and not the current value of $d$.\footnote{
+  These semantics are defined by
+  Yosys's \texttt{clk2fflogic} pass.
+}
+
+
+The \texttt{dff} expression is the 
+  only expression
+  in both Verilog and \lrir semantics
+  that updates the state map.
+All other expressions
+  are \textit{combinational},
+  meaning they do
+  not alter state.
+% This is significant as it allows us
+%   to simplify our mental model of 
+%   imported Verilog and \lrir semantics.
+% Knowing that \texttt{dff} is the only
+%   expression to update the state map,
+%   we can interpret
+%   all other expressions
+%   in the imported Verilog
+%   and \lrir
+%   as being purely combinational.
+% (Note that expressions generally \textit{merge}
+%   state maps, seen in most rules in 
+%   \cref{fig:verilog-semantics,fig:lrir-semantics},
+%   but crucially, only \texttt{dff} \textit{updates}
+%   values in the map).
+  
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+% Subsection: Spec IR and LRIR
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+\subsection{\lrir}
+\label{subsec:spec-ir-and-lrir}
+
+% \lr defines two Intermediate Representations (IRs),
+%   \Spec IR and \lrir;
+%   syntax for both is defined
+%   in \cref{fig:lakeroad-dsl-grammar}.
+% \lr uses \Spec IR
+%   to give specifications for
+%   instructions to synthesize.
+% Terms in \Spec IR are either
+%   bitvector constants,
+%   variables which represent
+%   inputs to the instruction,
+%   or operators
+%   applied to smaller terms.
+% \Spec IR is a subset of the SMT-LIB language~\cite{smtlib},
+%   from which it derives its semantics.
+
+\input{figures/lakeroad-dsl-grammar}
+
+\input{figures/lakeroad-dsl-semantics}
+
+\lr uses the \lr Intermediate Representation (\lrir) to represent
+  wire operations and computations on FPGAs.
+The syntax for \lrir is shown in
+  \cref{fig:lakeroad-dsl-grammar},
+  while its semantics are in \cref{fig:lrir-semantics}.
+In general, the \lrir syntax and semantics 
+  are straightforward.
+\lrir expressions evaluate to \signal{}s or
+  lists of \signal{}s.
+Fundamental operations over lists
+  (construction, 
+  indexing via \texttt{list-ref})
+  and \signal{}s
+  (\texttt{concat}, \texttt{extract}) 
+  are supported.
+
+The only \lrir expression
+  which can perform actual computation
+  or manipulate state
+  (beyond the state merging in \texttt{concat})
+  is \texttt{prim}.
+\texttt{prim}
+  represent instances
+  of \textit{hardware primitives} (e.g., LUTs and DSPs).
+A \texttt{prim} has a \textit{name}
+  (e.g., ``LUT4''), a \textit{configuration},
+  and an \textit{input}.
+
+The semantics of a \texttt{prim} expression
+  are the semantics extracted from the
+  primitive's vendor-supplied Verilog model,
+  as introduced in the previous section.
+Evaluating \texttt{prim} expressions
+  ``drops through'' to these imported
+  semantics.
+\lrir stores these semantics in
+  a context 
+  \[\Gamma: \left(\forall p: \textsc{Prim},
+            \textsc{Config}\ p\right)
+            \rightarrow [\texttt{signal}] 
+            \rightarrow [\texttt{signal}]\]
+  that takes a configuration
+  for a primitive $p$
+  and returns a function from
+  \texttt{signal}s to \texttt{signal}s
+  that captures the semantics
+  of $p$ with that configuration.
+A configuration of primitive $p$,
+  \textsc{Config} $p$,
+  is the list of parameters that
+  an instantiation of $p$ expects
+  (e.g., a Xilinx Ultrascale+ DSP48E2's
+  \texttt{AREG}
+  and \texttt{BREG}
+  parameters, which configure pipelining).
+  
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+% Subsection: Correctness of the LR Function
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+\subsection{Mathematical Model of \lr}
+\label{sec:correctness-argument}
+
+\newcommand{\SketchGenFn}{f_{\text{G}\xspace{}}}
+\newcommand{\LRSynthFn}{f_{\text{S}\xspace{}}}
+\newcommand{\HDLCompFn}{f_{\text{C}\xspace{}}}
+
+Now that we have formalized
+  \lr's fundamental components---%
+  signals,
+   imported Verilog semantics,
+   and \lrir---%
+  we now formalize the \lr workflow
+  as a function \lrfn{}.
+We define the function to be
+the composition of two sub-functions, which we describe in the below sections:
+% \[\lrfn: \Spec \times \Sketch \times \VendorSemantics \rightharpoonup \HDL.\]
+$$\lrfn : \Spec \times \Sketch \times \VendorSemantics \times \textsc{Input} \rightharpoonup \HDL = \HDLCompFn \circ \LRSynthFn$$
+where $\Spec$ represents hardware designs, $\Sketch$ represents program sketches, $\VendorSemantics$ represents vendor-provided semantics for FPGA components, and $\textsc{Input}$ represents partially symbolic inputs (discussed below).
+
+\lrfn does not include sketch generation,
+  instead taking the sketch as an input.
+This is for the benefit of stating the correctness properties:
+  There is no \textit{a priori} notion of the ``correctness'' of a sketch---%
+  a sketch is ``correct'' 
+  so long as program synthesis succeeds 
+  in filling the holes in the sketch.
+A sketch does, however, influence
+  the search space for program synthesis, as we note in \hl{todo fill in forward reference}.
+  
+% This is because our correctness properties
+%     state that any synthesized program is correct.
+% If an incorrect sketch is generated then synthesis
+%     will fail and the correctness
+%     properties will hold vacuously.
+
+% \hl{New user input needed: number of clock cycles, among other things?}
+
+% \hl{should sems be gamma?}
+
+%\hl{ben is pointing out that these functions don't actually compose in their current states b/c of their input/output types. we could do a few things: (1) change figure 2 so everything goes through sketch generator. (2) have the two differ but acknowledge the difference. or (3) go full formal and have the semantics "pass through"}
+
+%\hl{see notes under figure. we can just drop fg, and mention that fg isn't necessary to correctness}
+
+% %%%%%  Sketch Generation
+%
+% NOTE: I've removed this subsection, but we can include it
+% later if we think we should. It's not part of the lr function
+% so if we do include it, it should be put elsewhere!
+%
+% \subsubsection{\SketchGeneration}
+% \lrfn begins by performing \SketchGeneration
+%   on each available sketch 
+%   template\footnote{While sketch
+%   templates can in theory
+%   be provided by users, the \lr tool supplies
+%   a set of base templates and, for simplicity
+%   of the formalization, we treat
+%   them as being internal to the tool.}.
+% We formalize \SketchGeneration with the function
+% \hl{should also include the spec, b/c we need to know the input/output widths}
+%   \[\SketchGenFn :\SketchTemplate \times \ArchDescr \rightharpoonup \Sketch,\]
+%   where \(\rightharpoonup\)
+%   indicates that this operation is partial.
+% $\SketchGenFn$ is partial because a sketch template
+%   may use a primitive interface that isn't supported
+%   by a given architecture's description.
+  
+%%%%%  LRSynthesis
+\subsubsection{\LRSynthesis: $\LRSynthFn$}
+\label{sec:lr-synth-defs}
+\lrfn begins by attempting to synthesize an \lrir{} program
+  that implements a provided specification using
+  a program sketch.
+We formalize this component with 
+  the $\LRSynthFn{}$ function:
+  \[\LRSynthFn: \Sketch \times \Spec \times \VendorSemantics \times \textsc{Input} \rightharpoonup \lrir.\]
+$\LRSynthFn$ is partial since
+  synthesis may not find an
+  implementation for a spec
+  using the given sketch---%
+  Rosette may conclude that no implementation exists
+  or it may time out.
+%\hl{Maybe add signal 
+  %mention in this section 3.2.2.}
+  
+\newcommand{\lrinterp}[0]{\mathcal{I}_{Ax}}
+
+We formalize synthesis
+  in terms of an interpretation
+  function 
+  $\lrinterp$,
+  which expects
+  an \lrir program $p$,
+  vendor-provided semantics $e$ 
+  (used for interpreting the
+  semantics of any \texttt{prim}
+  constructs in $p$),
+  a vector $\mathbf{i}$ of
+  partially symbolic values,
+  and a partially symbolic
+  state map $m$
+  as input values,
+  and produces a partially
+  symbolic signal as output.
+A \textit{partially
+  symbolic signal} is a pair $(v, m)$
+  of a partially symbolic value $v$
+  and a partially symbolic
+  state map $m$.
+A \textit{partially symbolic value} $v$
+  is either a concrete bitvector
+  or a symbolic bitvector.
+A \textit{partially symbolic map} $m$
+  is a map from concrete keys
+  to partially symbolic values.
+% For a symbolic bitvector $v$,
+%   $f(v) = g(v)$ means that $\forall v^\prime, f(v^\prime) = g(v^\prime)$,
+%   where $v^\prime$ is a concrete bitvector;
+%   that is, we quantify 
+%   over all possible instantiations 
+%   of the symbolic values.
+
+%\hl{we need to get $(v,m)$/$(v,s)$ consistent across the paper. $s=(v,m)$ is probably better. Needs to be propagated to first half of formalization. -gs}
+
+
+We define $\lrinterp$ recursively:
+\begin{align*}
+    \lrinterp(p, e, [\mathbf{v_1}], m) &= \llbracket p \rrbracket (\mathbf{v_1}, m) \\
+    \lrinterp(p, e, [\mathbf{v_1}, \mathbf{v_2}, \ldots, \mathbf{v_n}], m)  &= \lrinterp(p, e, \\
+    & \hspace{15mm} [\mathbf{v_2}, \ldots, \mathbf{v_n}], \pi_S(\llbracket p \rrbracket (\mathbf{v_1}, m)))
+    % a little nasty but it breaks margins otherwise
+\end{align*}
+% $$\lrinterp(p, e, [\mathbf{v_1}]) = \llbracket p \rrbracket (\mathbf{v_1})$$
+% $$\lrinterp(p, e, [\mathbf{v_1}, \mathbf{v_2}, \ldots, \mathbf{v_n}]) = \lrinterp(p, e, [S_{\mathbf{v_1}}(\mathbf{v_2}), \ldots, S_{\mathbf{v_1}}(\mathbf{v_n})])$$
+%\hl{i think we can make these prettier -- perhaps use aligned env?}
+  where $\llbracket p \rrbracket(\textbf{v})$ evaluates $p$ 
+  with respect to its semantics 
+  (Figure~\ref{fig:lrir-semantics},
+  substituting the elements of $\mathbf{v}$ for each \texttt{signal-var} in $p$), and $\pi_S$ projects
+  the state map from a signal.
+We similarly define $\mathcal{I}_V(d, \mathbf{i}, m)$,
+  which behaves identically to $\lrinterp$,
+  except that it takes as input a Verilog design $d$ 
+  ($\llbracket d \rrbracket$
+  evaluates the design
+  according to the Verilog semantics
+  in Figure~\ref{fig:verilog-semantics})
+  and it does not use $e$,
+  since there are no
+  \texttt{prim} constructs in Verilog.
+
+Given a hardware design $d \in \Spec$,
+  vendor-provided semantics $e \in \VendorSemantics$,
+  $s \in \Sketch$,
+  and a input vector of partially symbolic values,
+  $\LRSynthFn$ is defined as sending the following query to Rosette:
+$$\exists p \in \lrir\ \text{s.t.}\ \lrinterp(p, e, \mathbf{i}) = \mathcal{I}_V(d, \mathbf{i}).$$
+Synthesis succeeds if Rosette
+  finds a program $p$ 
+  (constructed by filling the holes in $s$)
+  that satisfies this property.
+How the input 
+  $\mathbf{i}$
+  is constructed 
+  is an important design decision;
+  we describe the specific decisions
+  made by \lr
+  in 
+  \cref{sec:implementation:program-synthesis}.
+(Note that our formalization has no need
+  to ``privilege'' the clock---%
+  it can be treated like any other signal.)
+
+% [[d]]([t]) = [[d]]'(t)
+% [[d]](s) = s
+% Interp(e, i (vector)) each elem of i = tuple of signals
+% Interp(e, [] ::' i) = [[e]](i)
+% Interp(e, is ::' i) = let (_, s) = Interp(e, is) in
+%   Interp(e, [i.update(s)]
+% update: update((sig0, sig1, sig2), s) -> overwrites sig0, sig1, sig2 states with s
+% vector i: list of concrete length
+% element of vector i: tuple of concrete length
+% element of that tuple: signal
+% that signal: concrete or symbolic value, 
+%   state map has concrete keys, concrete or symbolic values
+
+% symbolic inputs are just variables, always bitvectors
+% if Rosette succeeds, then it's quantified for all symbolic values
+
+
+% The $\LRSynthFn{}$ takes
+%   $(d, n) \in \Spec$ and attempts
+%   to synthesize a program in \lrir
+%   with the semantics of $d$.
+% When $d$ is sequential, successful
+%   synthesis yields a program that
+%   implements $d$ after $n$ clock cycles.
+% \hl{Ben: \@Gus I'll need you to give more detail on this}
+% $\LRSynthFn{}$ does this by applying the
+%   interpreter to the sketch multiple times
+%   to simulate each cycle of the clock.
+% We can treat a sketch $s$ as a function that
+%   outputs values on the wire and 
+%   updated state (e.g., incremented clock).
+% Then Synthesis tries to find an instantiation
+%   $S$ of $s$ such that $S^n(i)$
+%   implements $d(i)$.
+% \hl{I'm not saying the above correctly, we need
+%   fix! But this is the basic idea}.
+% Here we use the notation $S^n(i)$ to mean
+%   the following:
+%   \begin{itemize}
+%       \item $S^1(i, \sigma_0)$ is defined to  be
+%         the 2-tuple $(v, \sigma_1)$
+%         of the output value $v$
+%         and state $\sigma_1$
+%         resulting from applying
+%         $S$ to input $i$
+%         with initial state $\sigma_0$.
+%       \item $S^{n+1}(i, \sigma_0)$ is defined
+%         to be the 2-tuple $(v, \sigma_{n+1})$ 
+%         of the output value $v$ and the
+%         state $\sigma_{n+1}$ resulting from
+%         applying $S$ to input $0$ and state
+%         $\sigma_n$.
+%   \end{itemize}
+%   \hl{Ben: This is not quite what we discussed, but I think it's correct for the formalism. We can go into the more detailed approach w/ multiple interpreter calls in implementation.
+
+% I'm also happy to go into more detail here, but I want to start simple and see what this misses.}
+  
+% When $d$ is combinational,
+%   successful synthesis yields a 
+%   program that implements the
+%   semantics of $d$ being run a
+%   single time (no updated state or
+%   clock cycles).
+
+
+%%%%%  HDL Compilation
+\subsubsection{\HDLCompilation}
+Next, \lrfn compiles each synthesized design
+  to an HDL. This is formalized with the function
+  \[\HDLCompFn: \lrir \rightarrow \HDL.\]
+This compilation is done as a very 
+  straightforward syntactic mapping:
+  each component
+  of \lrir maps directly to the
+  resulting Verilog implementation.
+
+% \subsubsection{Combining Components into \lrfn}
+%
+% NOTE: We no longer need this section
+%
+% The \lrfn function is built by combining the three above components, as sketched in the following pseudocode:
+
+% \lstset{style=pystyle}
+% \begin{lstlisting}[basicstyle=\normalsize\ttfamily]
+% def LR(spec, arch, sems):
+%   hdl_impls = {}
+%   for t in sketch_templates:
+%     sketch = generate_sketch(t, arch)
+%     lrir = synth_lrir(spec, sketch, sems)
+%     if lrir is not None:
+%         hdl_impls.add(compile2hdl(lrir))
+%   return hdl_impls
+% \end{lstlisting}
+% \lstset{style=lispstyle}
+
+  
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+% SubSection: Correctness of LRFN Function
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+\subsection{Properties of \lrfn{}}
+
+From the above definitions,
+  we can prove certain correctness properties
+  about \lrfn{} and $\LRSynthFn$
+  if we make certain assumptions about our some components of \lr (our trusted computing base):
+\begin{enumerate}
+\item \textbf{Rosette}: We assume that Rosette is correct (if it returns a program for a synthesis query, the program satisfies the specification) and sketch-complete modulo timeout (given a sketch, if there exists any solution using that sketch, Rosette will either find a solution or time out---it will not falsely conclude that no solution exists).
+\item \textbf{Yosys}: We assume that Yosys's conversion of Verilog into bitvector expressions is correct.
+\item \textbf{Vendor-supplied semantics}: We assume that these Verilog files correctly model the semantics of the FPGA components they model.\footnote{
+  Note that this assumption may not always be true,
+    as we will see in
+    \cref{sec:completeness}.
+}
+\item \textbf{The implementation of $\lrinterp$}: In synthesis, we include an interpreter for the semantics of \lrir. We assume that our implementation correctly implements the claimed semantics in Figure~\ref{fig:lrir-semantics}.
+\item $\mathbf{\HDLCompFn}$: We assume that our compilation from \lrir to Verilog is correct and complete. We do not prove this, though it could be done in principle via the semantics in Figures~\ref{fig:lrir-semantics} and~\ref{fig:verilog-semantics}; we rely instead on the simplicity of the implementation.
+\end{enumerate}
+
+\subsubsection{Correctness of Synthesis}
+
+We can state this property as follows: 
+If $\LRSynthFn(d, s, e, \mathbf{i}) = p$
+  for design $d$, 
+  sketch $s$,
+  vendor-provided semantics $e$,
+  and a partially symbolic input $\mathbf{i}$, 
+  then for all inputs $\mathbf{i}^\prime$ 
+  that are valid concrete instantiations of $\mathbf{i}$,
+  $\mathcal{I}_V(d, \mathbf{i}^\prime) = \lrinterp(p, e, \mathbf{i}^\prime)$.
+This follows directly from our assumptions about the correctness of Rosette and the correctness of Yosys (which is used to implement $\mathcal{I}_V$) and the definitions in \cref{sec:lr-synth-defs}.
+
+\subsubsection{Sketch-Completeness of Synthesis Modulo Timeout}
+
+Given design $d$,
+  sketch $s$,
+  vendor-provided semantics $e$,
+  and a partially symbolic input $\mathbf{i}$,
+  if there exists an instantiation of $s$ called $p$ for which $\mathcal{I}_V(d, \mathbf{i}^\prime) = \lrinterp(p, e, \mathbf{i}^\prime)$ 
+  for all
+  valid instantiations $\mathbf{i}^\prime$ of $\mathbf{i}$, 
+  then $\LRSynthFn(d, s, e, \mathbf{i})$ 
+  will either return some value or time out.
+This follows from the sketch-completeness (modulo timeout) of Rosette.
+
+\subsubsection{Correctness and Completeness of \lrfn{}}
+
+Given the above properties of $\LRSynthFn$
+  and our assumption of the correctness and completeness of $\HDLCompFn$,
+  it follows that their composition will have analogous properties:
+For design $d$,
+  sketch $s$,
+  vendor-provided semantics $e$,
+  and a partially symbolic input $\mathbf{i}$,
+  if $\lrfn(d, s, e, \mathbf{i}) = d^\prime$, then $\mathcal{I}_V(d, \mathbf{i}^\prime) = \mathcal{I}_V(d^\prime, \mathbf{i}^\prime)$ for all valid instantiations $\mathbf{i}^\prime$ of $\mathbf{i}$.
+Additionally, with $d$, $s$, $e$, and $i$,
+  if there exists some instantiation $p$ of $s$ for which
+  $\mathcal{I}_V(d, \mathbf{i}^\prime) = \lrinterp(p, e, \mathbf{i}^\prime)$ 
+  for all
+  valid instantiations $\mathbf{i}^\prime$ of $\mathbf{i}$,
+  then $\lrfn(d, s, e, \mathbf{i})$
+  will either return a value or time out.
+
+% \subsection{Correctness of the \lrfn{} Function}
+
+% \hl{Gus:Enumerate the 
+%  TCB,
+%  if we really want to show
+%  that we're serious
+%  about correctness Solver, semantics importer (a number of components within Yosys + our $\sim$300 line btor to Racket compiler)}
+%  \hl{Ben: The TCB is roughly enumerated after Property 3 is listed.}
+
+% The \lr-Correct property says that
+%   for instruction specification $s$, 
+%   HDL program $v$,
+%   architecture description $d$,
+%   vendor-supplied semantics $e$,
+%   and inputs $i$,
+%   if synthesis and HDL compilation
+%   with \lrfn on the instruction
+%   specified by $s$
+%   and architecture described by $d$
+%   results in a HDL implementation $v$,
+%   then simulating $v$ on inputs $i$
+%   produces the same result as evaluating $s$
+%   on inputs $i$. \hl{Should we talk here about how signals aren't relevant to the output comparison, just a way for interpretation to get to the output?}\\
+
+% \newtheorem{property}{Property}
+% \begin{property}[\lr-Correct]
+% For all \(s \in \Spec\),
+%         \(v \in \HDL\),
+%         \(d \in \ArchDescr\),
+%         \(e \in \VendorSemantics\)
+%         and inputs \(\mathbf{i}\)
+%   \[\lrfn(s,d,e) = v \implies 
+%      \denote{s}_{\text{bv}}(i) 
+%          = 
+%      \denote{v}_{\text{HDL}}(i).\]
+% \end{property}
+
+% \hl{should we have
+% (flr(...) = fc(fs(...)) = ...? or just one of those things? in which case, which one?}
+
+% The commutative diagram in \cref{fig:correctness-comm-diagram}
+%   shows how the \lr-Correct property
+%   is composed from the
+%   the Synth-Correct (bottom left triangle) and
+%   Compile-Correct (bottom right triangle) properties,
+%   which we describe below.
+  
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % COMMUTATIVE DIAGRAM FIGURE
+% \input{figures/correctness-comm-diagram}
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % Synth Correct Theorem Section
+% The Synth-Correct property states
+%   that when performing \LRSynthesis on a specification produces
+%   a result, that result is correct.\\
+
+
+% \hl{
+% TODO:
+% we have a big down arrow for what lakeroad program evals to over one timestep, we need a big down arrow that represents time stepping over multiple timesteps.}
+
+% %%%%%%%%%%%%%%%%%%%%%%
+% % Synth Correct Theorem
+% \begin{property}[Synth-Correct]
+%   For all \(k \in \Sketch\),
+%   \(s \in \textsc{Spec}\),
+%   \(c \in \ArchDescr\),
+%   \(e \in \VendorSemantics\),
+%   \(p \in \lrir\),
+%   and inputs \(\mathbf{i}\),
+%   \[\LRSynthFn(k, s, e) = p \implies \denote{s}_{bv}(i) = \denote{p}_{\lrir}(e)(i)\]
+% \end{property}
+% \label{thm:synth-correct}
+% % End Synth Correct Theorem
+% %%%%%%%%%%%%%%%%%%%%%%
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % Compile Correct Theorem Section
+
+% The Synth-Correct property asserts that 
+%   the \HDLCompilation component preserves semantics.\\
+
+% %%%%%%%%%%%%%%%%%%%%%%
+% % Compile Correct Theorem
+% \begin{property}[Compile-Correct]
+%   For all \(p \in \textsc{Impl}\) and all inputs \(i\),
+%   \[\HDLCompFn(p) = v \implies \denote{p}_\lrir(e)(i) = \denote{v}_\HDL(i).\]
+% \end{property}
+% \label{thm:compile-correct}
+% % End Compile Correct Theorem
+% %%%%%%%%%%%%%%%%%%%%%%
+
+% The Synth-Correct property depends on
+%   the correctness of the synthesis tool (in our case Rosette~\cite{torlak2014lightweight, torlak2013growing}),
+%   the correctness of vendor-supplied HDL FPGA primitive semantics,
+%   and the correctness of our \lrir interpreter.
+% All three of these pieces are real software and are thus subject
+%   to bugs in principle,
+%   but all are heavily tested and thus reasonable
+%   inclusions in our trusted computing base.
+% Rosette in particular is a widely-used
+%   by the Programming Languages and Program Synthesis communities.
+% \lr's core \lrir interpreter is straightforward and
+%   lifts bitvector and list manipulation
+%   functions from Rosette and Racket.
+% As such its correctness depends primarily on that of the host languages, though we  have also extensively tested it.
+% All hardware-specific portions of the \lrir interpreter are imported
+%   automatically from vendor-supplied HDL primitive specifications.
+% We assume that these specs are correct as they are provided as ground truth
+%   by vendors.
+% Again, we have also validated this 
+%   importing process through
+%   extensive testing.
+% Finally, the Compile-Correct property relies
+%   on the simplicity of \lrir: each component
+%   of \lrir maps directly to the
+%   resulting Verilog implementation,
+%   and compilation is a simple
+%   syntactic transformation.
+
+
+  
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% GRAVEYARD
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \begin{figure}
+% \hl{ben: ltop and ptol should also have some shift functionality}
+% \begin{verbatim}
+% spec ::= <bv-const> | <bv-var>
+%       | <binop> <spec> <spec>
+%       | <unop> <spec> <spec>
+%       | extract <nat> <nat> <spec>
+%       | concat <spec> ...
+%       | zero-extend <spec> <nat>
+%       | list <spec> ...
+%       | list-ref <spec> <nat>
+
+% binop ::= bvand | bvor | bvxor 
+%         | bvadd | bvsub | bvmul
+        
+% unop  ::= bvnot
+
+% impl  ::= bv <bv-const-or-var>
+%         | extract <nat> <nat> <impl>
+%         | logical-to-physical <ltop> <impl> ...
+%         | physical-to-logical <ptol> <impl> ...
+%         | primitive <name> <spec> ...
+
+% sketch ::= impl with holes
+        
+% ltop  ::= bitwise
+%         | bitwise-reverse
+
+% ptol  ::= bitwise
+%         | bitwise-reverse
+% \end{verbatim}
+% \caption{Caption}
+% \label{fig:syntax}
+% \end{figure}

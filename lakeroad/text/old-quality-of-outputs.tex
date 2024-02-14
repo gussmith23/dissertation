@@ -1,0 +1,423 @@
+\subsection{Quality of Output}
+To evaluate the quality of \lr's output,
+  we compare \lr against four tools---%
+  Yosys,
+  Vivado,
+  Diamond,
+  Quartus---%
+  on the task of mapping
+  a set of benchmark designs
+  to DSPs
+  on three FPGA architectures---%
+  Xilinx UltraScale+,
+  Lattice ECP5,
+  \hl{todo intel something?}.
+Note that we do not include
+  SOFA,
+  as the SOFA architecture
+  does not include DSPs.
+
+Our set of DSP benchmarks
+  is assembled from GitHub.
+Using GitHub's advanced search tool,
+  we searched through Verilog projects
+  on GitHub
+  which had submodules
+  intended to be compiled onto
+  the DSPs of various FPGA platforms.
+These submodules were identified
+  in a number of ways:
+  for example, by searching for
+  the Xilinx-specific
+  \texttt{(* use\_dsp = "yes" *)}
+  annotation.
+We attempt to compile \textit{every}
+  benchmark
+  on \textit{every}
+  architecture,
+  although most benchmarks
+  were written
+  for a specific FPGA architecture.
+
+\cref{tab:dsp-benchmarks}
+  shows our results.
+  
+\hl{We are comparable in quality to
+  existing, proprietary tools.}
+
+\hl{We enable broader support
+  for targeting DSPs
+  in open-source tools like Yosys.}
+
+
+
+
+  
+Furthermore, to highlight \lr's
+  utility to existing open-source tools,
+  we directly integrated 
+  integrated \lr 
+  into Yosys
+  as the 
+  \texttt{\lowercaselr}
+  subcommand,
+  using only 75 lines
+  of C++.
+Thus, when we mention
+  \lr in this section,
+  we actually mean
+  the
+  \texttt{\lowercaselr}
+
+\hl{The below section is  text from the old
+``support for complex primitives'' section.
+Tasks: (1) determine whether to keep
+the stuff about yosys integration,
+or where else we might put it
+(2) fold the ``synthetic'' benchmarks 
+into our benchmark suite, if we don't find
+existing benchmarks that do those things
+}
+
+
+In this section,
+  we evaluate \lr's ability
+  to utilize complex FPGA primitives.
+To do so,
+  we integrated \lr 
+  into Yosys
+  as the 
+  \texttt{\lowercaselr}
+  subcommand,
+  using 75 lines
+  of C++.
+We then compare 
+  the output of the 
+  \texttt{\lowercaselr}
+  subcommand
+  against the output of
+  Yosys's existing
+  \texttt{synth\_xilinx}
+  and
+  \texttt{synth\_ecp5}
+  subcommands,
+  which target Xilinx UltraScale+
+  and Lattice ECP5
+  respectively.
+These results highlight how \lr's approach
+  enables providing high-quality technology mapping
+  in Yosys with little manual implementation effort,
+  suggesting ease of adding support for new
+  future FPGA architectures.
+
+To evaluate \lr's ability
+  to map to complex primitives
+  on Xilinx UltraScale+,
+  we use the
+  \texttt{\lowercaselr}
+  and 
+  \texttt{synth\_xilinx}
+  subcommands
+  to attempt to map
+  a set of Verilog modules
+  to an UltraScale+ DSP.
+Specifically,
+  our set of modules
+  implement the set of computations
+  listed in tables 2-1 and 2-2
+  of Xilinx's
+  UltraScale Architecture DSP Slice User Guide~\cite{userguide}.
+These tables list
+  the functions implemented
+  by the UltraScale+ DSP;
+  thus, we know that all of
+  the modules in our set
+  should map one-to-one
+  to UltraScale+ DSPs.
+  
+The results for UltraScale+
+  are listed in
+  \cref{tab:yosys-xilinx}.
+As you can see,
+  the \texttt{\lowercaselr}
+  subcommand of Yosys
+  is able to map all expressions
+  to a single DSP
+  by automatically determining
+  the correct configuration
+  of the DSP's 20+ ports
+  and 40+ parameters.
+Meanwhile,
+  Yosys's
+  \texttt{synth\_xilinx}
+  can only map to DSPs
+  via manually written
+  patterns,
+  and currently, 
+  Yosys only implements patterns
+  for mapping multiplication.
+Thus,
+  \texttt{synth\_xilinx}
+  is able to capture the multiplication
+  portion of each target module,
+  but it maps the rest of the computation
+  (e.g., additions, subtractions,
+  or logic functions)
+  to LUTs and carry chains.
+Note that the runtimes
+  of the two passes are comparable,
+  except in the case of the $(a-b)^2-c$
+  expression,
+  when the \texttt{\lowercaselr}
+  subcommand
+  is an order of magnitude slower;
+  we speculate this is due to unpredictable
+  behavior in the underlying SAT solver.
+  
+To evaluate \lr's ability
+  to map to complex primitives
+  on Lattice ECP5,
+  we use the
+  \texttt{\lowercaselr}
+  and 
+  \texttt{synth\_ecp5}
+  subcommands
+  to attempt to map
+  a set of Verilog modules
+  to a Lattice ECP5 DSP.
+The Lattice ECP5 DSP
+  is split into multiple primitives;
+  we evaluate \lr's ability to map
+  to the multiplier (MULT18X18D)
+  and ALU (ALU24B) primitives.
+The results are shown
+  in \cref{tab:yosys-lattice}.
+Similar to the Xilinx UltraScale+ results,
+  we demonstrate that 
+  Yosys's \texttt{synth\_ecp5}
+  subcommand
+  fails to map all expressions
+  to the ECP5 DSP,
+  with some of the computation
+  being implemented onto CCU2Cs.
+Note that
+  \texttt{\lowercaselr}
+  uses 1 multiplier and 1 ALU
+  for the expression $a \times b$,
+  while \texttt{synth\_ecp5}
+  correctly uses just a single multiplier.
+  this is because \lr's DSP sketch
+  always instantiates both
+  a multiplier and an ALU.
+Detecting when the ALU is not necessary
+  can be implemented using optimization features
+  of modern SAT and SMT solvers;
+  we leave this development
+  for future work.
+  
+\begin{table}
+    \centering
+    \begin{tabular}{c|c}
+    \end{tabular}
+    \caption{Completeness of \lr against other tools.}
+    \label{tab:mylabel}
+\end{table}
+
+We also demonstrate \lr's robustness across workloads
+  compared to SOTA synthesis tools on three architectures. 
+On a number of benchmarks, \lr succeeds in mapping 
+  to DSPs compared to Yosys, and the architecture's corresponding proprietary synthesis tool.
+
+%\subsection{RQ5: Usability by Real Frameworks}
+%\label{sec:rq5}
+%
+%To demonstrate the ease of integrating \lr output with existing tools we
+%replace the ISA implementations of the Calyx compiler with \lr's output.
+%Calyx~\cite{nigam2021compiler}
+%  is a language
+%  and compiler
+%  for hardware designs.
+%  it supports multiple frontend languages,
+%  including their own Calyx
+%  language,
+%  Dahlia~\cite{nigam2020predictable},
+%  and TVM~\cite{chen2018tvm}.
+%Calyx
+%  compiles designs
+%  into synthesizable,
+%  architecture-independent
+%  behavioral Verilog,
+%  relying on hardware synthesis tools
+%  to finish compilation
+%  to the target FPGA
+%  (currently, they focus on
+%    Xilinx boards).
+%
+%To test correctness,
+%  we run the modified Calyx's entire 
+%  test suite
+%  and ensure all tests pass.
+%\hl{Do any of the tests
+%  actually test the resulting Verilog?
+%  Yes, I'm fairly certain a number of them
+%  Verilate the code and simulate
+%  and check the results.
+%  So we need to make sure we say that,
+%  in case a reviewer thinks
+%  that the tests will pass no matter
+%  what.}
+%
+%To test performance,
+%  we compile smaller sample Calyx programs
+%  found within Calyx's test suite,
+%  and larger hardware designs
+%  found in Calyx's evaluation repository. 
+%We then run Calyx's
+%  of Calyx's test suite
+%  and evaluation,
+%  allowing us to compile 
+%  
+%
+%The purpose of our end-to-end
+%  evaluation
+%  is not to demonstrate
+%  improved performance.
+%To truly compete
+%  with legacy logic synthesis
+%  and optimization,
+%  we would need an entire
+%  FPGA compiler pipeline
+%  designed to target an ISA
+%  and with built-in 
+%  optimization passes.
+%Calyx includes optimization
+%  passes \hl{(is that true?)},
+%  but still relies on
+%  hardware synthesis tools
+%  like Vivado
+%  for final optimization.
+%Instead, we aim to match
+%  previous performance,
+%  while demonstrating
+%  the ease of integration of an ISA
+%  with a toolchain,
+%  implying that future FPGA compilers
+%  can gain the benefits of \lr-generated
+%  ISAs
+%  (quick support of new architectures,
+%    multiple implementations of instructions,
+%    etc.)
+%    
+%Note that our
+%  ISA does not cover
+%  the entire Calyx ISA.
+%Notably,
+%  we do not cover
+%  their register-/memory-related
+%  instructions.
+%We also do not
+%  support 
+%  instructions
+%  outside of their
+%  ``core'' ISA;
+%  i.e.~we do not
+%  cover their
+%  math instruction set.
+%
+%\subsection{Pareto Frontier Exploration}
+%
+%\hl{
+%This might not need to be 
+%  its own subsection,
+%  but we need to highlight
+%  the ability
+%  to generate multiple implementations
+%  per instruction.}
+
+
+\hl{
+The below text is from the 
+``proof of concept''
+section added during response.
+(1) fold the table into the new DSP benchmark 
+table.
+(2) determine what text below we should keep.
+}
+
+\begin{table}[]
+\hl{Fold this into DSP benchmark suite}
+    \normalsize
+    \centering
+    \caption{
+Synthesizing sequential designs
+  onto a Xilinx DSP48E2
+  using our approach.
+All designs are 16 bit.}
+    \label{tab:sequential}
+    \begin{tabular}{c|c}
+\hline
+design & synthesis time (s) \\
+\hline
+2-stage $a\times b + c$ &  3.3 \\
+3-stage $(a + b) \times c + d$ &  3.4 \\
+3-stage $(a + b) \times c \oplus d$ &  3.3 
+    \end{tabular}
+\end{table}
+  
+The techniques presented
+  can be applied to sequential logic
+  as well.
+Our method for extracting semantics 
+  from Verilog
+  (\cref{sec:implementation:importing-semantics})
+  converts Verilog to the btor format~\cite{btor},
+  which natively supports
+  sequential logic
+  with its \texttt{state} and \texttt{next}
+  expressions.
+This, in combination with 
+  modifications to \lrir,
+  enable support for synthesizing
+  sequential logic.
+A full handling
+  of large sequential designs
+  requires techniques
+  in addition to just program synthesis:
+for example,
+  using richer 
+  hardware design languages
+  to convey timing information, 
+and
+  applying efficient term rewriting
+  techniques
+  such as equality saturation~\cite{willsey2021egg}
+  to automatically decompose large designs.
+We plan to present these techniques
+  in future work.
+Here, though, we present
+  proof-of-concept evidence
+  that program synthesis
+  can be applied not only
+  to combinational designs,
+  but to sequential designs as well.
+
+To demonstrate
+  our technique's ability to handle
+  sequential logic,
+  we run synthesis tasks
+  similar to those presented
+  in \cref{tab:xilinx-resource-utilization}.
+\cref{tab:sequential}
+  presents the results.
+Each line represents a sequential
+  design which is synthesized into
+  an instantiation of a Xilinx DSP48E2.
+As our results show,
+  we are able to map
+  interesting sequential circuits,
+  such as pipelined multiply--accumulators,
+  onto DSPs,
+  in timescales similar to those shown in
+  \cref{tab:xilinx-resource-utilization,tab:lattice-resource-utilization,tab:sofa-resource-utilization,tab:yosys-lattice,tab:yosys-xilinx}.
+
+
