@@ -1,9 +1,12 @@
-\section{Evaluation}
+%\section{Evaluation}
 \label{sec:evaluation}
 
 We now evaluate
   \lr in terms of completeness
-  and extensibility.
+  (related to \cref{thesis:optimizations})
+  and extensibility
+  (related to \cref{thesis:devtime}).
+\hl{also add a reference to thesis:correctness to formalization.}
 In the following experiments,
   we target four FPGA architectures:
   \textbf{Xilinx UltraScale+},
@@ -54,7 +57,7 @@ We use the software versions listed in \cref{sec:implementation}.
 %   Bitwuzla version 1.0
 %   were used.
 
-\subsection{\lr Completeness}
+\section{\lr Completeness}
 \label{sec:completeness}
 % \input{figures/lakeroad-yosys-xilinx}
 % \input{figures/lakeroad-yosys-lattice}
@@ -87,6 +90,13 @@ In particular,
   We next evaluate how \lr's program synthesis approach
   enables it to achieve greater completeness
   for these program fragments.
+In the context of this dissertation,
+  this corresponds to providing evidence
+  for our \cref{thesis:optimizations} claim:
+\begin{quote}
+  \thesisclaimoptimizations
+\end{quote}
+\hl{punch harder}
   
 \paragraph{\textnormal{\textit{\textbf{Evaluation Setup.}}}}
 
@@ -95,7 +105,7 @@ We highlight three particularly complex
   Lattice ECP5,
   and Intel Cyclone 10 LP architectures: 
   the Xilinx DSP48E2,
-  Lattice ALU54A/MULT18X18C 
+  Lattice ALU54A--MULT18X18C 
   (a single DSP composed of 
   two primitives),
   and Intel cyclone10lp\_mac\_mult.
@@ -146,6 +156,80 @@ Though \lr's output is correct by construction,
   by simulating each \lr-compiled design
   over thousands of consecutive cycles
   using Verilator.\tighten
+  
+
+\begin{figure}
+    \centering
+\includegraphics[width=0.7\textwidth]{lakeroad/assets/succeeded\_vs\_failed\_all.png}
+
+\vspace{1em}
+\footnotesize
+
+    \begin{tabular}{|l|S[table-format=3.2]|S[table-format=3.2]|S[table-format=3.2]|}
+    \hline
+     Tool & {Median Time (s)} & \multicolumn{2}{c|}{Min / Max Time (s)} \\ \hline
+    \multicolumn{4}{|c|}{\textbf{Xilinx}} \\ 
+    \hline
+         \lr & 14.99 & 2.99 & 127.70 \\  \hline
+         SOTA Xilinx & 261.61 & 227.82 & 598.67 \\ \hline
+         Yosys & 14.97 & 6.66 & 21.10 \\ \hline
+         %
+    \multicolumn{4}{|c|}{\textbf{Lattice}} \\
+    \hline
+         \lr & 9.49 & 6.70 & 55.23 \\ \hline
+         SOTA Lattice & 2.32 & 0.95 & 4.52 \\ \hline
+         Yosys & 2.31 & 0.90 & 4.01 \\ \hline
+    \multicolumn{4}{|c|}{\textbf{Intel}} \\
+    \hline
+         \lr & 2.92 & 2.12 & 4.13 \\ \hline
+         SOTA Intel & 38.73 & 19.11 & 43.49 \\ \hline
+         Yosys & 0.96 & 0.48 & 1.88 \\ \hline
+    \end{tabular}
+
+    % \begin{tabular}{|l|l|l::l|l|l|}
+    % \hline
+    % \multicolumn{3}{|c::}{\textbf{Xilinx}} & \multicolumn{3}{c|}{\textbf{Lattice}} \\
+    % \hline
+    %      Tool & Median Time (s) & Range (s) & Tool & Median Time (s) & Range (s)\\ \hline
+    %      \lr & 6.02 & 1.55--182 & \lr & 5.45 & 4.39--186\\ \hline
+    %      SOTA (Xil.) & 134 & 121--152 & SOTA (Lat.) & 0.777 & 0.593--1.04 \\ \hline
+    %      Yosys & 3.57 & 2.95--4.45 & Yosys & 0.592 & 0.442--0.798 \\ \hline
+    % \end{tabular}
+
+    \caption{
+Results of 
+  the completeness experiments
+  described in \cref{sec:completeness},
+  measuring the completeness 
+  of technology mapping tools for DSPs on Xilinx UltraScale+ and Lattice ECP5,
+  plus timing information.
+A single bar in the bar chart
+  communicates,
+  for a given FPGA architecture
+  and technology mapper,
+  the proportion of the microbenchmarks
+  that the given technology mapper could map to a single DSP.
+In \lr's case, experiments can 
+  either succeed 
+  (\lr maps the microbenchmark
+    to a single DSP),
+  timeout,
+  or return UNSAT.
+For the other tools,
+  experiments can either
+  succeed
+  or fail
+  (i.e., the tool returns a mapping,
+    but the mapping uses more than
+    a single DSP).
+There are a total of 
+  1320 experiments/microbenchmarks for Xilinx,
+  396 for Lattice,
+  and 66 for Intel.
+    }
+    \label{fig:xilinx-completeness}
+\end{figure}
+
   
 \paragraph{\textnormal{\textit{\textbf{Comparison to Existing Toolchains.}}}}
 As demonstrated in Figure~\ref{fig:xilinx-completeness} (top),
@@ -306,83 +390,11 @@ In the context of a larger
 
 
 
-
 \begin{figure}
     \centering
-\includegraphics[width=0.44\textwidth]{assets/succeeded\_vs\_failed\_all.png}
-
-\vspace{1em}
-\footnotesize
-
-    \begin{tabular}{|l|S[table-format=3.2]|S[table-format=3.2]|S[table-format=3.2]|}
-    \hline
-     Tool & {Median Time (s)} & \multicolumn{2}{c|}{Min / Max Time (s)} \\ \hline
-    \multicolumn{4}{|c|}{\textbf{Xilinx}} \\ 
-    \hline
-         \lr & 14.99 & 2.99 & 127.70 \\  \hline
-         SOTA Xilinx & 261.61 & 227.82 & 598.67 \\ \hline
-         Yosys & 14.97 & 6.66 & 21.10 \\ \hline
-         %
-    \multicolumn{4}{|c|}{\textbf{Lattice}} \\
-    \hline
-         \lr & 9.49 & 6.70 & 55.23 \\ \hline
-         SOTA Lattice & 2.32 & 0.95 & 4.52 \\ \hline
-         Yosys & 2.31 & 0.90 & 4.01 \\ \hline
-    \multicolumn{4}{|c|}{\textbf{Intel}} \\
-    \hline
-         \lr & 2.92 & 2.12 & 4.13 \\ \hline
-         SOTA Intel & 38.73 & 19.11 & 43.49 \\ \hline
-         Yosys & 0.96 & 0.48 & 1.88 \\ \hline
-    \end{tabular}
-
-    % \begin{tabular}{|l|l|l::l|l|l|}
-    % \hline
-    % \multicolumn{3}{|c::}{\textbf{Xilinx}} & \multicolumn{3}{c|}{\textbf{Lattice}} \\
-    % \hline
-    %      Tool & Median Time (s) & Range (s) & Tool & Median Time (s) & Range (s)\\ \hline
-    %      \lr & 6.02 & 1.55--182 & \lr & 5.45 & 4.39--186\\ \hline
-    %      SOTA (Xil.) & 134 & 121--152 & SOTA (Lat.) & 0.777 & 0.593--1.04 \\ \hline
-    %      Yosys & 3.57 & 2.95--4.45 & Yosys & 0.592 & 0.442--0.798 \\ \hline
-    % \end{tabular}
-
-    \caption{
-Results of 
-  the completeness experiments
-  described in \cref{sec:completeness},
-  measuring the completeness 
-  of technology mapping tools for DSPs on Xilinx UltraScale+ and Lattice ECP5,
-  plus timing information.
-A single bar in the bar chart
-  communicates,
-  for a given FPGA architecture
-  and technology mapper,
-  the proportion of the microbenchmarks
-  that the given technology mapper could map to a single DSP.
-In \lr's case, experiments can 
-  either succeed 
-  (\lr maps the microbenchmark
-    to a single DSP),
-  timeout,
-  or return UNSAT.
-For the other tools,
-  experiments can either
-  succeed
-  or fail
-  (i.e., the tool returns a mapping,
-    but the mapping uses more than
-    a single DSP).
-There are a total of 
-  1320 experiments/microbenchmarks for Xilinx,
-  396 for Lattice,
-  and 66 for Intel.
-    }
-    \label{fig:xilinx-completeness}
-\end{figure}
-\begin{figure}
-    \centering
-    \includegraphics[width=0.43\textwidth]{assets/time/lakeroad\_time\_xilinx.png}
-    \includegraphics[width=0.43\textwidth]{assets/time/lakeroad\_time\_lattice.png}
-    \includegraphics[width=0.43\textwidth]{assets/time/lakeroad\_time\_intel.png}
+    \includegraphics[width=0.7\textwidth]{lakeroad/assets/time/lakeroad\_time\_xilinx.png}
+    \includegraphics[width=0.7\textwidth]{lakeroad/assets/time/lakeroad\_time\_lattice.png}
+    \includegraphics[width=0.7\textwidth]{lakeroad/assets/time/lakeroad\_time\_intel.png}
 \caption{
 Histograms of \lr program synthesis runtime
   for all terminating
@@ -417,16 +429,16 @@ Histograms of \lr program synthesis runtime
 %     \end{tabular}
 % \end{table}
 
-\CatchFileDef{\LatticeResourceTable}{generated/lattice-resource-table.tex}{}
-\CatchFileDef{\XilinxResourceTable}{generated/xilinx-resource-table.tex}{}
-\CatchFileDef{\SofaResourceTable}{generated/sofa-resource-table.tex}{}
-\CatchFileDef{\BigTable}{generated/ThE-BiG-TaBlE-WiTh-EvErYtHiNg-In-It.tex}{}
-\CatchFileDef{\LatticeTable}{generated/LaTtIcE.tex}{}
-\CatchFileDef{\XilinxTable}{generated/xilinx-non-auto.tex}{}
-\CatchFileDef{\LatticeTable}{generated/lattice-non-auto.tex}{}
-\CatchFileDef{\SofaTable}{generated/SoFa.tex}{}
-\CatchFileDef{\SofaTable}{generated/sofa-non-auto.tex}{}
-\CatchFileDef{\FinalTable}{generated/expressive-select.tex}{}
+\CatchFileDef{\LatticeResourceTable}{lakeroad/generated/lattice-resource-table.tex}{}
+\CatchFileDef{\XilinxResourceTable}{lakeroad/generated/xilinx-resource-table.tex}{}
+\CatchFileDef{\SofaResourceTable}{lakeroad/generated/sofa-resource-table.tex}{}
+\CatchFileDef{\BigTable}{lakeroad/generated/ThE-BiG-TaBlE-WiTh-EvErYtHiNg-In-It.tex}{}
+\CatchFileDef{\LatticeTable}{lakeroad/generated/LaTtIcE.tex}{}
+\CatchFileDef{\XilinxTable}{lakeroad/generated/xilinx-non-auto.tex}{}
+\CatchFileDef{\LatticeTable}{lakeroad/generated/lattice-non-auto.tex}{}
+\CatchFileDef{\SofaTable}{lakeroad/generated/SoFa.tex}{}
+\CatchFileDef{\SofaTable}{lakeroad/generated/sofa-non-auto.tex}{}
+\CatchFileDef{\FinalTable}{lakeroad/generated/expressive-select.tex}{}
 \newcommand{\titletilt}{90}
 
 
@@ -470,7 +482,7 @@ Histograms of \lr program synthesis runtime
 % \end{center}
 % \end{table*}
 
-\subsection{\lr Extensibility and Expressiveness}
+\section{\lr Extensibility and Expressiveness}
 
 In addition to being
   correct by construction (\cref{sec:formalization}) and
@@ -481,6 +493,14 @@ Furthermore, automatic primitive semantics extraction
   from vendor-provided HDL simulation models
   enables \lr to support diverse, highly configurable
   FPGA primitives.
+Evaluating \lr's extensibility and expressiveness
+  corresponds to
+  evaluating the \cref{thesis:devtime} claim
+  of this dissertation's thesis:
+\begin{quote}
+    \thesisclaimdevtime
+\end{quote}
+\hl{punch up}
 
 
 The architecture descriptions
@@ -550,7 +570,7 @@ Even if a user
   for each primitive in 
   the architecture description.
   
-\cref{table:imported-primitves} further
+\Cref{table:imported-primitves} further
   highlights \lr's expressiveness,
   i.e., its ability to support a diverse
   range of configurable primitives

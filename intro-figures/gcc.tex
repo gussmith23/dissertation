@@ -1,0 +1,28 @@
+\begin{figure}[H]
+    \centering
+% https://github.com/gcc-mirror/gcc/blob/29ac92436aa5c702e9e02c206e7590ebd806398e/gcc/config/i386/i386.md#L9840C1-L9854C1
+\begin{minted}[baselinestretch=1]{racket}
+(define_insn "*mul<mode>3_1"
+  [(set (match_operand:SWIM248 0 "register_operand" "=r,r,r")
+	(mult:SWIM248
+	  (match_operand:SWIM248 1 "nonimmediate_operand" "%rm,rm,0")
+	  (match_operand:SWIM248 2 "<general_operand>" "K,<i>,<m>r")))
+   (clobber (reg:CC FLAGS_REG))]
+   ...
+\end{minted}
+    \caption{
+x86 machine description
+  for the \texttt{imul}
+  family of instructions~\cite{gccx86isa}.
+}
+    \label{fig:intro:gcc-imul}
+\end{figure}
+% \noindent
+% This machine description
+%   is simply an explicit model\footnote{
+%   \hl{https://en.m.wikipedia.org/wiki/Greenspun's_tenth_rule}
+%   as a fun note, thanks Steven
+%   }
+%   of the underlying hardware:
+%   in this case, an explicit model
+%   of the hardware's instruction set.

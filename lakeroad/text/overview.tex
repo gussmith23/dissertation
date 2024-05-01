@@ -48,7 +48,7 @@ The designer is specifically aiming to use
   simplified
   block diagram~\cite{userguide}:
 \begin{center}
-\includegraphics[width=.75\columnwidth]{assets/dsp48e2-block-diagram-simplified.drawio.png}
+\includegraphics[width=.75\columnwidth]{lakeroad/assets/dsp48e2-block-diagram-simplified.drawio.png}
 \end{center}
 The designer's hardware block
   involves the computation
@@ -60,11 +60,13 @@ The designer's hardware block
   %four separate times:
 In particular, suppose the design
   consists of four separate instances of the following computation:
-\begin{minted}[fontsize=\footnotesize]{verilog}
+\begin{center}
+\begin{minted}[baselinestretch=1]{verilog}
  for(i=0; i<4; i++) begin
   r[i] <= (d[i] + a[i]) * b[i] & c[i];
  end
 \end{minted}
+\end{center}
 %Thus, the designer expects that this design
   %should fit on a total of
   %four DSPs.
@@ -112,8 +114,8 @@ For example, a hardware design simply may not fit on an FPGA
   by 
   placing the computation
   of interest into a separate module:
-  
-\begin{minted}[fontsize=\footnotesize]{verilog}
+
+\begin{minted}[baselinestretch=1]{verilog}
 // add_mul_and.v: computes (a+b)*c&d in two clock cycles.
 module add_mul_and(input clk, input [15:0] a, b, c, d,
                    output reg [15:0] out);
@@ -209,13 +211,6 @@ It may work in a few simulated test cases,
   
 \subsection{Compiling a Design to a DSP with \lr}
 \label{sec:overview-part-2}
-\begin{figure}
-    \centering
-    \hspace{-1cm}%
-    \includegraphics[width=0.85\columnwidth]{assets/lakeroad-diagram.drawio.png}
-   \caption{The components within \lr.}
-    \label{fig:lakeroad-diagram}
-\end{figure}
 
 \lr can save hardware designers
   the great effort involved
@@ -235,7 +230,7 @@ After putting
   into its own module,
   the designer calls
   \lr from the command line:
-\begin{minted}[fontsize=\footnotesize]{bash}
+\begin{minted}[baselinestretch=1]{bash}
 $ lakeroad --template dsp \
            --arch-desc xilinx-ultrascale-plus.yml \
            add_mul_and.v
@@ -246,7 +241,8 @@ The \texttt{lakeroad} command outputs
   an implementation
   of \texttt{add\_mul\_and}
   that uses a single UltraScale+ DSP48E2:
-\begin{minted}[fontsize=\scriptsize]{verilog}
+\hl{would really like this to not break across pages}
+\begin{minted}[baselinestretch=1]{verilog}
 module add_mul_and_impl(input clk, input [15:0] a, b, c, d,
                         output [15:0] out);
  DSP48E2 #(
@@ -271,6 +267,16 @@ Importantly, this compiled design
   to implement
   the input \texttt{add\_mul\_and}
   design.
+  
+\begin{wrapfigure}{r}{.5\textwidth}
+%\begin{figure}
+    \centering
+    \hspace{-1cm}%
+    \includegraphics[width=.5\columnwidth]{lakeroad/assets/lakeroad-diagram.drawio.png}
+   \caption{The components within \lr.}
+    \label{fig:lakeroad-diagram}
+%\end{figure}
+\end{wrapfigure}
 
 How does \lr provide 
   \textit{verified, more complete} support
@@ -305,8 +311,9 @@ In
   the following sketch,
   which we refer to as \texttt{sketch}:\footnote{
 Though this example is presented in a Verilog-like language,
-  \lr's sketches are actually encoded in a Racket DSL that resembles structural Verilog.}
-\begin{minted}[fontsize=\scriptsize]{verilog}
+  \lr's sketches are actually encoded in a Racket DSL that resembles structural Verilog.
+  \hl{why is this footnote breaking across pages??}}
+\begin{minted}[baselinestretch=1]{verilog}
 module sketch(input clk, input [15:0] a, b, c, d,
               output [15:0] out);
  DSP48E2 #(
@@ -349,7 +356,7 @@ Instead of storing
   the designer has chosen to use 
   with the \mbox{\texttt{-{}-template dsp}} flag.
 A simplified form of this template looks like the following:
-\begin{minted}[fontsize=\scriptsize]{verilog}
+\begin{minted}[baselinestretch=1]{verilog}
 module dsp_sketch_template(input clk,
                            input [n-1:0] a, b, c, d,
                            output [n-1:0] out);
@@ -423,7 +430,7 @@ The following simplified snippet of the UltraScale+
   instances of the DSP
   primitive interface
   should be implemented with a DSP48E2:
-\begin{minted}[fontsize=\scriptsize]{yaml}
+\begin{minted}[baselinestretch=1]{yaml}
 - interface: {name: DSP, params: { out-width: 48, a-width: 30, ...}} 
   holes: [?ACASCREG, ?ADREG, ?ALUMODEREG, ?AREG, ...]
   implementation:
@@ -495,11 +502,10 @@ In our \texttt{add\_mul\_and} example,
   We formalize this synthesis query and explain it precisely in \cref{sec:formalization}.
 }
 \footnotesize
-\begin{multline*}
-\exists \ \mathtt{ACASCREG}, \mathtt{ADREG}, ...\ . \forall \mathrm{inputs}. \\
+$$\exists \ \mathtt{ACASCREG}, \mathtt{ADREG}, ...\ .\ \forall \ \mathrm{inputs} . \ 
   \texttt{add\_mul\_and}(\mathrm{inputs}) 
   = \texttt{sketch}(\mathrm{inputs}, \mathtt{ACASCREG}, \mathtt{ADREG}, ...)
-\end{multline*}
+$$
 \normalsize
 The query asks:
   are there concrete values for
@@ -630,8 +636,10 @@ Meanwhile, \lr did all of this
   while requiring no input from the user
   other than the Verilog to be compiled.
 
-%\sandy{IMO, the following (commented out) text is unnecessary imo. The Intro already stated what was in each section, and the paper's too short to require such segues.}
-
-%In the next two sections, we give details on the concepts introduced in this overview. We begin by formalizing \lr's compilation flow in \cref{sec:formalization}, covering sketches and program synthesis in detail.Then, in \cref{sec:implementation}, we give implementation details for sketch templates, primitive interfaces, semantics importing, and compilation to Verilog.
+In the next chapter,
+  we provide details on the concepts introduced in this overview.
+We begin by formalizing \lr's compilation flow in \cref{sec:formalization}, 
+  covering sketches and program synthesis in detail.
+Then, in \cref{sec:implementation}, we give implementation details for sketch templates, primitive interfaces, semantics importing, and compilation to Verilog.
   
 

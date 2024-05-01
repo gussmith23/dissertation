@@ -1,5 +1,4 @@
-\section{Introduction}
-\label{sec:intro}
+\input{lakeroad/figures/firstpage}
 
 Given a high-level hardware design specification
   (e.g., expressed in behavioral Verilog),
@@ -169,15 +168,16 @@ We explore how
   program synthesis
   can simplify the design and implementation of
   FPGA technology mappers while providing
-  \textbf{correct},
-  \textbf{extensible}, and
+  \textbf{correct} (\cref{thesis:correctness}),
+  \textbf{extensible} (\cref{thesis:devtime}), and
   \textbf{more complete}
+  (\cref{thesis:optimizations})
   support for mapping to 
   diverse, highly configurable primitives
   like DSPs.
 Program synthesis techniques rely on
   automated theorem provers like
-  SAT and SMT solvers~\cite{de2008z3, barbosa22cvc5}
+  SAT and SMT solvers~\cite{de2008z3, barbosa2022cvc5}
   to automatically generate programs
   satisfying a given specification.
 We demonstrate how
@@ -240,7 +240,9 @@ To support
   to automatically extract
   complete primitive semantics
   from vendor-published HDL models
-  (\cref{fig:firstpage}, ``input 3'').
+  (\cref{fig:firstpage}, ``input 3''),
+  which are widely available
+  (\cref{thesis:ubiquity}).
 Traditionally, such models have
    been used only 
   for
@@ -324,7 +326,7 @@ Unfortunately,
  
 To address these challenges, 
   we introduce
-  \textbf{architecture-\newline independent sketch templates.}
+  \textbf{architecture-independent sketch templates.}
 % There are a few common classes 
 %   of
 %   FPGA primitives
@@ -412,8 +414,9 @@ In particular,
 %   Yosys~\cite{wolf2013yosys}.
 %\sandy{Note that this is a long list of contributions, which "usually" (in most papers I read) number a more memorable 3 or 4. Can any contributions be combined for ease or reader retention? }
 
-This paper makes  
-the following key contributions:
+\Cref{part:lakeroad} of this dissertation
+makes
+  the following key contributions:
 \begin{itemize}[leftmargin=*]
 \item The novel application of program synthesis
   to produce a technology mapper---\lr---that is
@@ -486,4 +489,4 @@ In the following sections, we walk through a real-world example
   % implementations.
 \cref{sec:background-and-related-work}
   discusses related work, and
-  \cref{sec:conclusion} concludes.
+  \cref{sec:lakeroad-conclusion} concludes.

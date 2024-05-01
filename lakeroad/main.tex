@@ -1,136 +1,22 @@
-\documentclass[screen, sigplan]{acmart}
-\settopmatter{printfolios=true}
-% ZTATLOCK: temporarily commenting out for copy / paste
-% \usepackage{lineno}
-% \linenumbers
+\chapter{Introduction and Motivation}
+\label{chapter:part2-intro}
+\input{lakeroad/text/introduction}
+\input{lakeroad/text/overview}
 
-\input{imports-and-macros}
+\chapter{Lakeroad}
+\label{chapter:part2-lakeroad-detail}
+\input{part 2/formalization-implementation-chapter-intro}
+\input{lakeroad/text/formalization}
+\input{lakeroad/text/implementation}
 
+\chapter{Evaluation}
+\input{lakeroad/text/evaluation}
 
-%replace XXX with the submission number you are given from the ASPLOS submission site.
-\newcommand{\asplossubmissionnumber}{71}
+\chapter{Related Work}
+\input{lakeroad/text/related-work-and-background}
 
-\usepackage[normalem]{ulem}
-\begin{abstract}
-\input{text/abstract}
-\end{abstract}
-
-%%%%%
-\copyrightyear{2024}
-\acmYear{2024}
-\setcopyright{rightsretained}
-\acmConference[ASPLOS '24]{29th ACM International Conference on Architectural Support for Programming Languages and Operating Systems, Volume 2}{April 27-May 1, 2024}{La Jolla, CA, USA}
-\acmBooktitle{29th ACM International Conference on Architectural Support for Programming Languages and Operating Systems, Volume 2 (ASPLOS '24), April 27-May 1, 2024, La Jolla, CA, USA}
-\acmDOI{10.1145/3620665.3640387}
-\acmISBN{979-8-4007-0385-0/24/04}
-%%%%%
-
-
-\begin{document}
-
-
-\title[FPGA Technology Mapping Using Sketch-Guided Program Synthesis]{FPGA Technology Mapping Using \\ Sketch-Guided Program Synthesis}
-%\title{FPGA Technology Mapping Using Sketch-Guided Program Synthesis}
-\date{}
-\author{Gus Henry Smith}
-\orcid{0000-0001-9754-233X}
-\affiliation{%
-    \institution{University of Washington}
-    \city{Seattle}
-    \country{USA}}
-\email{gussmith@cs.washington.edu}
-
-\author[BK]{Ben Kushigian}
-\orcid{0009-0009-2504-1582}
-\affiliation{%
-    \institution{University of Washington}
-    \city{Seattle}
-    \country{USA}}
-\email{benku@cs.washington.edu}
-
-\author[VC]{Vishal Canumalla}
-\orcid{0009-0001-5418-1279}
-\affiliation{%
-    \institution{University of Washington}
-    \city{Seattle}
-    \country{USA}}
-\email{vishalc@cs.washington.edu}
-
-\author[AC]{Andrew Cheung}
-\orcid{0009-0006-0661-2640}
-\affiliation{%
-    \institution{University of Washington}
-    \city{Seattle}
-    \country{USA}}
-\email{acheung8@cs.washington.edu}
-
-\author[SL]{Steven Lyubomirsky}
-\orcid{0009-0003-6747-7014}
-\affiliation{
-  \institution{OctoAI}
-  \city{Seattle}
-  % \state{WA}
-  \country{USA}
-}
-\email{slyubomirsky@octo.ai}
-
-\author[SP]{Sorawee Porncharoenwase}
-\orcid{0000-0003-3900-5602}
-\affiliation{
-  \institution{University of Washington}
-  \city{Seattle}
-  % \state{WA}
-  \country{USA}
-}
-\email{sorawee@cs.washington.edu}
-
-\author[RJ]{Ren{\'e} Just}
-\orcid{0000-0002-5982-275X}
-\affiliation{%
-    \institution{University of Washington}
-    \city{Seattle}
-    \country{USA}}
-\email{rjust@cs.washington.edu}
-
-\author[GLB]{Gilbert Louis Bernstein}
-\orcid{0000-0002-3016-1169}
-\affiliation{%
-    \institution{University of Washington}
-    \city{Seattle}
-    \country{USA}}
-\email{gilbo@cs.washington.edu}
-
-\author[ZT]{Zachary Tatlock}
-\orcid{0000-0002-4731-0124}
-\affiliation{%
-    \institution{University of Washington}
-    \city{Seattle}
-    \country{USA}}
-\email{ztatlock@cs.washington.edu}
-\maketitle
-
-\thispagestyle{empty}
-
-
-
-
-\input{text/incubator}
-% \input{text/intro}
-\input{text/overview}
-\input{text/formalization}
-\input{text/implementation}
-\input{text/evaluation}
-\input{text/related-work-and-background}
-\input{text/conclusion}
-\input{text/acknowledgements}
-
-\bibliographystyle{plain}
-\bibliography{bib}
-
-
-\clearpage
-\appendix
-\input{text/ae}
-
-\end{document}
+\chapter{Conclusion}
+\input{lakeroad/text/conclusion}
+% moved to top level acks
+%\input{lakeroad/text/acknowledgements}
 

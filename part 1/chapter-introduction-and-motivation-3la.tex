@@ -1,66 +1,3 @@
-What do we need this chapter to do?
-
-We need it to set up the background of why something like 3LA needs to exist.
-We need it to explain 3LA.
-We need it to explain why 3LA needs something like Glenside.
-
-
-%% Pasted from "overview" 
-The past decade has seen the rise
-  of specialized hardware
-  for
-  machine learning accelerators,
-  leading to the rise of a
-  ``golden age of computer architecture''
-  \hl{cite lattner}.
-\hl{Statistics on machine learning accelerators}
-\hl{Benefits of machine learning
-  accelerators; what have they
-  enabled.}
-
-Accelerators are difficult to design;
-  despite being special-purpose,
-  they are nevertheless complex.
-
-A core part of designing an accelerator
-  which is often overlooked
-  is the process of designing its compiler.
-Hardware is nothing
-  without software to run on it,
-  and your software is only as good as the compiler
-  that produces it.
-In fact, it isn't uncommon
-  for hardware designers in academia
-  to simply not design compilers
-  for their hardware.
-
-Why is it hard?
-Lots has to be written by hand.
-Easy to make bugs.
-Easy to miss optimizations.
-
-\hl{Existing frameworks for compilers (BYOC) are lacking.}
-
-\hl{Can we make compiler design easier}
-
-
-\hl{
-In part 1 of this disseration,
-  I describe an application
-  of my thesis
-  in the machine learning accelerator space.
-I demonstrate how
-  formal models of hardware---%
-  in this case, captured as rewrites
-  over a domain-specific language,
-  can be used to automatically generate
-  one portion of a compiler.
-% Doesn't actually generate it...
-% just leans on existing tools!
-% but that's kinda what generation is, always...
-}
-
-
 \chapter{Introduction and Motivation}
 \label{sec:part1-motivation}
 
@@ -78,24 +15,115 @@ I demonstrate how
 %% Hardware acceleration is important.
 
 Hardware acceleration has powered significant advances
-  in subfields like artificial intelligence, image processing, and graph analysis~\cite{han2016eie,chen2016eyeriss,reagen2016minerva,zhang2016cambricon,hameed2010understanding,ham2016graphicionado}.
-\hl{glenside} Machine learning (ML) and other
-  high-performance computing (HPC)
-  applications increasingly rely on
-  specialized hardware accelerators to
-  provide speed and energy efficiency~\cite{jouppi2017tpu, krizhevsky2012conv, reuther2019survey}.
+  in subfields like artificial intelligence, image processing, and graph analysis~\cite{han2016eie,chen2016eyeriss,reagen2016minerva,zhang2016cambricon,hameed2010understanding,ham2016graphicionado,jouppi2017tpu, krizhevsky2012conv, reuther2019survey}.
 This trend has highlighted the need
   for flexible accelerator support
   in domain-specific compilers like
   Halide~\cite{halide},
-  TVM~\cite{tvm},
+  TVM~\cite{chen2018tvm},
   TensorFlow/MLIR~\cite{tensorflow, mlir}, and
   PyTorch~\cite{pytorch}.
 
+Despite our increasing dependence
+  on accelerators,
+  building compilers
+  for custom accelerators
+  remains a daunting task.
+Paralleling the thesis of this dissertation,
+  we will describe the challenges
+  of building compilers
+  along three axes:
+  \cref{thesis:devtime},
+  \cref{thesis:optimizations},
+  and \cref{thesis:correctness}.
+  
 
+\paragraph{
+\cref{thesis:devtime}.
+}
+Current frameworks for compiler generation
+  generally require significant compilers expertise,
+  and the sheer amount of effort
+  required to build a compiler from the ground up
+  generally limits bespoke compiler construction
+  to teams
+  at large companies,
+  e.g. the TensorFlow 
+  stack~\cite{abadi2016tensorflow}
+  for Google's 
+  TPU~\cite{jouppi2017tpu,jouppi2020tpu}.
+Though projects
+  such as 
+  MLIR~\cite{mlir,
+  lattner2021mlir,
+  eldridge2021mlir}
+  and
+  Exo~\cite{ExoPldi22}
+  have begun to prescribe
+  a general framework
+  for structuring a compiler,
+  these tools are built for
+  domain experts,
+  and require significant time investment
+  \hl{vague}.
+There is a need for
+  automated techniques
+  for compiler generation,
+  to lower the barrier
+  and allow non-experts to generate
+  functioning compilers.
+An example of such a technique
+  is the deep learning compiler
+  TVM's~\cite{chen2018tvm}
+  Bring Your Own Codegen (BYOC)
+  framework~\cite{chen2021byoc}.
+\hl{tease at how BYOC will fail? or handle in optimizations?}
+Though, 
+  as we will show later,
+  while BYOC makes it easy for
+  users to add basic support
+  for accelerators,
+  we will see 
+  that its ability to 
+  match workloads to accelerators
+  is lacking.
 
-%% Accelerators are nothing without testing/without compilers? which one?
+\paragraph{
+\cref{thesis:optimizations}.
+}
+Even once a compiler is constructed,
+  they still have the tendency
+  to leave optimizations on the table---%
+  especially user-facing compiler construction frameworks.
+\hl{As a consequence, optimizations can be left on the table.
+Note that simply mapping to accelerators
+  is considered an optimization,
+  but e.g.~mappings can be missed.}
+Even once a compiler
+  is constructed
+  for a piece of custom hardware,
+  it can still leave optimizations
+  on the table.
+Getting a compiler to realize
+  that a certain operator
+  can be run on an accelerator,
+  for example,
+  may require syntactic changes
+  to the input program,
+  especially when using
+  a matcher like
+  BYOC.
 
+And the difficulties
+  in building a quality compiler
+  often lead hardware designers to forego the process
+  entirely, which can
+  hinder or entirely prevent
+  the validation and testing
+  of custom hardware,
+  leading to expensive bugs
+  (\cref{thesis:correctness}).
+\cref{thesis:correctness}
 Core to developing
   accelerators
   quickly and correctly
@@ -112,25 +140,47 @@ An immense amount of effort
   is currently put
   into hardware validation and testing.
 \hl{how much is spent on hw validation compared to sw}  
-
-\begin{figure}[!ht]
-  %\centering
-  \begin{minipage}[h]{0.49\textwidth}
-    \vspace{-5\fboxsep}
-    \caption{
-    \hl{this figure is taken from ...cite 3LA...update caption}
-    \textbf{Gap in end-to-end evaluation of accelerators for neural network applications:} 
-    Survey of papers from ISCA, MICRO, VLSI, and ISSCC in 2021 and ICCAD, DAC in 2020.
-    Our survey of $79$ papers  that introduced new DL accelerator designs/methodologies, comparing how the accelerators were evaluated. Only 41\% of the works reported end-to-end evaluation on non-synthetic applications, of which 68\% (28\% of the total) were from industrial teams.
-    }
-    \label{fig:3la-pie}
-  \end{minipage}\hfill
-  \begin{minipage}[h]{0.49\textwidth}
-    \includegraphics[width=\textwidth]{assets/3la-pie.pdf}
-  \end{minipage}
-\end{figure}
-
-
+Despite the growing dependence
+  on accelerators,
+  testing custom hardware is still largely
+  a manual, ad hoc, and difficult process.
+A primary challenge in 
+  accelerator development
+  is validating designs
+  on real applications.
+This validation
+  is critical,
+  as some accelerator bugs 
+  arise
+  only during validation
+  of full applications.
+For example,
+  a deep learning
+  accelerator may use
+  a custom numeric format
+  tuned to be storage-efficient,
+  while still providing enough
+  precision
+  to support effective inference.
+Testing the numeric format
+  on a single layer
+  of the deep learning model
+  may produce results
+  well within the designer's
+  error bounds.
+However, if the designer
+  neglects to test
+  \textit{all}
+  layers of the model,
+  they may fail to discover that,
+  even though individual layers
+  behave well,
+  the error may accumulate
+  across layers
+  to an unfeasible degree~\cite{zorn2021rounding}.
+Early end-to-end application level validation is thus essential
+  for avoiding expensive and complex late stage hardware design changes.
+\hl{merge or delete below}
 In general,
   thorough validation
   is inaccessible
@@ -142,6 +192,20 @@ The most intensive validation
   to do validation
   on designs.
 \hl{reference fig} \cref{fig:3la-pie}
+
+\begin{figure}
+\centering
+\includegraphics[width=.6\textwidth]{assets/3la-pie.pdf}
+\caption{
+\hl{this figure is taken from ...cite 3LA...update caption}
+\textbf{Gap in end-to-end evaluation of accelerators for neural network applications:} 
+Survey of papers from ISCA, MICRO, VLSI, and ISSCC in 2021 and ICCAD, DAC in 2020.
+Our survey of $79$ papers  that introduced new DL accelerator designs/methodologies, comparing how the accelerators were evaluated. Only 41\% of the works reported end-to-end evaluation on non-synthetic applications, of which 68\% (28\% of the total) were from industrial teams.
+}
+\label{fig:3la-pie}
+\end{figure}
+
+
   
 When validation \textit{is} done
   outside of industry,
@@ -161,7 +225,7 @@ Issues arising from these complex
   for example, a reduced-bitwidth
   ALU
   may still produce accurate results,
-  but overal \textit{application}
+  but overall \textit{application}
   performance
   may suffer
   due to the change in numeric behaviors.
@@ -191,7 +255,7 @@ Explain how we're just a component of 3LA.
     \caption{
     \hl{not quite sure where this goes}
 This figure first appeared
-  in Huang et.~al.~\cite{3la}.
+  in Huang et.~al.~\cite{huang2024application}.
 Diagram of the 3LA prototype's flow.
 Note that only the ``Glenside/egg''
   portion of 3LA
@@ -216,10 +280,9 @@ Second, even given a simulator
 The first contribution
   of 3LA
   we do not consider
-  a contribution of this thesis;
+  a contribution of this dissertation;
   please refer to the dissertation
-  of Bo-yuan Huang
-  \hl{ref his thesis.}
+  of Bo-Yuan Huang~\cite{huang2022instruction}.
 
 However,
   the second contribution of 3LA
@@ -307,9 +370,9 @@ To help mitigate such impedance mismatches,
   supports expressing and reasoning about
   data layout transformations via
   syntactic rewrite rules.
-  \begin{wrapfigure}{r}{.5\textwidth}
+  \begin{figure}
     \centering
-    \includegraphics[width=.9\linewidth]{glenside/access-pattern-examples-2x2.png}
+    \includegraphics[width=.6\linewidth]{glenside/access-pattern-examples-2x2.png}
     \caption{
       Four access patterns,
         representing different ways
@@ -323,7 +386,7 @@ To help mitigate such impedance mismatches,
         a vector of 2D matrices.}
     \label{fig:access-pattern-examples}
     \vspace{-1em}
-\end{wrapfigure}
+\end{figure}
 When combined with standard arithmetic rewrites
   for per-tensor-element computations,
   access patterns enable implementing complex
@@ -374,7 +437,7 @@ In particular,
 
 \hl{move this to glenside chapter?}
  The rest of this chapter is organized as follows:
-Section~\ref{sec:background} provides background
+Section~\hl{todo} provides background
   and briefly surveys closely related work.
 Section~\ref{sec:matmul} motivates
   \g via a running example exploring

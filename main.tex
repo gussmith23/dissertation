@@ -1,3 +1,6 @@
+% Global option passing "before" document class
+\PassOptionsToPackage{table}{xcolor} % for coloring table cells
+
 \documentclass[12pt, hidelinks]{book}
 
 \usepackage{hyperref}
@@ -81,7 +84,7 @@
   morekeywords=[3]{bool, char, f32, f64, i8, i16, i32, i64, isize, str, u8, u16, u32, u64, unit, usize, i128, u128},
 }%
 
-\def\mytitle{Something about hardware}
+\def\mytitle{Generation of Compiler Backends\\ from Formal Models of Hardware}
 \def\myauthor{Gus Henry Smith}
 \def\year{2024}
 
@@ -97,6 +100,7 @@ something something
 \input{imports-and-macros}
 
 \begin{document}
+
 \input{todos}
 \pagestyle{empty}
 
@@ -175,16 +179,20 @@ something something
 
 % These chapters are outside of a part
 \input{text/acknowledgements}
+\printnoidxglossaries
 \input{text/intro}
 
 \part{Compilation to Machine Learning Accelerators}
 \label{part:glenside-and-3la}
-\input{part 1/intro-and-background-and-related-work}
+\input{part 1/abstract}
 \input{part 1/chapter-introduction-and-motivation-3la}
 \input{glenside}
 \input{part 1/chapter-evaluation}
+\input{part 1/intro-and-background-and-related-work}
 
 \part{Compilation to FPGAs}
+\label{part:lakeroad}
+\input{part 2/part2}
 
 \input{text/conclusion}
 \input{text/broader-thoughts.tex}

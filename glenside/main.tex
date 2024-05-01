@@ -49,7 +49,7 @@
 \chapter{Glenside}
 \label{sec:part1-glenside}
 
-\textit{This is derived from the work done in \ref{glenside}.}
+\textit{This is derived from Smith et.~al.~\cite{smith2021pure}.}
 
 \section{New Introduction}
 
@@ -1295,6 +1295,8 @@ $N$ is batch size; $H$/$W$ are spatial dimension sizes; $C$/$O$ are input/output
 
 %\hl{1. represent kernels, 2. map to hardware w/ generic rewrite, 3. expand/make flexible that rewrite to other workloads}
 
+\hl{delete these? or move them to eval?}
+
 To demonstrate \g's utility,
   we first show how it enables
   concise specifications of several
@@ -2463,29 +2465,32 @@ This case study demonstrates
 %   our systolic array rewrite (\autoref{fig:systolic-array-rewrite}).
 
     
-%\section{Future Work and Conclusion}
-\section{Conclusion}
-\label{sec:conclusion}
+% %\section{Future Work and Conclusion}
+% \section{Conclusion}
+% \label{sec:conclusion}
 
-In this paper,
-  we proposed \textit{access patterns} as an
-  abstraction to enable equality saturation
-  style term rewriting for low-level
-  tensor program mapping to hardware accelerators.
-Crucially, access patterns support
-  specifying and composing
-  higher-order, arbitrary dimension
-  tensor operators without the need
-  for binding structures like anonymous functions
-  or index notation.
-We demonstrated the potential utility of
-  access patterns in the \g IR through
-  case studies showing how rewrites in \g
-  can automatically uncover common
-  layout transformations like \tcd{im2col}
-  used for accelerator mapping.
-We are excited for the community
-  to join in further exploring the potential
-  applications of access patterns and to
-  build additional optimizations on
-  \g's foundations.
+% In this paper,
+%   we proposed \textit{access patterns} as an
+%   abstraction to enable equality saturation
+%   style term rewriting for low-level
+%   tensor program mapping to hardware accelerators.
+% Crucially, access patterns support
+%   specifying and composing
+%   higher-order, arbitrary dimension
+%   tensor operators without the need
+%   for binding structures like anonymous functions
+%   or index notation.
+% We demonstrated the potential utility of
+%   access patterns in the \g IR through
+%   case studies showing how rewrites in \g
+%   can automatically uncover common
+%   layout transformations like \tcd{im2col}
+%   used for accelerator mapping.
+% We are excited for the community
+%   to join in further exploring the potential
+%   applications of access patterns and to
+%   build additional optimizations on
+%   \g's foundations.
+
+
+  \hl{there's a missing chapter/section here about where Glensdie fits into 3LA}

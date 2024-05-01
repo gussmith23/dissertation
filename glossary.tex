@@ -1,0 +1,92 @@
+
+% Bold the first occurrence of a glossary word
+\DeclareRobustCommand{\glossfirstformat}[1]{\textit{#1}}
+\renewcommand*{\glsdisplayfirst}[4]{\glossfirstformat{#1#4}}
+\usepackage[normalem]{ulem}
+\renewcommand*{\glstextformat}[1]{\color{lightgray}{\dotuline{\color{black} #1}}}
+
+
+% \makeglossaries
+\makenoidxglossaries
+
+% NOTE: use \glstext and not \gls in this file.
+% This prevents the glossary from thinking that uses of these words in the glossary are the first occurrence in text. We'd rather those first occurrences happen e.g. in the intro.
+
+\newglossaryentry{compiler}
+{
+    name=compiler,
+    description={
+A tool which converts between representations.
+    }
+}
+
+
+\newglossaryentry{target}
+{
+    name=target,
+    description={
+The platform which a \glstext{compiler} generates code for.
+    }
+}
+
+\newglossaryentry{compilerbackend}
+{
+    name=compiler backend,
+    description={
+The portion of a \glstext{compiler} that concerns the \glstext{target},
+  e.g., target-specific optimizations and code generation.
+    }
+}
+
+\newglossaryentry{validation}
+{
+    name=validation,
+    description={
+The process of sanity-checking a program or hardware design using a
+  limited, finite set
+  of inputs, and judging the correctness 
+  of the outputs.
+Also referred to as \textit{testing.}
+Validation should specifically be distinguished from
+  \glstext{verification}.
+Confusingly, 
+  in the world of hardware design,
+  validation is often referred to as
+  verification,
+  while verification (by our definition)
+  is referred to as \textit{formal} verification.
+    }
+}
+
+\newglossaryentry{verification}
+{
+    name=verification,
+    description={
+The process of mathematically proving correctness
+  about a program or hardware design.
+While the proofs of correctness themselves
+  can have limitations,
+  verification is generally more thorough
+  than \glstext{validation} or \textit{testing.}
+In the world of hardware design,
+  ``verification''
+  generally refers to what we call validation or testing,
+  while ``formal verification''
+  refers to our verification.
+    }
+}
+
+\newglossaryentry{hardwaresynthesis}
+{
+    name={hardware synthesis},
+    description={
+Another term for hardware compilation.
+The process of converting a hardware design
+  captured in a high-level language
+  to a low-level target implementation,
+  for example,
+  a netlist which can be programmed onto an FPGA
+  or a geometry file to be made into an ASIC.
+  \hl{define the terms in here}
+    }
+}

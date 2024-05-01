@@ -1,14 +1,20 @@
 \chapter{Introduction}
 
-A \textit{compiler}
-  converts from one representation
+\hl{cite} \cite{ebner2008generalized}: using a solver for optimal instruction selection
+
+A \gls{compiler}
+  converts from one language
   to another.
 A classic example
-  is the GNU C Compiler, gcc, which
-  compiles program written in C
-  into low-level, processor-specific
+  is the clang compiler
+  from the LLVM suite,
+  which
+  compiles programs written in 
+  processor-independent C
+  into processor-specific
   machine code,
-  ready to be executed:
+  which the hardware understands how
+  to execute:
 \begin{figure}[!h]
 \centering
 \begin{tikzpicture}
@@ -33,132 +39,340 @@ square:
 \end{minipage}
   \egroup;
 
-\draw[inner sep = 5pt] (4.5,0) node [draw, thin] (compiler) {compiler};
+\draw[inner sep = 5pt] (4.5,0) node [draw, thin] (compiler) {clang};
 
   \draw[->, very thick] (c) edge (compiler) (compiler) edge (asm);
 \end{tikzpicture}
 \end{figure}
 
 \noindent
-We call the platform
+In this case,
+  clang is generating code 
+  for an x86 processor;
+  we refer to 
+  the platform
   which the compiler is compiling for
-  the \textit{target.}
-% Inside a compiler are many processes,
-%   only some of which relate to the the target:
-% 
-% \begin{figure}[h!]
-%     \centering
-% \begin{tikzpicture}
-% \draw[inner sep = 5pt] (4.5,0) node [draw, thin] (compiler) {compiler};
-% \draw (0,-2) node [draw,thin] (parser) {parser};
-% \draw (compiler) edge (parser);
-% \end{tikzpicture}
-%     \label{fig:enter-label}
-% \end{figure}
-% 
-\hl{diagram blowing up the compiler box?}
+  as the \gls{target}.
 Though compilers perform many target-agnostic
-  transformations and optimizations---%
-  that is, modifications of the high-level code
-  which are useful regardless of the target---%
-  a compiler's most basic purpose
-  is target-specific: that is,
-  producing a program
-  in the target's representation.
-We call the target-specific portion
+  transformations and optimizations
+  (modifications of the high-level code
+    which are useful regardless of the target),
+  a compiler's fundamental purpose
+  is to produce a program
+  in the target's language.
+For example,
+  while clang has many optimizations
+  it can perform
+  before knowing what its target is,
+  it eventually needs to produce e.g.~x86
+  assembly code
+  such as in the example above.
+We use the term
+  \gls{compilerbackend}
+  to refer to the target-specific portion
   of the compiler
-  which implements this process
-  a \textit{compiler backend,}
-  and they will be the focus of this thesis.
-  
-Built in to every compiler backend
-  is at least one model
+  which implements this process.
+
+Whether or not they are apparent,
+  built into every compiler backend
+  are \textbf{models}
   of the target platform.
 These models come in all shapes
   and sizes.
 For example,
-  the x86 backend for gcc
-  (that is, the portion of the compiler
-    that compiles code for x86 processors)
-  must understand
-  the instructions available
-  for x86;
-  this is essentially a model
-  of the x86 ISA.
-\hl{get concrete examples here}
-A compiler for deep learning
-  workloads,
-  on the other hand,
-  must understand
-  the potentially multiple
-  available hardware accelerators,
-  comprising a model
-  of the system topology.
-
-A compiler backend's
-  internal hardware models
-  are generally
-  \textbf{implicit.}
-That is, 
-  the models are encoded in subtle ways;
-  it would take an expert
-  staring at the code
-  to understand what the underlying hardware
-  architecture
-  actually is.
-For example, \hl{example.}
+  within clang, there is a list
+  of the x86 architecture's
+  instructions.
+Here,
+  we show the declaration of
+  \texttt{mul} and \texttt{imul}:
   
-Though they are the norm,
-  implicit, handwritten hardware models
-  present in a compiler
-  are a problem
-  for a number of reasons.
-First, implicit, handwritten models
-  are a great source of bugs.
-Second, they are hard to change.
-And third, 
-  they leave potential optimizations
-  on the table.
+\begin{figure}[H]
+    \centering
+\begin{minted}[baselinestretch=1]{cpp}
+defm MUL : Mul<0xF7, "mul", MRM4r, MRM4m, mul>;
+defm IMUL : Mul<0xF7, "imul", MRM5r, MRM5m, null_frag>;
+\end{minted}
+\caption{
+Declaration of x86's
+  \texttt{mul} and \texttt{imul}
+  instructions in LLVM's x86 
+  backend~\cite{llvmx86tablegen}.
+}
+    \label{fig:intro:llvm-tablegen}
+\end{figure}
 
-Implicit,
-  handwritten models
-  are a great source of bugs.
-If your intention is to build a model
-  of your underlying system,
-  it is very easy to make a mistake
-  while implementing that model,
-  whether it be missing functionality,
-  or misrepresenting the functionality
-  of the hardware.
-Furthermore, it is even easier
-  to generate bugs
-  (and harder to find them)
-  when the model is implicit.
+\noindent
+These declarations
+  serve as one type of model
+  of the underlying hardware:
+  in this case, a model which captures
+  the instructions
+  implemented by the hardware.
+Different models
+  can capture very different things.
+The deep learning compiler TVM,
+  for example,
+  declares 
+  hundreds of different NVIDIA GPUs,
+  including information
+  about their internal capacities:
 
-Implicit, handwritten models
-  are also
-  hard to build and change,
-  and make compilers less extensible overall.
-If every architecture is added
-  by hand, manually,
-  it discourages adding new ones.
-If models are implicit
-  and hard to understand,
+\input{intro-figures/tvm-nvidia-gpu-parameters}
 
+\noindent
+These GPU declarations
+  are a very different type of model
+  from those shown in
+  \cref{fig:intro:llvm-tablegen};
+  instead of declaring instructions
+  implemented by the hardware,
+  these models capture
+  capacity information.
+These examples serve to show
+  that models are not only pervasive
+  within compilers,
+  but also that
+  they come in many forms.
+\hl{there is no way to build a compiler
+  without encoding some kind 
+  of model of the hardware}
 
-Finally,
-  implicit, handwritten models
-  leave potential optimizations on the table.
+\hl{do we need a paragraph
+  about how models are used?
+probably.}
+Hardware models
+  within compilers
+  are used within a number of core
+  compilation
+  \textbf{algorithms.}
+The clang compiler uses 
+  the model of the x86 instruction set
+  shown in \cref{fig:intro:llvm-tablegen}
+  to implement
+  various algorithms
+  such as instruction 
+  selection~\cite{llvminstructionselection}.
+Compiler algorithms
+  which operate over hardware models
+  have benefits...\hl{finish}
+In many cases, though,
+  the model and algorithm are 
+  one in the same.
+The following algorithm
+  from the open-source hardware compiler
+  (or, interchangeably,
+    \gls{hardwaresynthesis} tool)
+  Yosys
+  is searching for a specific pattern 
+  in the hardware design:
+
+\input{intro-figures/yosys-pmgen}
+
+\noindent
+The above example is both algorithm
+  and model:
+  encoded \textit{implicitly}
+  within this algorithm
+  is a model of the underlying hardware.
+Models implicitly encoded within algorithms
+  are pervasive and potentially problematic...\hl{blah}
+\hl{why are we talking about this?}
+  
+
+The current state-of-the-art
+  when it comes to compiler algorithms
+  using hardware models
+  has many shortcomings:
+  missed
+  \cref{thesis:optimizations},
+  \cref{thesis:correctness}
+  issues,
+  and 
+  increased developer time
+  (\cref{thesis:devtime})
+  and effort.
+We will now
+  elaborate on each of these three topics.
+
+\paragraph{\cref{thesis:optimizations}.}
+If compilers rely on models
+  of hardware
+  when implementing optimizations,
+  then, depending on how the model
+  and the optimization is written,
+  key optimizations can be left on the table.
+Consider the snippet of Yosys code
+  shown in
+  \cref{fig:intro:yosys-pmgen}.
+This snippet captures a specific optimization:
+  utilizing an inbuilt feature of a hardware block,
+  rather than adding additional hardware
+  (i.e., another register) to solve the problem.
+However,
+  \hl{blah blah what could break?}
 \hl{would be nice to show that automated methods have clearly shown
   to be superior when it comes to optimizing programs.
   STOKE, AutoTVM, synthesis in general, ML guided?}
 
+\paragraph{\cref{thesis:correctness}.}
+Second, compilers
+  which rely on models of hardware
+  can have hard-to-find bugs.
+\hl{todo}
+
+\paragraph{\cref{thesis:devtime}.}
+And lastly,
+  models of hardware
+  built into compilers
+  can oftentimes make compiler development
+  more difficult.
+This happens especially
+  when models of hardware
+  are \textit{implicit.}
+For example, 
+  compare the gcc example (\cref{fig:intro:gcc-imul})
+  to the example from
+  Yosys above (\cref{fig:intro:yosys-pmgen}).
+You will notice that the
+  gcc example is \textit{declarative:}
+  it explicitly declares
+  what the capabilities of the hardware are.
+Meanwhile,
+  the Yosys example is \textit{imperative:}
+  rather than implicitly declaring
+  the capabilities of the hardware,
+  the capbailities of the hardware
+  are \textit{implicitly} captured
+  via a set of imperative instructions
+  for matching a design
+  to a hardware primitive.
+Understanding implicit,
+  imperative models
+  is often more challenging
+  than understanding explicit,
+  declarative models.
+Firstly, these models
+  can be harder to find,
+  as they are easier
+  to embed implicitly into the compiler
+  e.g.~within an optimization pass.
+Secondly, as they are less explicit,
+  it can be harder to reason about
+  what they tell us about the underlying hardware.
+% old version:
+% In the worst case,
+%   the model of a target
+%   built into a compiler
+%   can be \textit{implicit.}
+% Unlike the example from gcc above,
+%   in which the model \textit{explicitly}
+%   describes the underlying hardware
+%   without placing any undocumented
+%   judgements upon it
+%   (for example, how to perform a specific optimization),
+%   \textit{implicit} models
+%   are less declarative,
+%   and implicitly encode more judgements.
+% As an example
+%   from a completely different domain,
+%   this code snippet~\cite{yosysxilinxpmgen}
+%   comes from
+%   the open source hardware synthesis tool Yosys's
+%   \texttt{pmgen} framework.
+% This code
+%   captures a model of a specific hardware platform's functionality.
+% Specifically, it checks whether
+%   there is a \textit{D flip-flop}
+%   (a specific hardware primitive)
+%   on the input of a hardware module,
+%   and folds it in to a larger module
+%   if so
+%   (which is omitted):
+% \begin{minted}[baselinestretch=1]{c}
+% subpattern in_dffe
+% arg argQ clock
+% code
+%   dff = nullptr;
+%   if (argQ.empty())
+%     reject;
+%   for (const auto &c : argQ.chunks()) {
+%     if (!c.wire)
+%       reject;
+%     ...
+% \end{minted}
+% We consider this model to be more \textit{implicit,}
+%   as it encodes information
+%   about the target
+%   in an indirect way.
+% Specifically, the above code
+%   is making decisions
+%   about how to use the underlying hardware platform,
+%   and the only documentation for these decisions
+%   are those left in code comments (omitted).
+% In general, this model
+%   is more \textit{imperative}
+%   than the instruction model found within
+%   gcc, which is more \textit{declarative}---%
+%   the imperative nature gives more room for
+%   implicit, undocumented decisions and preferences
+%   to be encoded.
+  
+
+\hl{"all models are wrong, some are useful"
+
+zach: not the case that implicit is worse; explicit can only express what fits in the model ie the DSL. implicit models have the flexibility of a more general language usually.
+
+zach: why draw the fine line between explicit and implicit? First make points about limitations of models, then find a place to dig deeper later on.
+
+implicit vs explicit flexibility: the power of negative expressiveness.
+
+}
+
+Thus, we have seen that
+  existing approaches
+  to building compilers
+  using models of hardware
+  can lead to missed optimization opportunities
+  (\cref{thesis:optimizations}),
+  issues with correctness
+  (\cref{thesis:correctness}),
+  and difficulty in compiler development
+  (\cref{thesis:devtime}).
+
+\hl{the strangeness of this first line is pointing out the fact taht we don't really want to be attacking models as a bad idea...we need a bit more nuance there. we need to make it clear we're pro model from the start.}
+However,
+  building compilers
+  using models of hardware
+  is still a good idea;
+  in fact, in this dissertation,
+  we will argue
+  that existing approaches
+  do not take the idea far enough.
+We will specifically argue
+  that compilers should be
+  \textit{automatically} generated
+  from formal models of hardware.
+\hl{there's some spectrum here,
+  of fully implicit models
+  on the left,
+  to automatic generation with explicit models
+  on the right.}
+
 \textbf{Explicit} models of hardware,
   on the other hand,
-  are not only pervasive,
-  but are also prime for use with automated reasoning tools,
-  in addition to often being more correct.
+  are not only (1) pervasive (\cref{thesis:ubiquity}),
+  but are also (2) prime for use with automated reasoning tools,
+  in addition to (3) often being more correct.
+
+\hl{a lot of this is true but for the hardware world. lots of stuff in the compiler world that's not good for automated tooling.
+
+basically zach is saying, be cautious about applying this to general compilers i.e. llvm, gcc
+
+domain specific accels + hardware, is the focus
+}
   
+\hl{Hardware models are pervasive:}
 The reliance of modern compilers
   on \textit{implicit} models is truly odd, 
   given that
@@ -184,6 +398,7 @@ should probably go into a later paragraph}
 \hl{maybe something about declarative programming being good?
 a trend towards declarative programming?}
 
+\hl{Hardware models are prime for use with automated tools:}
 Furthermore, 
   there exist plenty of automated
   tools
@@ -204,6 +419,7 @@ Why not instead
   that you can't compile an incorrect
   program?
 
+\hl{The models are more correct:}
 Lastly, and perhaps most importantly,
   these explicit models
   are perhaps \textit{more correct}
@@ -212,13 +428,62 @@ Lastly, and perhaps most importantly,
   as in many cases, these models
   are the \textit{ground truth.}
 
-Automated reasoning tools
-  are ready for the challenge
-  of automated compiler generation.
+Furthermore, it is our position that
+  \textbf{recent advances
+  in programming languages
+  make automated compiler construction
+  feasible.}
+The idea of automatically generating
+  compiler backends is not new:
+  previous work includes
+  synthesizing instruction selectors%
+  ~\cite{buchwald2018synthesizing,dias2010automatically,brandner2007compiler,daly2022synthesizing}
+  and code generators~\cite{leupers1997retargetable,brandner2013automatic},
+  among other work.
+However, much of this work
+  is a decade old, if not more,
+  and does not benefit from
+  advances in
+  languages and type systems
+  for hardware~\cite{durst2020type,nigam2023modular,nigam2020predictable},
+  equational reasoning via equality saturation~\cite{tate2009equality,willsey2021egg},
+  program synthesis~\cite{solar2008program,torlak2013growing},
+  and machine learning for program generation~\cite{alon2019code2vec,austin2021program}.Furthermore, it is our position that
+  \textbf{recent advances
+  in programming languages
+  make automated compiler construction
+  feasible.}
+The idea of automatically generating
+  compiler backends is not new:
+  previous work includes
+  synthesizing instruction selectors%
+  ~\cite{buchwald2018synthesizing,dias2010automatically,brandner2007compiler,daly2022synthesizing}
+  and code generators~\cite{leupers1997retargetable,brandner2013automatic},
+  among other work.
+However, much of this work
+  is a decade old, if not more,
+  and does not benefit from
+  advances in
+  languages and type systems
+  for hardware~\cite{durst2020type,nigam2023modular,nigam2020predictable},
+  equational reasoning via equality saturation~\cite{tate2009equality,willsey2021egg},
+  program synthesis~\cite{solar2008program,torlak2013growing},
+  and machine learning for program generation~\cite{alon2019code2vec,austin2021program}.
 
 Finally, this leads to my thesis statement:
 
-In this thesis,
+\mdfsetup{
+    frametitle={\colorbox{white}{\space{Thesis Statement}\space}},
+    innertopmargin=10pt,
+    frametitleaboveskip=-9,
+    frametitlealignment=\center
+    }
+\begin{mdframed}
+% Defined in toplevel imports-and-macros.tex
+\mythesis
+\end{mdframed}
+
+In this dissertation,
   I present the case for
   automatically generating compiler backends
   from
@@ -268,9 +533,16 @@ In the second part,
 The primary contributions of this dissertation
   are
 \begin{itemize}
+
     \item blah
 \end{itemize}
-  
+
+
+\hl{
+TODO: people keep asking about the other direction;
+  i.e. software generating hardware.
+Have to explain why we're not doing that here.
+}
   
 
 \input{text/argument-structure}

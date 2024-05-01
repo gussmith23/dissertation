@@ -30,7 +30,7 @@ We used Vivado version v2023.1,
   Quartus 22.1std.1 Build 917 02/14/2023 SC Lite Edition,
   Diamond version 3.12,
   Yosys version 0.36+42 (commit \texttt{70d3531}),
-  the cvc5~\cite{barbosa22cvc5} and Yices2~\cite{dutertre2006yices,dutertre2014yices}
+  the cvc5~\cite{barbosa2022cvc5} and Yices2~\cite{dutertre2006yices,dutertre2014yices}
   solvers
   included in the 2023-08-06 release of \texttt{oss-cad-suite} from YosysHQ,
   the Bitwuzla solver at commit \texttt{b655bc0}~\cite{bitwuzla},
@@ -75,7 +75,7 @@ The next section includes a concrete example
 \subsection{Architecture Descriptions}
 \label{sec:impl-arch-descs}
 
-\input{figures/sofa-arch-description}
+\input{lakeroad/figures/sofa-arch-description}
 
 \noindent As described in \cref{sec:overview},
   \textit{architecture descriptions}
@@ -188,8 +188,7 @@ As a more complex example
   uses $n$ LUTs and a carry chain
   to implement designs such as 
   addition or subtraction.
-As of the paper's publication date, 
-  \lr provides 5 sketch templates: 
+\lr currently provides 5 sketch templates: 
   \texttt{dsp},
   \texttt{bitwise}, \texttt{bitwise-with-carry},
   \texttt{comparison} (LUT- and carry-based arithmetic comparison), 
@@ -419,7 +418,7 @@ Multiple clock cycle guarantees,
 We use a portfolio solving
   method, running
   Bitwuzla~\cite{niemetz2020bitwuzla},
-  cvc5~\cite{barbosa22cvc5},
+  cvc5~\cite{barbosa2022cvc5},
   Yices2~\cite{dutertre2006yices,dutertre2014yices},
   and STP~\cite{stp}
   in parallel
@@ -442,7 +441,8 @@ This paper describes \lr
   but the core \lr implementation
   could be integrated directly into
   existing tools.
-Though out of scope for this paper,
+\hl{want to include detail on this?}
+For example,
   we have early,
   encouraging results
   integrating \lr

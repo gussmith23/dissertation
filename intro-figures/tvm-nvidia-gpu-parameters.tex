@@ -1,0 +1,15 @@
+
+\begin{figure}[H]
+    \centering
+\begin{minted}[baselinestretch=1]{cpp}
+TVM_REGISTER_CUDA_TAG("nvidia/nvidia-h100", "sm_90a", 49152, 65536)
+    .with_config("l2_cache_size_bytes", Integer(52428800));
+TVM_REGISTER_CUDA_TAG("nvidia/nvidia-a100", "sm_80", 49152, 65536)
+    .with_config("l2_cache_size_bytes", Integer(41943040));
+\end{minted}
+\caption{
+Declarations of NVIDIA GPUs
+  within TVM~\cite{tvmgpudecls}.
+}
+    \label{fig:intro:tvm-gpu-decls}
+\end{figure}

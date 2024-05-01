@@ -1,0 +1,40 @@
+\begin{figure}[H]
+\begin{minted}[baselinestretch=1]{python}
+@T.prim_func
+def mma_sync_desc(A, B, C):
+  with T.block("root"):
+    T.reads(C[...], A[...], B[...])
+    T.writes(C[...])
+    for i, j, k in T.grid(M_DIM, N_DIM, k_dim):
+      with T.block("C"):
+        T.reads(C[...], A[...], B[...])
+        T.writes(C[...])
+        C[thread_id_C, local_id_C] +=
+          A[thread_id_A, local_id_A] * B[thread_id_B, local_id_B]
+\end{minted}
+    \centering
+    \caption{
+NVIDIA GPU tensor 
+  intrinsic declaration
+  for matrix multiply--accumulate
+  (MMA)
+  within TVM~\cite{tvmcudatensorintrin}.
+    }
+    \label{fig:intro:tvmcudatensorintrin}
+\end{figure}
+
+% As a separate example
+%   from a completely different domain---%
+%   deep learning---%
+%   consider this 
+%   simplified version
+%   of a
+%   model~\cite{tvmcudatensorintrin} 
+%   found within TVM~\cite{chen2018tvm},
+%   a deep learning 
+%   compiler.
+% Specifically,
+%   this model captures the behavior
+%   of a NVIDIA
+%   GPU's matrix multiplication primitive
+%   (matrix multiply--accumulate, or MMA).

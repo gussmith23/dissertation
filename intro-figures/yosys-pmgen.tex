@@ -1,0 +1,41 @@
+
+% Lastly, as an example from
+%   yet another different domain,
+%   this code snippet~\cite{yosysxilinxpmgen}
+%   comes from
+%   the open source hardware synthesis tool 
+%   Yosys's~\cite{wolf2013yosys}
+%   \texttt{pmgen} framework:
+
+\begin{figure}[H]
+    \centering
+\begin{minted}[baselinestretch=1]{c}
+subpattern in_dffe
+arg argQ clock
+code
+  dff = nullptr;
+  if (argQ.empty())
+    reject;
+  for (const auto &c : argQ.chunks()) {
+    if (!c.wire)
+      reject;
+    ...
+\end{minted}
+    \caption{
+Snippet of code
+  from Yosys's pmgen framework~\cite{yosysxilinxpmgen}
+  attempting to map hardware designs
+  to specific hardware primitives.
+    }
+    \label{fig:intro:yosys-pmgen}
+\end{figure}
+
+% This code
+%   captures a model of a specific hardware platform's functionality;
+%   specifically, it checks whether
+%   there is a \textit{D flip-flop}
+%   (a specific hardware primitive)
+%   on the input of a hardware module,
+%   and folds it in to a larger module
+%   if so
+%   (which is omitted).

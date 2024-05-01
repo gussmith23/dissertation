@@ -11,7 +11,7 @@ This trend has highlighted the need
   for flexible accelerator support
   in domain-specific compilers like
   Halide~\cite{halide},
-  TVM~\cite{tvm},
+  TVM~\cite{chen2018tvm},
   TensorFlow/MLIR~\cite{tensorflow, mlir}, and
   PyTorch~\cite{pytorch}.
 
@@ -75,23 +75,24 @@ To help mitigate such impedance mismatches,
   supports expressing and reasoning about
   data layout transformations via
   syntactic rewrite rules.
-  \begin{wrapfigure}{r}{.5\textwidth}
-    \centering
-    \includegraphics[width=.9\linewidth]{glenside/access-pattern-examples-2x2.png}
-    \caption{
-      Four access patterns,
-        representing different ways
-        a
-        tensor program
-        (or \textit{kernel})
-        might access
-        the same 3D tensor. 
-      For example, (c) represents
-        accessing a 3D tensor as
-        a vector of 2D matrices.}
-    \label{fig:access-pattern-examples}
-    \vspace{-1em}
-\end{wrapfigure}
+% We moved this figure elsewhere in the thesis
+%   \begin{wrapfigure}{r}{.5\textwidth}
+%     \centering
+%     \includegraphics[width=.9\linewidth]{glenside/access-pattern-examples-2x2.png}
+%     \caption{
+%       Four access patterns,
+%         representing different ways
+%         a
+%         tensor program
+%         (or \textit{kernel})
+%         might access
+%         the same 3D tensor. 
+%       For example, (c) represents
+%         accessing a 3D tensor as
+%         a vector of 2D matrices.}
+%     \label{fig:access-pattern-examples}
+%     \vspace{-1em}
+% \end{wrapfigure}
 When combined with standard arithmetic rewrites
   for per-tensor-element computations,
   access patterns enable implementing complex
@@ -160,10 +161,10 @@ To summarize, the contributions of this chapter include:
 
 \hl{i moved related work, so probably need to rework this}
 The rest of this chapter is organized as follows:
-Section~\ref{sec:background} provides background
+Section~\hl{todo} provides background
   and briefly surveys closely related work.
-Section~\ref{sec:matmul} motivates
+Section~\hl{todo} motivates
   \g via a running example exploring
   pure matrix multiplication.
-Section~\ref{sec:glenside} details the
+Section~\hl{todo} details the
   design and implementation of \g.

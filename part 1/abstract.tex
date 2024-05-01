@@ -1,0 +1,55 @@
+\Cref{part:glenside-and-3la} 
+  of this dissertation
+  is pulled from two publications:
+``Pure Tensor Program Rewriting via Access Patterns'' by Smith et.~al.~\cite{smith2021pure} and ``Blah 3LA'' by Huang et.~al.~\cite{huang2022specialized}. \hl{update 3LA citation, make sure}
+
+\chapter*{\Cref{part:glenside-and-3la} Abstract}
+
+In \cref{part:glenside-and-3la} of this dissertation,
+  I describe an application of my underlying thesis
+  to the generation of compilers
+  for machine learning accelerators.
+Specialized hardware, especially for high-performance fields
+  such as machine learning,
+  have only grown in importance
+  over the last decade.
+Despite increased focus
+  in the generation of new hardware,
+  it remains surprisingly difficult
+  to build compilers specialized hardware.
+Existing approaches
+  often require much boilerplate (\cref{thesis:devtime}).
+The extensible approaches that do exist
+  often cannot easily optimize programs,
+  leaving optimizations on the table (\cref{thesis:optimizations}).
+Crucially, this difficulty in compilation
+  often leads to a lack of testing.
+Testing hardware is crucial
+  to delivering a functional product;
+  without rigorous testing,
+  custom hardware can easily have bugs
+  (\cref{thesis:correctness}).
+In the following chapters,
+  I describe how,
+  responding to the lack of testing
+  in the accelerator design
+  community,
+  we applied
+  my thesis
+  to generate an extensible
+  compiler
+  which produces emergent optimizations.
+This compiler is an integral piece of 3LA,
+  a novel methodology
+  for building and testing hardware accelerators.
+\hl{the rest still TODO}
+In \cref{sec:part1-background}
+  we give related background.
+In \cref{sec:part1-motivation},
+  we introduce the
+  motivation for this part.
+In \cref{sec:part1-glenside},
+  we introduce \g,
+  \hl{a language for equality saturation.}
+In \cref{sec:part1-evaluation}
+  we present an evaluation.

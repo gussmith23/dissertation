@@ -1,59 +1,1275 @@
-\Cref{part:glenside-and-3la} 
-  of this dissertation
-  is pulled from two publications:
-``Pure Tensor Program Rewriting via Access Patterns'' by Smith et.~al.~\cite{smith2021pure} and ``Blah 3LA'' by Huang et.~al.~\cite{huang2022specialized}. \hl{update 3LA citation, make sure}
-
-\chapter*{\Cref{part:glenside-and-3la} Abstract}
-
-\hl{
-In this abstract we should capture 
-  how this section actually relates
-  to the broader thesis.
-By the time we get to intro/motivation,
-  we should be ready
-  to jump into explaining the background
-  of 3LA...without calling back to the thesis?
-Or should we call back to the thesis there as well?
-It seems weird not to,
-  but at that point we'll be "in the weeds"
-}
-
-In \cref{part:glenside-and-3la} of this dissertation,
-  I describe an application of my underlying thesis
-  to the generation of compilers
-  for machine learning accelerators.
-Specialized hardware, especially for high-performance fields
-  such as machine learning,
-  have only grown in importance
-  over the last decade.
-Despite increased focus
-  in the generation of new hardware,
-  it remains surprisingly difficult
-  to test hardware
-  as it is being designed.
-Testing hardware is crucial
-  to delivering a functional product.
-In \cref{part:glenside-and-3la},
-  I describe how we applied
-  my thesis
-  when building 3LA,
-  a novel methodology
-  for building hardware accelerators.
-In \cref{sec:part1-background}
-  we give related background.
-In \cref{sec:part1-motivation},
-  we introduce the
-  motivation for this part.
-In \cref{sec:part1-glenside},
-  we introduce \g,
-  \hl{a language for equality saturation.}
-In \cref{sec:part1-evaluation}
-  we present an evaluation.
-
   
 \chapter{Background and Related Work}
 \label{sec:part1-background}
 
-\input{glenside/background-and-related-work}
+In \cref{part:glenside-and-3la}
+  of this dissertation,
+  we have described an application
+  of our thesis
+  to the problem of
+  generating compilers
+  for deep learning accelerators.
+We have described 
+  the difficulties in building
+  compilers
+  for custom accelerators.
+First, developing a compiler
+  requires much
+  developer effort
+  and expertise
+  (\cref{thesis:devtime}).
+Second,
+  even once a compiler is built,
+  optimizations still often
+  get left on the table
+  (\cref{thesis:optimizations}).
+And lastly,
+  the difficulties in
+  building compilers
+  for accelerators
+  often makes the process
+  of validation
+  of accelerators
+  hard if not impossible
+  for accelerator designers
+  (\cref{thesis:correctness}).
+We describe how
+  we applied our thesis
+  in the process of developing
+  3LA: a new methodology
+  for accelerator design.
+Specifically, we present
+  \g,
+  a domain-specific language
+  which can be used to 
+  automatically compile
+  workloads to accelerators.
 
-\input{3la/related-work}
+We now present background
+  and related work
+  on the various topics
+  involved in
+  \cref{part:glenside-and-3la}
+  of this dissertation.
+We first discuss existing
+  machine learning accelerators
+  (\cref{sec:part1:relatedwork:accelerators}).
+
+\section{Machine Learning Accelerators}
+\label{sec:part1:relatedwork:accelerators}
+
+A variety of accelerators~\cite{
+    jouppi2017tpu, chen2016eyeriss, moreau2018vta, markidis2018tensorcore, nvdla,
+    genc2021gemmini}
+  have been developed 
+  to provide efficient implementations
+  of tensor operators for ML applications.
+These devices accelerate tensor operators 
+  through hardware parallelism, 
+  simultaneously applying related operations
+  across many tensors in the accelerator's memory (which are often laid out according to custom rules that facilitate hardware optimization).
+  %in the accelerator's memory,
+  %often laid out according to custom rules
+  %that facilitate hardware optimization.
+Tensor program compilers must translate
+  expensive application code fragments
+  down to accelerator invocations that
+  adhere to these layout rules,
+  which often involves both
+  (a) higher-level transformations like
+  tensor reshaping to match accelerator size bounds and
+  loop unrolling to expose optimization opportunities, and
+  (b) lower-level transformations like
+  operator fusion and \tcd{im2col}
+  to match accelerator calling conventions and
+  even implement different operations
+  using the same accelerator,
+  e.g., on systolic arrays~\cite{im2col, jia2014semantic}.
+  
+% Hence, it becomes the task of the compiler 
+%   to ensure that data 
+%   can be efficiently offloaded 
+%   to these accelerators 
+%   in the expected format,
+%   sometimes requiring higher-level program transformations
+%   to avoid redundant transformations.
+% \hl{Maybe this isn't the place for im2col?} Additionally, 
+%   certain layout transformations 
+%   can be used to implement different operations using the same accelerator,
+%   as in the above-mentioned \tcd{im2col} example.
+
+\section{Validating Hardware Designs}
+
+\Gls{validation} of hardware designs
+  is an incredibly important task---%
+  so important, in fact, that it often represents
+  a majority of the cost
+  for a new hardware design \hl{cite this}.
+Validating a hardware design
+  is the process of ensuring
+  that it behaves as intended.
+In the world of hardware design,
+  this process is more commonly
+  referred to as
+  \textit{verification---}%
+  however, in this dissertation,
+  I prefer to use the definitions
+  of \textit{validation} and \textit{verification}
+  from the field of Programming Languages,
+  in which \textit{validation}
+  refers to non-formal, non-mathematical,
+  non-exhaustive sanity checking,
+  while \textit{verification}
+  refers to formal, mathematical
+  proving of properties (like correctness).
+Hardware designers and validation engineers
+  perform validation
+  at many points in the hardware design process.
+For example,
+  they might validate that
+  their initial prototype of the design,
+  written in e.g.~Python or C++,
+  behaves identically to their
+  initial Verilog implementation
+  using a simulator
+  such as Verilator~\cite{verilator}.
+Later in the design process,
+  they might
+  formally verify the equivalence
+  of their initial Verilog implementation
+  against a lower-level,
+  backend-specific version of the Verilog
+  using an equivalence checker
+  like Cadence's Jasper~\cite{jasper},
+  or similar tools from Mentor Graphics
+  or Synopsys.
+
+
+Simulation tools can operate
+  at different levels of specificity.
+Tools like Verilator~\cite{verilator} and Cuttlesim~\cite{pitclaudel2021cuttlesim} enable \textit{cycle-accurate RTL simulation}:
+  i.e.~they simulate exactly what the hardware
+  is doing
+  at each clock cycle.
+However,
+  cycle-accurate simulation is slow,
+  as it requires simulating
+  every component within the hardware design.
+Often, it is useful to run
+  \textit{application-level co-simulation,} 
+  in which a high-level software program
+  (e.g.~a deep learning model)
+  is simulated simultaneously with the hardware.
+Co-simulation is integral
+  to the 3LA methodology---%
+  by running entire applications
+  via co-simulation, 3LA helps designers
+  find bugs in their hardware designs.
+In general, cycle-accurate simulators
+  are too slow to run full applications
+  in any realistic amount of time,
+  making co-simulation infeasible.
+In these cases,
+  higher-level, non-cycle-accurate simulation
+  can enable fast simulation.
+SystemC~\cite{SystemC}
+  and ILA~\cite{todo},
+  are common tools for implementing
+  these high-level models.
+The 3LA framework relies on ILA, which,
+  unlike SystemC,
+  provides
+  a clear formal verification path to RTL.
+  
+% Other work has targeted formal verification of code generation for accelerators~\cite{AtlPopl22,ExoPldi22}, but does not have a path to RTL design verification that is possible with ILAs. 
+ %and
+ %do not support %for %flexible matching and 
+ %application-level co-simulation. \sm{Not sure how this fits here.} 
+%
+  
+
+\section{Hardware--Software Co-Design}
+
+\textit{Hardware--software co-design}
+  refers to a loosely grouped
+  set of techniques and ideas
+  centered around one primary idea:
+  rather than the well-defined separation
+  between software and hardware design
+  which existed in the past,
+  hardware and software
+  should instead be designed \textit{together.}
+That is, to maximize
+  the performance of hardware,
+  hardware designers should be able to suggest
+  changes to the software
+  such that it will be more amenable to acceleration;
+  similarly,
+  software designers should be able to suggest
+  hardware changes
+  to enable new algorithms.
+\g and the 
+  \TLA methodology enable
+  hardware--software co-design
+  by making it easier
+  to simulate full end-to-end
+  applications
+  on prototype hardware.
+This enables faster iteration
+  both on the software 
+  and on the hardware.
+
+There exists much other work on
+  hardware--software codesign
+  for deep learning.
+Recent work on accelerator generation and integration~\cite{
+    bahr2020creating, truong2020fault}
+  has explored adding support in the Halide~\cite{ragan2013halide}
+  compiler flow for specialized Coarse-Grained Reconfigurable Array (CGRA) accelerators.
+That work composes an
+  impressive array of custom tools to
+  generate and verify specialized CGRA accelerators
+  and also map Halide program fragments
+  down to accelerator invocations.
+HeteroCL~\cite{lai2019heterocl} also provides
+  a similar custom flow.
+
+
+\section{Tensor IRs and Compilers}
+
+\g, the primary contribution
+  of \cref{part:glenside-and-3la}
+  of this dissertation,
+  is fundamentally an
+  intermediate representation (IR)
+  for tensor programs.
+On top of the \g IR,
+  we build the 3LA methodology,
+  which includes a compiler
+  utilizing \g
+  to map deep learning workloads
+  to accelerators.
+In this section, we describe
+  other IRs and compilers
+  for tensor programs.
+
+Machine learning workloads
+ are generally viewed
+ as a sequence of 
+ of \textit{tensor kernel} invocations,
+ where tensor kernels
+ are large operations
+ over multidimensional arrays (tensors)
+ such as 2D convolution
+ or dense matrix multiplication.
+Machine learning frameworks
+ (such as TensorFlow \cite{tensorflow}
+   and PyTorch \cite{pytorch})
+ and machine learning compilers
+ (such as TVM \cite{chen2018tvm})
+ can optimize
+ machine learning workloads
+ at a number of levels,
+ which often result
+ in each framework
+ having a number of different IRs.
+TVM, for example,
+ can optimize machine learning workloads
+ at a high-level
+ using its high-level IR
+ Relax \hl{cite}
+ (and its former high-level
+   IR Relay \cite{relay}),
+ but
+ low-level optimizations
+ such as loop blocking and reordering
+ must be done 
+ in its lower-level IRs.
+
+% \hl{not mentioning hand-optimized kernels like CuDNN,
+% but maybe that's OK for focus / space}
+
+Tensor compilers for ML and HPC applications strive
+  to balance clear, high-level operator semantics
+  and support for the low-level optimizations
+  necessary to target specialized accelerators.
+Halide~\cite{halide}
+  achieves this balance by separating
+  operator \textit{specifications} (what is computed) from
+  \textit{schedules} (how, when, and where
+  each output element is generated).
+This style of separation has proven
+  highly effective across both
+  application domains and hardware targets;
+  numerous compilers including TVM~\cite{chen2018tvm},
+  FireIron~\cite{hagedorn2020fireiron},
+  LIFT~\cite{lift}, and Accelerate~\cite{accelerate}
+  follow variations of this strategy.
+  
+The specification/schedule separation approach
+  allows the same high-level program (specification)
+  to be flexibly optimized for and mapped to
+  different hardware targets by applying different schedules.
+From this perspective,
+  schedules represent different rewriting strategies
+  to explore various loop ordering and memory layouts;
+  in LIFT and Accelerate these
+  take the form of functional combinators
+  closely related to \g's approach.
+As in classic term rewriting,
+  experts must often carefully craft
+  schedules for each target to achieve
+  the best performance and mitigate
+  phase ordering challenges~\cite{phase-ordering},
+  though recent projects have produced promising results
+  in automatic scheduling~\cite{
+    chen2018autotvm, zheng2020ansor, anderson2020learning}.
+
+Other tensor IRs like
+  TACO~\cite{taco}, Keops~\cite{keops},
+  and COMET~\cite{tian2021highperformance}
+  rely on \textit{index notation}\footnote{
+    Index notation is closely related to
+    ``Einstein notation'' where reduction
+    indices are implicit.}
+  to concisely express tensor operators
+  and simplify optimization by
+  uniformly representing
+  per-output-element computations.
+These approaches also rely on
+  rewriting passes to generate
+  kernel implementations specialized to
+  tensor sparsity / density,
+  operator combinations arising in
+  the source application, and
+  details of the target hardware.
+In Section~\ref{sec:matmul} we discuss
+  some of the tradeoffs of these approaches
+  with respect to other rewriting strategies.
+ 
+Polyhedral compilers~\cite{polyhedral-survey}
+  like Tensor Comprehensions~\cite{vasilache2018tensor}
+  and Tiramisu~\cite{tiramisu}
+  optimize loop-filled programs
+  by modeling loop nests as polyhedra
+  and applying geometric transformations.
+The polyhedral approach exploits
+  regular loop structure,
+  but is also restricted
+  to geometrically affine transformations.
+In contrast, term rewriting is
+  neither guided nor restricted by
+  geometric constraints, making
+  these approaches broadly complementary.
+
+
+% Accelerators and parallel architectures 
+%   present many opportunities 
+%   for tuning and improving tensor operator implementations for the best performance.
+% Many systems, 
+%   including deep learning frameworks like PyTorch~\cite{pytorch},
+%   make extensive use of hand-optimized tensor operator implementations
+%   (such as those in the CuDNN library~\cite{chetlur2014cudnn}).
+% While these hand-optimized implementations
+%   achieve strong performance,
+%   various systems, including \g,
+%   have been proposed to automatically
+%   generate optimized tensor operators
+%   to reduce development time,
+%   support varied hardware platforms,
+%   and avoid reliance on a small number of experts.
+% These tensor compilers 
+%   rely on specifying tensor computations 
+%   in a form that allows for
+%   conveniently exploring options for optimizations, 
+%   such as by changing loop orderings
+%   to best utilize caches.
+
+% \hl{Surely there's a better summary/gloss here.}
+% Many tensor operator compilers 
+%   use index notation
+%   to specify tensor operators
+%   (defining how each element of the output
+%   is to be computed
+%   based on corresponding elements 
+%   of the input).
+% TACO~\cite{taco} uses index notation 
+%   for automatically generating and optimzing both sparse and dense tensor computations,
+%   permitting particular dimensions 
+%   to be specified as dense or sparse,
+%   introducing various structures for reasoning about how 
+%   to iterate over sparse dimensions.
+% %Tensor operators in TACO
+%   %are described using index notation, 
+%   %with particular tensor dimensions 
+%   %being either dense or sparse.
+% %\cite{taco} initially 
+%   %focused on compiling for CPU, 
+%   %while subsequent work~\cite{senanayake2020}
+%   %has extended TACO to target
+%   %GPUs and vector units.
+% %  is a compiler notable for its handling
+% %  of computations over sparse tensors.
+% %\hl{unsure how to draw any connection here, but i feel like i need to at least mention taco}
+% Keops~\cite{keops} also uses
+%   index notation to describe tensor operations
+%   for both dense and spare matrices,
+%   but introduces another matrix representation
+%   called symbolic matrices, 
+%   in which each element of the symbolic matrix
+%   is computed from two smaller data matrices.
+% Computations on symbolic matrices 
+%   can more easily be deployed to GPUs and other accelerators 
+%   than sparse computations
+%   but require less data movement than dense computations.
+% %% I think MLIR isn't relevant in this discussion: IRs built _in_ MLIR might be
+% %MLIR~\cite{mlir} is a general-purpose compiler framework intended to facilitate the development of IRs.
+% %While MLIR itself does not have a built-in notion of tensorization, it has been used to implement polyhedral IRs and other tensor operator representations.
+% COMET~\cite{tian2021highperformance} is another
+%   CPU-focused sparse tensor algebra IR,
+%   implemented using MLIR~\cite{mlir},
+%   that additionally uses information about sparse storage formats 
+%   in its representation 
+%   to increase temporal and spatial locality.
+
+% Halide~\cite{ragan2013halide}
+%   %while not a machine learning compiler
+%   has been influential
+%   in using a representation
+%   that separates
+%   an tensor operator's specification (what it computes)
+%   from its schedule (what order elements are computed),
+%   allowing many optimizations
+%   to be described as different schedules
+%   for the same specification
+%   and facilitating operator fusion.
+% As discussed in~\cite{newcomb2020halide-rewrite},
+%   Halide applies a term rewriting system
+%   for producing optimized code.
+%   \hl{Any insight for why Halide is amenable to a rewrite system?}
+% TVM~\cite{chen2018tvm}
+%   uses a similar specification-schedule split
+%   for describing its tensor operators.
+% FireIron~\cite{hagedorn2020fireiron} is another system
+%   using a split between a computation specification 
+%   and its realization
+%   (using a decompositions, rather than Halide-style schedules,
+%   for scheduling parts in a top-down style).
+% \g can be understood
+%   as a further refinement
+%   on an algorithm's specification,
+%   disambiguating
+%   how data is accessed
+%   from the computation being performed
+%   over the data,
+%   enabling transformations
+%   like mapping to hardware
+%   before the program is scheduled.
+%   \hl{What does it mean
+%   that mapping to hardware
+%   is done before the program is scheduled?}
+
+% Like \g, several other systems 
+%   use functional representations
+%   of tensor operators.
+% LIFT~\cite{lift}
+%   separates specifications from schedules
+%   using combinators like maps and reductions to specify schedules,
+%   an idea further explored in~\cite{hagedorn2020func-high-perf}.
+% \hl{anything else to say about LIFT? Contrast with Halide/TVM's scheduling languages?}
+% Accelerate~\cite{accelerate} 
+%   uses functional combinators 
+%   to map Haskell code 
+%   to GPU programming primitives.
+% \hl{Discussion comparing these to \g?}
+
+% The polyhedral representation~\cite{polyhedral-survey} 
+%   has also proven useful
+%   for expressing tensor operators.
+% %Polyhedral compilation~\cite{polyhedral-survey}
+%   %is a powerful alternative
+%   %to term rewriting-based compilers.
+% Polyhedral compilers optimize
+%   loop-filled programs
+%   by modeling loop nests
+%   as polyhedra
+%   and transforming them geometrically.
+% Tensor Comprehensions~\cite{vasilache2018tensor}
+%   and Tiramisu~\cite{tiramisu}
+%   are examples of machine learning compilers
+%   powered by the polyhedral framework.
+% \hl{Need note about deploying to accelerators?}
+% \hl{Implications for term rewriting?}
+% Multidimensional homomorphisms~\cite{multidimensional-homomorphism} 
+%   are another mathematical representation 
+%   of tensor operations
+%   that has been amenable to automatic parallelization 
+%   and allows for hierarchical composition.
+%   \hl{any comment in relation to \g?}
+
+%There are at least as many
+  %tensor IRs
+  %as there are
+  %deep learning frameworks,
+  %and many frameworks
+  %use more than one.
+%TVM \cite{chen2018tvm},
+  %for example,
+  %uses the high-level
+  %Relay IR~\cite{relay}
+  %for optimizations
+  %in the sequencing of tensor kernels,
+  %while it uses low-level TIR
+  %to optimize kernels themselves.
+%\hl{If you're going to complain about TIR not being pure, you need to establish that purity is a requirement before this. Maybe discuss this later}
+%Relay and TIR
+  %are a perfect example
+  %of our impedance mismatch problem:
+  %Relay is pure but too high-level,
+  %while
+  %TIR is low-level but impure.
+
+
+% Should we talk about BYOC here?
+%Recently,
+%  the Bring Your Own Codegen
+%  (BYOC)
+%  framework
+%  was merged into TVM \cite{byoc}.
+%BYOC
+%  is novel,
+%  as it allows for the 
+%  fast implementation
+%  of a full compiler
+%  for deep learning models
+%  down to custom hardware backends
+%  with fairly little additional code,
+%  assuming the users
+%  have written a codegen
+%  for their hardware
+%  already.
+%BYOC includes
+%  a matching framework,
+%  for matching
+%  user-specified
+%  patterns
+%  of Relay code.
+%As we will see
+%  in Section \ref{sec:case-study-tensorization},
+%  one of our primary case studies
+%  of \g{}
+%  is as a pattern matcher
+%  for matching such computational patterns---%
+%  in fact,
+%  it was the original
+%  intended use case
+%  of \g{}!
+%In some sense,
+%  the two pattern matchers
+%  are incomparable,
+%  because,
+%  as we've described above,
+%  \g{}
+%  and Relay
+%  operate at different levels
+%  of abstraction.
+%Yet if we ignore the differences
+%  in the levels of abstraction,
+%  we can compare
+%  the matchers
+%  in how they operate.
+%In this comparison,
+%  \g{} shines through
+%  with the help of
+%  the \egr{}.
+%Because rewrites
+%  are so cheap and easy
+%  within the \egr{},
+%  we can run a huge number
+%  of exploratory rewrites,
+%  potentially finding places
+%  to map in user-defined
+%  patterns.
+%BYOC,
+%  on the other hand,
+%  expects the user to provide
+%  multiple equivalent patterns
+%  to cover the numerous ways
+%  their pattern might appear 
+%  in the program
+%  \hl{(verify this)}.
+
+%Named tensors \cite{chiang2021named}
+%  are a primary inspiration
+%  for the access pattern data structure
+%  at the core of \g.
+%%Tensors have a specific layout
+%%  in memory,
+%%  a hardware detail
+%%  that often bubbles up
+%%  even to the highest levels
+%%  of tensor abstractions.
+%%For example,
+%%  in both TVM and TensorFlow,
+%%  the \tcd{conv2d} operator
+%%  requires the user to specify
+%%  the layout of the activation tensor---%
+%%  \tcd{NCHW} or \tcd{NHWC},
+%%  where \tcd{N} is the batch dimension,
+%%  \tcd{C} is the channels dimension,
+%%  and \tcd{H} and \tcd{W} are the spatial
+%%  (height and width)
+%%  dimensions.
+%%Rather than pass layout information
+%%  externally,
+%%  named tensors
+%%  incorporate dimension names
+%%  directly into the tensor abstraction.
+%%Named tensors
+%%  acknowledge the fact
+%%  that
+%%  not all dimensions
+%%  are made the same,
+%%  and that different dimensions
+%%  have different functions.
+%Named tensors
+%  assign names
+%  to the dimensions of a tensor,
+%  increasing code readability
+%  and acknowledging that different dimensions
+%  have different functions.
+%Though
+%  we do not actually adopt
+%  this notation
+%  in \g{}---%
+%  the dimensions of tensors
+%  are still just indexed
+%  with integers---%
+%  this core idea
+%  is reflected
+%  in the design
+%  of access patterns,
+%  which encode the fact that
+%  some dimensions are
+%  for
+%  \textit{iterating over,}
+%  while others are meant to be 
+%  \textit{computed upon.}
+
+%Many machine learning frameworks
+  %have an optimization step
+  %in which they match program patterns
+  %to efficient low-level implementations,
+  %whether that be offloading to hardware
+  %or calling into a tuned library.
+%TVM \cite{chen2018tvm}, 
+%% Steve: I would say Latte is not very relevant here
+%% It provides AD, but it requires the user to manually implement just about everything else
+  %Latte \cite{latte},
+
+
+%% Steven: Not clear it's relevant to this context
+%Norman Ramsey instruction selection~\cite{dias2010instruction-selection}
+
+%\hl{even further back:} apl?~\cite{apl-survey} % probably no
+
+
+Another key piece of background to note
+  when it comes to deep learning compiler frameworks
+  is interoperability of frontends.
+Machine learning models can be expressed
+  in many frontend languages,
+  including MxNet~\cite{chen2015mxnet},
+  PyTorch~\cite{paszke2019pytorch},
+  TensorFlow~\cite{abadi2016tensorflow},
+  ONNX~\cite{linux2019onnx},
+  and CoreML~\cite{apple2022coreml},
+  and generally,
+  compilers should strive to support
+  models expressed in all of these frontends.
+As it is built on top of TVM,
+  which supports importing from many
+  frontend languages,
+  our \TLA prototype
+  supports all of these frontend languages.
+  
+% \TLA is capable of supporting any accelerator back-end provided that it be represented in terms of ILA instructions. BYOC, MLIR, and Exo are similarly capable of supporting arbitrary back-ends, so long as users implement custom code generators. Several Halide extensions have implemented support for some accelerators, like stencils or systolic arrays, but these have required modifications to Halide's core (see Table~\ref{figure.methodology}).
+% %and are not extensible with respect to new back-ends. 
+% While Glenside can represent arbitrary accelerator operations as opaque predicates, no further code generation is implemented (hence, \TLA is its first use in code generation).
+
+% Formally verified compilers such as  
+%   CompCert~\cite{leroy2006formal} and CakeML~\cite{kumar2014cakeml}
+%   can rigorously establish end-to-end equivalence
+%   from high-level source code down to assembly for
+%   various CPU back-ends via machine-checkable proofs,
+%   but currently do not provide a general approach
+%   for integrating new accelerator support and
+%   provide no support for custom numerics.
+% In contrast, \TLA enables validating
+%   accelerator mappings via
+%   end-to-end simulation handling custom numerics. 
+  %and formally verifying individual rewrite rules from compiler IR patterns to accelerator invocations.
+% \TLA provides an approach
+%   to extend existing compilers
+%   with mappings from DSLs workloads
+%   to custom accelerator back-ends and
+%   enables validating these mappings
+%   via end-to-end simulation.
+% Thus, \TLA complements
+%   existing compiler verification efforts, and
+%   may provide guidance for future work on formally
+%   verifying ``accelerator-extensible'' compilers.
+
+
+  
+%   \hl{Need to make sure that we distinguish \TLA's validation of the compilation results from the CompCert style verifying the compiler itself.}
+
+
+
+%\subsection{Term Rewriting, Equality Graphs, and Equality Saturation}
+\subsection{Term Rewriting and Equality Saturation}
+
+Term rewriting is a classic
+  program optimization technique~\cite{baader1998term}
+  that relies on iteratively applying
+  rewrite rules of the form $\ell \xrightarrow{} r$:
+  when part of a program
+  matches the pattern $\ell$
+  under substitution $\sigma$,
+  it is rewritten into $\sigma(r)$.
+This approach is ubiquitous,
+  frequently used in both mainstream and DSL compilers
+  to implement features including preprocessing,
+  strength reductions, and
+  peephole optimizations~\cite{garavel2018rewrite-context}.
+  
+Classic term rewriting systems where
+  rewrites are applied destructively suffer
+  phase ordering problems~\cite{phase-ordering}:
+  the order in which rewrites are applied can
+  enhance or severely diminish performance.
+Recent work has shown how program synthesis
+  can help address this challenge in
+  peephole optimizers like Halide's
+  scalar expression rewriter~\cite{
+    newcomb2020halide-rewrite}.
+  
+Advances in alternate rewriting techniques
+  like equality saturation~\cite{tate2009equality}
+  also mitigate phase ordering by exploiting
+  the e-graph data structure from SMT solvers
+  to repeatedly apply all rewrites simultaneously,
+  thus obviating rule ordering considerations.
+In particular,
+  the \tcd{egg} library~\cite{willsey2021egg}
+  has been used to develop new synthesis and
+  optimization tools across diverse domains~\cite{
+    herbie, szalinski, wang2020spores},
+  including DSP compiler vectorization~\cite{
+    vanhattum2021vectorization} and
+  tensor computation graphs~\cite{yang2021equality}.
+
+\g provides the first tensor IR
+  amenable to equality saturation by
+  introducing access patterns to
+  provide pure, higher order tensor
+  kernel combinators that support
+  rank-polymorphism without the need
+  for binding structures like
+  anonymous functions or index notation.
+
+% {\color{red} \noindent\rule{8.5cm}{10pt}}
+
+% \g utilizes
+%   the power of equality saturation
+%   in
+%   low-level tensor program
+%   transformation---%
+%   namely, mapping programs
+%   to custom hardware.
+  
+% Term rewriting
+%   is a classic technique
+%   in program optimization
+%   in which rewrite rules of the form
+%   $\ell \xrightarrow{} r$
+%   are applied over a program.
+% When an expression in the program
+%   matches
+%   the pattern $\ell$,
+%   it is rewritten
+%   into the pattern $r$.
+% In classic term rewriting systems,
+%   the ordering
+%   in which rewrites are applied
+%   can affect whether optimizations
+%   are found,
+%   as some rewrites
+%   may reverse or muddle
+%   the effects
+%   of other rewrites.
+% Equality saturation
+%   is a technique
+%   developed to sidestep
+%   this 
+%   phase ordering problem.
+% The technique
+%   has recently re-emerged
+%   with the development
+%   of the \tcd{egg} library
+%   \cite{willsey2021egg},
+%   and with the successful application
+%   of equality saturation
+%   to floating point optimization \cite{herbie}
+%   and CAD program simplification \cite{szalinski},
+%   among other varied fields.
+
+% %A primary feature
+% %  of equality saturation
+% %  is its ability to
+% %  efficiently store
+% %  all previously discovered
+% %  versions 
+% %  of the program
+% %  being transformed.
+% %The data structure which enables this
+% %  is the
+% %  \textit{equality graph}
+% %  (\egr),
+% %  which resembles
+% %  a standard program graph (\hl{not sure on words to use here?}),
+% %  except
+% %  each node in the program
+% %  is replaced with a \textit{set} of nodes,
+% %  called an \textit{equivalence class}
+% %  or \textit{eclass.}
+% %All nodes within an eclass
+% %  are equivalent, and thus 
+% %  can be substituted for one another
+% %  to produce an equivalent program.
+% %This property is only possible
+% %  when the language used
+% %  within the \egr
+% %  is pure,
+% %  which thus becomes a requirement
+% %  for any language
+% %  we'd like to transform
+% %  with equality saturation.
+  
+% Diospyros \cite{vanhattum2021vectorization}
+%   is a vectorizing compiler
+%   for DSPs
+%   which uses equality saturation
+%   to match program fragments
+%   to hardware primitives.
+% Diospyros
+%   starts from scalar programs
+%   and, via symbolic evaluation
+%   and equality saturation,
+%   lifts them to vectorized
+%   expressions,
+%   while \g starts
+%   from a higher level of abstraction
+%   and searches downwards.
+  
+% SPORES \cite{wang2020spores}
+%   and Tensat \cite{yang2021equality}
+%   utilize equality saturation
+%   to optimize
+%   linear algebra expressions
+%   and tensor computation graphs,
+%   respectively.
+% While both
+%   show the potential
+%   of equality saturation
+%   for tensor program transformation,
+%   both of their IRs
+%   are too high-level
+%   for the task of mapping to hardware.
+
+% TODO mention somewhere in here that lambdas (which a lot of langs will use) are a problem for first-order rewrite systems
+
+\section{3LA Related Work}
+
+\hl{have to adapt and rewrite all of this}
+
+%\input{floats/tab-compiler-framework-comparison}
+
+%\hl{[Zach]}
+
+% Limitations of current approaches
+% E.g., what’re the challenges in using MLIR, for example, to build the {\TLA} or an end-to-end flow.
+% Even if MLIR wants to do the same things, they should adopt the {\TLA} approach! (i.e., MLIR doesn’t immediately make addressing the challenges we are focusing on easier!)
+% (We would need to figure out which MLIR integrations we’re referring to… CIRCT may be one. There is also a systolic array document)
+
+%The key insights of the \TLA methodology for doing end-to-end application-level evaluation on accelerators are using (i) the ILA as a formal software/hardware interface for mapping DSL applications to specialized accelerators and (ii) using flexible matching to avoid rewriting applications to match an accelerator.
+%
+% Above, we demonstrated how \TLA's ILA interfaces enable simulating 
+% %\hl{ \textit{unmodified}} 
+% applications on custom accelerators, modular validation and verification of accelerator mappings, and flexible matching to search for semantically equivalent offload opportunities.
+%
+%Below we survey work related to the \TLA methodology.
+
+% By adopting \TLA, engineers can simulate, debug, and even verify mappings from DSL workloads down to custom accelerator invocations.
+% %
+% Furthermore, \TLA's uniform accelerator interface enables flexible matching to automatically discover opportunities for accelerator invocations in unmodified source programs.
+% %
+% \TLA is also extensible along several key dimensions: adding support for new accelerators, enhancing flexible matching with additional rewrite rules, and incorporating new tools into the ecosystem (e.g., design space exploration or breakpoint debugging).
+% %
+% %To the best of our knowledge, no existing framework provides a similarly comprehensive set of features.
+% %
+% Below we survey past work addressing different aspects of the features \TLA provides.
+
+\paragraph{Pattern Matching Accelerator Calls}
+
+% \hl{This paragraph appears to clash with the section header.}
+% Numerous DSLs have recently become popular
+%   to facilitate programming productivity
+%   in high-value applications, e.g.,
+%   TVM~\cite{chen2018tvm},
+%   Halide~\cite{ragan2013halide}, and
+%   TACO~\cite{kjolstad2017tensor}.
+% The \TLA methodology complements all these efforts;
+%   \TLA is designed to ease adding accelerator support for
+%   compilers in this class of high-performance DSLs
+%   by providing a uniform interface that can be reused
+%   across DSLs and compilers and additionally
+%   introduce support for verifying compiler-to-accelerator
+%   mappings via ILAng tooling~\cite{huang2019ilang}.
+
+The most closely related work to flexible matching is from 
+\begin{itemize}
+  \item TVM BYOC~\cite{chen2021byoc}, which only provides exact syntactic matching as discussed in \S\ref{sec.background}, and
+  \item Glenside~\cite{smith2021pure}, which, prior to this work, had not been integrated into a compilation pipeline nor used to target custom accelerators.
+\end{itemize}
+Past work has also explored rewrite-based techniques for
+  automatically inferring instruction selection passes
+  between ISAs~\cite{
+    ramsey2011resourceable,
+    dias2010automatically}
+  and in the context of superoptimization~\cite{
+    bonsal-so,
+    bonsal-so-translate}.
+Rewriting in \TLA instead operates on a high-level IR
+  to expose opportunities to invoke code generators,
+  rather than performing low-level code generation directly.
+Equality saturation has been
+  used in the context of
+  ML and DSP compilers for
+  optimization~\cite{
+    yang2021equality,
+    alexa-dsp-eqsat,
+    caviar-cc22}.
+There has also been significant work on
+  ML and HPC compiler frameworks with
+  varying degrees of support for
+  targeting custom accelerators~\cite{
+    ragan2013halide,
+    AtlPopl22,
+    chen2018tvm,
+    moreau2019hardware,
+    lattner2021mlir}.
+To the best of our knowledge,
+  none of these frameworks provides support for
+  testing prototype accelerators
+  designs end-to-end on
+  unmodified source applications.
+  
+
+
+% In principle, many DSLs allow for supporting custom accelerators via bespoke translations from DSL operators to specific accelerator APIs,
+% e.g., as in the original TVM~\cite{chen2018tvm} support for VTA~\cite{moreau2019hardware}.
+% %
+% TVM's BYOC~\cite{chen2021byoc} interface
+% % provides a more convenient mechanism for
+% eases incorporating custom accelerators
+% %, especially for coarser-grained operations,
+% by performing syntactic pattern matching to offload computations via user-provided code generators.
+% % By building on TVM,
+% %   BYOC inherits support for multiple frontends
+% %   and additionally provides extensible pattern matching to facilitate
+% %   adding new rules for mapping DSL fragments to new accelerators.
+% %\hl{merge next two sentences?}
+% However, BYOC leaves
+%   all matters of code generation, e.g., MMIO invocations,
+%   to the user,
+%   while \TLA provides
+%   more structure to code generation
+%   via the ILA.
+% %Furthermore, unlike \TLA, BYOC does not directly support custom
+% % code generation for fine-grained MMIO invocations.
+% In particular, 
+%   the ILA provides useful simulation capabilities.
+% %   that can be of practical use during compiler development, 
+% %   whereas any comparable faculties (such as TVM's built-in VTA functional simulator) 
+% %   would otherwise have to be separately developed and deployed.
+% Additionally, BYOC's pattern matching
+% %, while incorporating some dataflow analysis beyond exact matching,
+% cannot search the space of programs equivalent to the input,
+% limiting the number of potential accelerator invocations %it can find
+% compared to flexible matching in our \TLA prototype.
+
+% The MLIR framework~\cite{lattner2021mlir} provides a rich metalanguage and numerous tools for
+%   developing, optimizing, and translating between custom compiler IRs,
+%   but does not inherently provide direct support for
+%   \TLA's features.
+%   %--- MLIR serves more as a rich metalanguage
+%   %in which users can develop custom IRs,
+%   %potentially reusing tools and definitions.
+%   %ideally reusing tools and definitions from related IRs also
+%   %expressed in MLIR.
+% It would be possible to realize the \TLA methodology
+%   within an MLIR-based ecosystem; 
+%   we implemented our DL-focused prototype using TVM %and BYOC
+%   since it allowed leveraging 
+%   % us to leverage 
+%   more DL infrastructure.
+%   %in the case of our DL-focused prototype, 
+%   %we found it more convenient to use TVM and BYOC 
+%   %we believe that our current approach using BYOC required less effort and derived more benefit
+%   %from existing infrastructure. 
+%   %\hl{Not sure what is the point being made in the later part of this sentence. --It is supposed to explain why we chose to implement our prototype via TVM rather than MLIR. Can rephrase to clarify}
+
+% However, these instruction selection techniques
+%   are complementary to \TLA's approach
+%   and potentially can be used in the \TLA methodology
+%   for generating instructions for fine-grained accelerators like VTA.
+%\hl{maybe add sentence distinguishing from flex matching, and then cut what is now the last sentence of this para?}
+%   and how equality saturation can be applied
+%   to automatically discover accelerator opportunities~\cite{willsey2021egg}. \hl{Should the cite at the end be Glenside? Not sure what in the egg paper it is referring to.}
+%These techniques provide an ideal complement to
+%  \TLA's pattern-matching approach and could be
+%  incorporated into the \TLA methodology in future work.
+%   for generating instructions for fine-grained accelerators like VTA.
+
+
+% \subsubsection{The Costs and Benefits of Abstraction in 3LA}
+% %
+% In order to provide modularity, extensiblity, and verification,
+%   the 3LA methodology relies on ILA-based abstractions of both
+%   compiler IR intrinsics and accelerator operations.
+% Our earlier case studies (Section~\ref{sec.eval}) demonstrate
+%   the numerous benefits such abstractions can provide,
+%   but the approach is not a panacea.
+% In particular, strictly respecting abstraction boundaries in 3LA
+%   complicates adding support for lower-level optimizations like
+%   operator fusion that require fine-grained knowledge of operator internals.
+% %  operator fusion that requires first ``inlining'' low-level
+%   %operator implementations to expose optimization opportunities.
+% This added complexity does not impact coarse-grained accelerators
+%   like FlexASR, but further work may be required to achieve
+%   optimal performance for finer-grained accelerators.
+%   %that rely
+%   %on operator fusion.
+
+
+
+
+
+
+
+  
+  
+  
+  
+  
+  
+
+
+
+% ---------- CASES ----------
+
+% \section{Related Work} \label{sec.related}
+
+% The 3LA methodology uses the ILA as a uniform interface
+%   connecting DSLs to custom accelerators by
+%   incorporating an extensible pattern matcher to verifiably
+%   map application fragments to accelerator invocations.
+% As such, 3LA is closely related to both
+%   various mainstream systems and
+%   past work on
+%   software/hardware co-design,
+%   extensible compiler frameworks, and
+%   compiler verification.
+
+% \subsection{Relation to Current Approaches}
+% %
+% Table~\ref{tab.comparison} provides
+%   a high-level comparison of 3LA to
+%   a selection of related methodologies, tools, and frameworks.
+% Because 3LA spans several layers of the system stack,
+%   these contrasting points are not all of the same sort;
+%   we discuss the nuances of such ``cross-category''
+%   feature comparisons below.
+
+% \mysubsub{Representative Approaches and Key Features.}
+% %
+% Calling back to Section~\ref{subsec.challenges},
+%   we consider how each related approach supports
+%   formal software/hardware interfaces (Formal SW/HW),
+%   verification (Verif),
+%   end-to-end workflows (E2E),
+%   multiple backends (Multi-Back),
+%   multiple frontends (Multi-Front),
+%   extensible pattern matching (PatMatch), and
+%   compiler optimizations (Opts).
+% Across these dimensions, we compare
+%   traditional, manual approaches to customization (Ad Hoc),
+%   the TPU support provided in the
+%     TensorFlow~\cite{abadi2016tensorflow} (TPU: TF) and
+%     PyTorch~\cite{paszke2019pytorch} (TPU: PT) frameworks,
+%   the BYOC interface~\cite{chen2020byoc}, and
+%   the MLIR framework for developing compiler IRs~\cite{lattner2021mlir}.
+
+
+% \input{tab_comparison.tex}
+
+
+% \mysubsub{Comparing Approaches.}
+% %
+% Table~\ref{tab.comparison} highlights two
+%   of 3LA's key benefits relative to  existing approaches:
+%   providing a formal software/hardware interface and
+%   built-in verification support via ILAng~\cite{huang2019ilang}.
+% Traditional, ad hoc approaches and implementations providing
+%   custom accelerator support for a particular DSL
+%   (TPU: TF, TPU: PT) can map from high-level DSLs all the way
+%   to MMIO-invoked custom accelerators,
+%   but generally are too specialized to provide easy extensibility.
+% However, such focused specialization also facilitates
+%   good support for compiler optimizations, both
+%   at higher levels (HL, e.g., common subexpression elimination) and
+%   at lower levels (LL, e.g., operator fusion).
+
+% By building on the TVM framework,
+%   BYOC inherits support for multiple backends and frontends and
+%   additionally provides extensible pattern matching to facilitate
+%   adding new rules for mapping DSL fragments to new accelerators.
+% However, BYOC leaves
+%   all matters of code generation, e.g., MMIO invocations,
+%   to the user,
+%   while 3LA provides
+%   more structure to code generation
+%   via the ILA.
+% %However, unlike 3LA, BYOC does not directly support custom
+% %  code generation for fine-grained MMIO invocations.
+
+% The MLIR framework provides numerous tools for
+%   developing, optimizing, and translating between custom compiler IRs,
+%   but does not inherently provide direct support for any of
+%   the features 3LA targets --- similarly to BYOC, MLIR serves more as a rich metalanguage
+%   in which users can develop custom IRs,
+%   potentially reusing tools and definitions.
+%   %ideally reusing tools and definitions from related IRs also
+%   %expressed in MLIR.
+% It would likely also be possible to realize the 3LA methodology
+%   within an MLIR-based ecosystem; in the case of our DL-focused
+%   prototype, we believe that our current approach using BYOC required less effort and derived more benefit
+%   from existing infrastructure.
+ 
+% \mysubsub{The Costs and Benefits of Abstraction in 3LA}
+% %
+% In order to provide modularity, extensiblity, and verification,
+%   the 3LA methodology relies on ILA-based abstractions of both
+%   compiler IR intrinsics and accelerator operations.
+% Our earlier case studies (Section~\ref{sec.eval}) demonstrate
+%   the numerous benefits such abstractions can provide,
+%   but the approach is not a panacea.
+% In particular, strictly respecting abstraction boundaries in 3LA
+%   complicates adding support for lower-level optimizations like
+%   operator fusion that require fine-grained knowledge of operator internals.
+% %  operator fusion that requires first ``inlining'' low-level
+%   %operator implementations to expose optimization opportunities.
+% This added complexity does not impact coarse-grained accelerators
+%   like FlexASR, but further work may be required to achieve
+%   optimal performance for finer-grained accelerators.
+%   %that rely
+%   %on operator fusion.
+
+% \subsection{Broader Related Work}
+
+% % 3LA additionally relates to broader research efforts
+% %   across the system stack.
+% % Below we briefly highlight some of
+% %   the most closely related past work.
+
+% \mysubsub{Software/Hardware (SW/HW) Co-Design.}
+% %
+% Recent work on accelerator generation and integration~\cite{
+%     bahr2020creating, fault-truong-cav2020}
+%   has also explored adding support in the Halide~\cite{ragankelley2013halide}
+%   compiler flow for specialized Coarse-Grained Reconfigurable Array (CGRA) accelerators.
+% In that approach, the authors compose an
+%   impressive array of custom tools to
+%   generate and verify specialized CGRA accelerators
+%   and also map Halide program fragments
+%   down to accelerator invocations.
+% HeteroCL~\cite{lai2019heterocl} also provides
+%   a similar custom flow.
+% %designed around the details of the HeteroCL compiler flow.
+% In contrast, the 3LA methodology is design to support
+%   fast and flexible SW/HW co-design by mitigating impedance mismatches
+%   between the granularity of \textit{independently developed}
+%   DSLs and \textit{near-arbitrary} accelerators;
+%   because of the flexibility of the ILA,
+%   the 3LA methodology is applicable to a
+%   broad class of compilers and accelerators,
+%   rather than being focused on a single compiler flow
+%   or class of accelerators.
+
+% % As such, 3LA complements the above past work in
+% %   HW/SW co-design and could be combined with
+% %   those approaches to further ease the
+% %   development, integration, and verification
+% %   of specialized accelerators supporting high-value applications.
+
+% \mysubsub{DSL Design, Extensible Compiler Frameworks, and Compiler Verification}
+% %
+% Numerous DSLs
+%   to facilitate programming productivity
+%   in high-value applications have recently become popular, e.g.,
+%   TVM~\cite{chen2018tvm},
+%   Halide~\cite{ragankelley2013halide}, and
+%   TACO~\cite{taco}.
+% The 3LA methodology complements all these efforts;
+%   3LA is designed to ease adding accelerator support for
+%   compilers in this class of high-performance DSLs
+%   by providing a uniform interface that can be reused
+%   across DSLs and compilers and additionally
+%   introduce support for verifying compiler-to-accelerator
+%   mappings via ILAng tooling~\cite{huang2019ilang}.
+
+% Past work has also explored rewrite-based techniques for
+%   automatically inferring instruction selection passes
+%   between ISAs~\cite{dias-isel-popl10}
+%   and how equality saturation can be applied
+%   to automatically discover accelerator opportunities~\cite{willsey2021egg}.
+% These techniques provide an ideal complement to
+%   3LA's pattern-matching approach and could be
+%   incorporated into the 3LA methodology in future work.
+
+% Formally verified compilers like
+%   CompCert~\cite{compcert} and CakeML~\cite{cakeml}
+%   can rigorously establish end-to-end equivalence
+%   from high-level source down to assembly for
+%   various CPU back-ends via machine-checkable proofs,
+%   but currently do not provide a general approach
+%   for integrating new accelerator support.
+% 3LA provides exactly such an approach
+%   for extending existing compilers
+%   with verifiable mappings from program fragments
+%   to accelerator back-ends, and thus also complements
+%   the state-of-the-art in formal compiler verification.
+
+
+% % listing what different approaches provide.
+% % Verification, pattern matching, co-design, numerics support, and 
+% % integration with broader workflow.
+
+% % Compare with Cosy (Lisa) and Target (nML), manual dev, BYOC, and 
+% % MLIR~\cite{lattner2021mlir}.
+
+% % Table~\ref{tab.comparison} listing what different approaches provide.
+% % Verification, pattern matching, co-design, numerics support, and 
+% % integration with broader workflow.
+
