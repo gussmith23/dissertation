@@ -80,7 +80,18 @@ We use the term
   which implements this process.
 
 \hl{instead of models then algos, algos then models.}
-
+To implement the lowering
+  from a high-level representation
+  to target-specific code,
+  compiler backends use a number of
+  \textbf{algorithms}
+  depending on the domain.
+For example,
+  to decide how to implement
+  a C program with x86 instructions,
+  clang uses an \textit{instruction selection}
+  algorithm.\hl{cite}
+\hl{other examples? or too noisy?}
 
 \textbf{Compilers contain
   models o}\textbf{f hardware.}
@@ -88,6 +99,14 @@ Whether or not they are apparent,
   built into every compiler backend
   are \textbf{models}
   of the target platform.
+Compiler backends 
+  utilize \textbf{models} of hardware
+  in the implementations 
+  of their core algorithms.
+% Whether or not they are apparent,
+%   built into every compiler backend
+%   are \textbf{models}
+%   of the target platform.
 These models come in all shapes
   and sizes.
 For example,
@@ -118,12 +137,13 @@ Declaration of x86's
 \end{figure}
 
 \noindent
-These declarations
-  serve as one type of model
-  of the underlying hardware:
-  in this case, a model which captures
-  the instructions
-  implemented by the hardware.
+clang's instruction selection algorithm
+  uses
+  this model of
+  x86's instruction set
+  to determine what instructions
+  are available for selection.
+
 Different models
   can capture very different things.
 The deep learning compiler TVM,
@@ -144,6 +164,12 @@ These GPU declarations
   implemented by the hardware,
   these models capture
   capacity information.
+However, similar to the model in 
+  \cref{fig:intro:llvm-tablegen},
+  these models of GPU hardware
+  are used by TVM's GPU backend
+  algorithms
+  \hl{how?}
 These examples serve to show
   that models are not only pervasive
   within compilers,
