@@ -3,14 +3,20 @@
 \hl{cite} \cite{ebner2008generalized}: using a solver for optimal instruction selection
 
 A \gls{compiler}
-  converts from one language
-  to another.
+  is a tool which
+  converts from one representation
+  to another---%
+  usually, from a
+  higher-level,
+  human-readable representation
+  to a lower-level,
+  machine-readable representation.
 A classic example
   is the clang compiler
   from the LLVM suite,
   which
   compiles programs written in 
-  processor-independent C
+  processor-independent C code
   into processor-specific
   machine code,
   which the hardware understands how
@@ -64,7 +70,7 @@ For example,
   while clang has many optimizations
   it can perform
   before knowing what its target is,
-  it eventually needs to produce e.g.~x86
+  it eventually needs to produce x86
   assembly code
   such as in the example above.
 We use the term
@@ -73,6 +79,8 @@ We use the term
   of the compiler
   which implements this process.
 
+\textbf{Compilers contain
+  models of hardware.}
 Whether or not they are apparent,
   built into every compiler backend
   are \textbf{models}
@@ -85,6 +93,8 @@ For example,
   instructions.
 Here,
   we show the declaration of
+  the integer multiplication
+  instructions
   \texttt{mul} and \texttt{imul}:
   
 \begin{figure}[H]
@@ -136,11 +146,11 @@ These examples serve to show
   they come in many forms.
 \hl{there is no way to build a compiler
   without encoding some kind 
-  of model of the hardware}
+  of model of the hardware;
+  maybe this should go later, when we talk about implicit models?}
 
-\hl{do we need a paragraph
-  about how models are used?
-probably.}
+\textbf{Compilation algorithms
+  utilize hardware models.}
 Hardware models
   within compilers
   are used within a number of core
