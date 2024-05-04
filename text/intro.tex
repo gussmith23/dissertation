@@ -79,8 +79,11 @@ We use the term
   of the compiler
   which implements this process.
 
+\hl{instead of models then algos, algos then models.}
+
+
 \textbf{Compilers contain
-  models of hardware.}
+  models o}\textbf{f hardware.}
 Whether or not they are apparent,
   built into every compiler backend
   are \textbf{models}
@@ -94,19 +97,21 @@ For example,
 Here,
   we show the declaration of
   the integer multiplication
-  instructions
-  \texttt{mul} and \texttt{imul}:
+  instruction
+  \texttt{imul},
+  which clang used to implement
+  the \texttt{square} function above:
   
 \begin{figure}[H]
     \centering
+%defm MUL : Mul<0xF7, "mul", MRM4r, MRM4m, mul>;
 \begin{minted}[baselinestretch=1]{cpp}
-defm MUL : Mul<0xF7, "mul", MRM4r, MRM4m, mul>;
 defm IMUL : Mul<0xF7, "imul", MRM5r, MRM5m, null_frag>;
 \end{minted}
 \caption{
 Declaration of x86's
-  \texttt{mul} and \texttt{imul}
-  instructions in LLVM's x86 
+  \texttt{imul}
+  instruction in LLVM's x86 
   backend~\cite{llvmx86tablegen}.
 }
     \label{fig:intro:llvm-tablegen}
@@ -151,9 +156,10 @@ These examples serve to show
 
 \textbf{Compilation algorithms
   utilize hardware models.}
-Hardware models
-  within compilers
-  are used within a number of core
+Compilers use their
+  wide variety of
+  hardware models
+  to implement a number of core
   compilation
   \textbf{algorithms.}
 The clang compiler uses 
