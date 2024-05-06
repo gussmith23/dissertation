@@ -155,6 +155,17 @@ TVM, for example, implements a step
   to target-specific implementations,
   including invocations
   of specialized hardware.
+Similarly,
+  a core step in hardware compilation
+  for
+  Yosys and other \hl{hardware synthesis tools}
+  is \textit{technology mapping,}
+  in which the tool determines
+  how to implement the high-level
+  hardware design
+  using the hardware primtives
+  available on the hardware
+  platform.
 
 Compiler backends 
   utilize \textbf{models} of hardware
@@ -221,6 +232,7 @@ These GPU declarations
   implemented by the hardware,
   these models capture
   capacity information.
+\hl{tensorization}
 However, similar to the model in 
   \cref{fig:intro:llvm-tablegen},
   these models of GPU hardware
@@ -237,47 +249,25 @@ These examples serve to show
   of model of the hardware;
   maybe this should go later, when we talk about implicit models?}
 
-\textbf{Compilation algorithms
-  utilize hardware models.}
-Compilers use their
-  wide variety of
-  hardware models
-  to implement a number of core
-  compilation
-  \textbf{algorithms.}
-The clang compiler uses 
-  the model of the x86 instruction set
-  shown in \cref{fig:intro:llvm-tablegen}
-  to implement
-  various algorithms
-  such as instruction 
-  selection~\cite{llvminstructionselection}.
-Compiler algorithms
-  which operate over hardware models
-  have benefits...\hl{finish}
-In many cases, though,
-  the model and algorithm are 
-  one in the same.
-The following algorithm
-  from the open-source hardware compiler
-  (or, interchangeably,
-    \gls{hardwaresynthesis} tool)
-  Yosys
+Lastly, for an example from Yosys,
+  we look to its implementation of
+  technology mapping.
+This algoirthm
   is searching for a specific pattern 
   in the hardware design:
 
 \input{intro-figures/yosys-pmgen}
 
 \noindent
-The above example is both algorithm
-  and model:
+Unlike the clang and TVM examples,
+  which show declarative hardware models
+  that are later used by algorithms,
+  the above example is both algorithm
+  \textit{and} model:
   encoded \textit{implicitly}
   within this algorithm
   is a model of the underlying hardware.
-Models implicitly encoded within algorithms
-  are pervasive and potentially problematic...\hl{blah}
 \hl{why are we talking about this?}
-  
 
 The current state-of-the-art
   when it comes to compiler algorithms
