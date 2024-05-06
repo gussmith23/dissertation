@@ -79,17 +79,31 @@ We use the term
   of the compiler
   which implements this process.
 
-Compilers are found in many domains.
-General-purpose C compilers like
-  clang and gcc
-  are well-known, heavily-used examples
-  of compilers,
-  but compilers exist for many other languages
-  and domains.
-The TVM compiler~\cite{tvm,chen2018tvm},
-  for example,
+Throughout this intro,
+  we will use three different compilers
+  as our running examples.
+As we have already seen, we will
+  consider the
+  general-purpose C compiler
+  clang
+  as our ``gold standard'' example
+  of a commonly-known
+  and understood compiler.
+However, we will also consider
+  two compilers from more specialized
+  domains,
+  which will be key to
+  \cref{part:glenside-and-3la}
+  and
+  \cref{part:lakeroad}
+  of this dissertation,
+  respectively.
+First,
+  the TVM compiler~\cite{tvm,chen2018tvm},
+  which will be a main character
+  of \cref{part:glenside-and-3la},
   is a compiler for deep learning
-  programs,
+  programs
   which compiles code written in a
   high-level
   Python
@@ -98,10 +112,12 @@ The TVM compiler~\cite{tvm,chen2018tvm},
   for CPUs, GPUs,
   and custom accelerators.
 \hl{ insert example?}
-As a second example,
+Second,
   the open-source \gls{hardwaresynthesis}
   tool Yosys
-  is a compiler for hardware designs.
+  is a compiler for hardware designs,
+  and will be a focus of
+  \cref{part:lakeroad}.
 \hl{figure?}
 
 \hl{instead of models then algos, algos then models.}
