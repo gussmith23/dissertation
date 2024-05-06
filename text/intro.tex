@@ -79,6 +79,31 @@ We use the term
   of the compiler
   which implements this process.
 
+Compilers are found in many domains.
+General-purpose C compilers like
+  clang and gcc
+  are well-known, heavily-used examples
+  of compilers,
+  but compilers exist for many other languages
+  and domains.
+The TVM compiler~\cite{tvm,chen2018tvm},
+  for example,
+  is a compiler for deep learning
+  programs,
+  which compiles code written in a
+  high-level
+  Python
+  \gls{dsl}
+  into optimized code
+  for CPUs, GPUs,
+  and custom accelerators.
+\hl{ insert example?}
+As a second example,
+  the open-source \gls{hardwaresynthesis}
+  tool Yosys
+  is a compiler for hardware designs.
+\hl{figure?}
+
 \hl{instead of models then algos, algos then models.}
 To implement the lowering
   from a high-level representation
@@ -86,19 +111,35 @@ To implement the lowering
   compiler backends use a number of
   \textbf{algorithms}
   depending on the domain.
-For example,
-  to decide how to implement
-  a C program with x86 instructions,
-  clang uses an \textit{instruction selection}
-  algorithm.\hl{cite}
-\hl{other examples? or too noisy?}
+A key step in 
+  compiling our
+  example above
+  is
+  \textit{instruction selection:}
+  deciding how to implement
+  the various parts of the C program
+  using actual instructions
+  implemented in the hardware.
+In the \texttt{square} function,
+  clang must decide how to implement
+  C's \texttt{*} operator---%
+  in this case, using x86's
+  \texttt{imul} instruction.
+clang does this using
+  an \textit{instruction selection}
+  algorithm~\cite{llvminstructionselection}.
+Steps akin to instruction selection
+  exist in our other two compiler examples,
+  as well.
+TVM, for example, implements a step
+  called 
+  \textit{tensorization}~\cite{tvmtensorization}
+  which maps high-level 
+  machine learning kernels \hl{define}
+  to target-specific implementations,
+  including invocations
+  of specialized hardware.
 
-\textbf{Compilers contain
-  models o}\textbf{f hardware.}
-Whether or not they are apparent,
-  built into every compiler backend
-  are \textbf{models}
-  of the target platform.
 Compiler backends 
   utilize \textbf{models} of hardware
   in the implementations 
