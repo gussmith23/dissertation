@@ -120,7 +120,6 @@ Second,
   \cref{part:lakeroad}.
 \hl{figure?}
 
-\hl{instead of models then algos, algos then models.}
 To implement the lowering
   from a high-level representation
   to target-specific code,
@@ -167,23 +166,20 @@ Similarly,
   available on the hardware
   platform.
 
-Compiler backends 
-  utilize \textbf{models} of hardware
-  in the implementations 
-  of their core algorithms.
+To implement their core algorithms,
+  compiler backends 
+  employ \textbf{models} of hardware.
 % Whether or not they are apparent,
 %   built into every compiler backend
 %   are \textbf{models}
 %   of the target platform.
-These models come in all shapes
-  and sizes.
+These models come in many forms
+  and serve many purposes.
 For example,
   within clang, there is a list
   of the x86 architecture's
-  instructions.
-Here,
-  we show the declaration of
-  the integer multiplication
+  instructions, such as the 
+  integer multiplication
   instruction
   \texttt{imul},
   which clang used to implement
@@ -205,12 +201,16 @@ Declaration of x86's
 \end{figure}
 
 \noindent
+This list of instructions
+  serves as one type of model
+  of the target hardware:
+  namely, a model describing 
+  the available instructions.
 clang's instruction selection algorithm
   uses
-  this model of
-  x86's instruction set
-  to determine what instructions
-  are available for selection.
+  this model
+  directly in its implementation of 
+  instruction selection.
 
 Different models
   can capture very different things.
@@ -239,18 +239,22 @@ However, similar to the model in
   are used by TVM's GPU backend
   algorithms
   \hl{how?}
-These examples serve to show
-  that models are not only pervasive
-  within compilers,
-  but also that
-  they come in many forms.
-\hl{there is no way to build a compiler
-  without encoding some kind 
-  of model of the hardware;
-  maybe this should go later, when we talk about implicit models?}
+% These examples serve to show
+%   that models are not only pervasive
+%   within compilers,
+%   but also that
+%   they come in many forms.
 
-Lastly, for an example from Yosys,
-  we look to its implementation of
+In fact,
+  I claim that
+  there is no way to build a compiler
+  \textit{without} encoding some kind 
+  of model of the hardware.
+That is, any algorithm which targets
+  a hardware platform
+  implicitly models the underlying hardware.
+As a concrete example, consider Yosys's
+  implementation of 
   technology mapping.
 This algoirthm
   is searching for a specific pattern 
@@ -267,7 +271,50 @@ Unlike the clang and TVM examples,
   encoded \textit{implicitly}
   within this algorithm
   is a model of the underlying hardware.
-\hl{why are we talking about this?}
+
+\hl{
+Thing i'm hanging on: i still don't love the flow of introducing models.
+
+We can't make the argument that we're making in the hardware talk. Or maybe we can, if we scope it to just the compilers we care about.
+
+Basically it's like, how do we make the thesis sound interesting given that hardware models already exist inside compilers? well i think the important part is that we're automatically generating compilers from models of hardware, using new techniques. how do we differentiate? the direct use of hardware models, first. the use of automated reasoning techniques, second.
+
+how do we lead into this? what's the clear argument? because "they go pretty far but not far enough" isn't super interesting.
+
+Part of the problem is just htat i don't know enough about existing algorithms.
+
+honestly, i do think we can criticise the existing approach pretty cleanly.
+
+it's verbose. there's still no single source of truth. there's still potential for bugs. generating automatically from literal source is a long-term dream that we begin to scratch the surface of with this thesis.
+}
+
+\hl{
+  ah, perhaps this is it:
+  there's a spectrum of compiler construction from models.
+  at the lower end is fully manual construction.
+  in the middle is semi-automated: construct models by hand,
+  have some automated algorithms that process them.
+  we're proposing fully automated: don't even write the models. don't write algorithms.
+}
+
+In this dissertation,
+  I argue that
+  we have not gone far enough
+  when using hardware models
+  to construct compilers.
+Incorporating hardware models---%
+  especially explicit, declarative
+  models of hardware---%
+  into compilers has been
+  only a good thing.
+\hl{list benefits? if we do, we run into the weird issue of having to make a bunch of positives into shortcomings.
+perhaps we only introduce the benefits}
+However,
+  we cannot stop halfway to the destination.
+We have not realized
+  the full potential
+  of hardware models
+  in compilers.
 
 The current state-of-the-art
   when it comes to compiler algorithms
