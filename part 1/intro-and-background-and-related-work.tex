@@ -35,15 +35,15 @@ And lastly,
   (\cref{thesis:correctness}).
 We describe how
   we applied our thesis
-  in the process of developing
-  3LA: a new methodology
-  for accelerator design.
-Specifically, we present
+  to produce
   \g,
   a domain-specific language
   which can be used to 
   automatically compile
   workloads to accelerators.
+We used \g to build
+  3LA, a new methodology
+  for accelerator design.
 
 We now present background
   and related work
@@ -51,9 +51,13 @@ We now present background
   involved in
   \cref{part:glenside-and-3la}
   of this dissertation.
-We first discuss existing
+We start from the basics, discussing
+  existing
   machine learning accelerators
-  (\cref{sec:part1:relatedwork:accelerators}).
+  (\cref{sec:part1:relatedwork:accelerators}),
+  whose popularity
+  is the core motivation
+  behind building 3LA and \g.
 
 \section{Machine Learning Accelerators}
 \label{sec:part1:relatedwork:accelerators}
@@ -117,8 +121,8 @@ In the world of hardware design,
   of \textit{validation} and \textit{verification}
   from the field of Programming Languages,
   in which \textit{validation}
-  refers to non-formal, non-mathematical,
-  non-exhaustive sanity checking,
+  refers to non-formal-methods-based,
+  (usually) non-exhaustive sanity checking,
   while \textit{verification}
   refers to formal, mathematical
   proving of properties (like correctness).
@@ -211,18 +215,22 @@ That is, to maximize
 \g and the 
   \TLA methodology enable
   hardware--software co-design
-  by making it easier
+  through the simple fact that
+  they make
+  hardware design iterations quicker.
+By making it quicker and easier
   to simulate full end-to-end
   applications
-  on prototype hardware.
-This enables faster iteration
-  both on the software 
-  and on the hardware.
+  on prototype hardware,
+  3LA and \g enable designers
+  to see simulation results more quickly
+  and adjust both their design
+  and the software running on the hardware.
 
 There exists much other work on
   hardware--software codesign
   for deep learning.
-Recent work on accelerator generation and integration~\cite{
+Work on accelerator generation and integration~\cite{
     bahr2020creating, truong2020fault}
   has explored adding support in the Halide~\cite{ragan2013halide}
   compiler flow for specialized Coarse-Grained Reconfigurable Array (CGRA) accelerators.
@@ -277,7 +285,7 @@ TVM, for example,
  can optimize machine learning workloads
  at a high-level
  using its high-level IR
- Relax \hl{cite}
+ Relax~\cite{lai2023relaxcomposableabstractionsendtoend}
  (and its former high-level
    IR Relay \cite{relay}),
  but
@@ -330,7 +338,7 @@ Other tensor IRs like
   and COMET~\cite{tian2021highperformance}
   rely on \textit{index notation}\footnote{
     Index notation is closely related to
-    ``Einstein notation'' where reduction
+    ``Einstein notation'', in which reduction
     indices are implicit.}
   to concisely express tensor operators
   and simplify optimization by
@@ -339,7 +347,7 @@ Other tensor IRs like
 These approaches also rely on
   rewriting passes to generate
   kernel implementations specialized to
-  tensor sparsity / density,
+  tensor sparsity/density,
   operator combinations arising in
   the source application, and
   details of the target hardware.
@@ -889,59 +897,10 @@ In particular,
 
 % TODO mention somewhere in here that lambdas (which a lot of langs will use) are a problem for first-order rewrite systems
 
-\section{3LA Related Work}
-
-\hl{have to adapt and rewrite all of this}
-
-%\input{floats/tab-compiler-framework-comparison}
-
-%\hl{[Zach]}
-
-% Limitations of current approaches
-% E.g., what’re the challenges in using MLIR, for example, to build the {\TLA} or an end-to-end flow.
-% Even if MLIR wants to do the same things, they should adopt the {\TLA} approach! (i.e., MLIR doesn’t immediately make addressing the challenges we are focusing on easier!)
-% (We would need to figure out which MLIR integrations we’re referring to… CIRCT may be one. There is also a systolic array document)
-
-%The key insights of the \TLA methodology for doing end-to-end application-level evaluation on accelerators are using (i) the ILA as a formal software/hardware interface for mapping DSL applications to specialized accelerators and (ii) using flexible matching to avoid rewriting applications to match an accelerator.
-%
-% Above, we demonstrated how \TLA's ILA interfaces enable simulating 
-% %\hl{ \textit{unmodified}} 
-% applications on custom accelerators, modular validation and verification of accelerator mappings, and flexible matching to search for semantically equivalent offload opportunities.
-%
-%Below we survey work related to the \TLA methodology.
-
-% By adopting \TLA, engineers can simulate, debug, and even verify mappings from DSL workloads down to custom accelerator invocations.
-% %
-% Furthermore, \TLA's uniform accelerator interface enables flexible matching to automatically discover opportunities for accelerator invocations in unmodified source programs.
-% %
-% \TLA is also extensible along several key dimensions: adding support for new accelerators, enhancing flexible matching with additional rewrite rules, and incorporating new tools into the ecosystem (e.g., design space exploration or breakpoint debugging).
-% %
-% %To the best of our knowledge, no existing framework provides a similarly comprehensive set of features.
-% %
-% Below we survey past work addressing different aspects of the features \TLA provides.
-
-\paragraph{Pattern Matching Accelerator Calls}
-
-% \hl{This paragraph appears to clash with the section header.}
-% Numerous DSLs have recently become popular
-%   to facilitate programming productivity
-%   in high-value applications, e.g.,
-%   TVM~\cite{chen2018tvm},
-%   Halide~\cite{ragan2013halide}, and
-%   TACO~\cite{kjolstad2017tensor}.
-% The \TLA methodology complements all these efforts;
-%   \TLA is designed to ease adding accelerator support for
-%   compilers in this class of high-performance DSLs
-%   by providing a uniform interface that can be reused
-%   across DSLs and compilers and additionally
-%   introduce support for verifying compiler-to-accelerator
-%   mappings via ILAng tooling~\cite{huang2019ilang}.
+\subsection{Pattern Matching Accelerator Calls}
 
 The most closely related work to flexible matching is from 
-\begin{itemize}
-  \item TVM BYOC~\cite{chen2021byoc}, which only provides exact syntactic matching as discussed in \S\ref{sec.background}, and
-  \item Glenside~\cite{smith2021pure}, which, prior to this work, had not been integrated into a compilation pipeline nor used to target custom accelerators.
-\end{itemize}
+   TVM BYOC~\cite{chen2021byoc}, which only provides exact syntactic matching as discussed in \S\ref{sec.background}.
 Past work has also explored rewrite-based techniques for
   automatically inferring instruction selection passes
   between ISAs~\cite{

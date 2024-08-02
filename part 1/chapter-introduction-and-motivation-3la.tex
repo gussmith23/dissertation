@@ -1,5 +1,39 @@
-\chapter{Introduction and Motivation}
+\chapter{\Cref{part:glenside-and-3la} Introduction and Motivation}
 \label{sec:part1-motivation}
+
+\hl{copied from glenside intro}
+Machine learning (ML) and other
+  high-performance computing (HPC)
+  applications increasingly rely on
+  specialized hardware accelerators to
+  provide speed and energy efficiency~\cite{jouppi2017tpu, krizhevsky2012conv, reuther2019survey}.
+This trend has highlighted the need
+  for flexible accelerator support
+  in domain-specific compilers like
+  Halide~\cite{halide},
+  TVM~\cite{chen2018tvm},
+  TensorFlow/MLIR~\cite{tensorflow, mlir}, and
+  PyTorch~\cite{pytorch}.
+
+Adding accelerator support to
+  an existing compiler typically
+  uses custom pattern matching to
+  map expensive tensor operations
+  from applications down to
+  accelerator invocations~\cite{
+    yang2020interstellar, byoc}.
+Pattern matching often additionally relies on
+  various other transformations
+  to canonicalize intermediate representations (IRs)
+  %~\cite{??}
+  and massage data layouts into
+  formats matching accelerator requirements~\cite{nvidia2020nhwc}.
+Even with these changes,
+  users may need to manually modify their application to
+  help the compiler discover opportunities
+  for dispatching operations to accelerators, 
+  such as by changing data types or unrolling loops.
+\hl{end copied from glenside intro}
 
 % Top-level points: 
 % We need something like the 3LA methodology;
@@ -114,16 +148,19 @@ Getting a compiler to realize
   a matcher like
   BYOC.
 
-And the difficulties
-  in building a quality compiler
-  often lead hardware designers to forego the process
-  entirely, which can
-  hinder or entirely prevent
-  the validation and testing
-  of custom hardware,
-  leading to expensive bugs
-  (\cref{thesis:correctness}).
-\cref{thesis:correctness}
+% And the difficulties
+%   in building a quality compiler
+%   often lead hardware designers to forego the process
+%   entirely, which can
+%   hinder or entirely prevent
+%   the validation and testing
+%   of custom hardware,
+%   leading to expensive bugs
+%   (\cref{thesis:correctness}).
+
+\paragraph{
+\cref{thesis:correctness}.
+}
 Core to developing
   accelerators
   quickly and correctly
@@ -176,8 +213,8 @@ However, if the designer
   even though individual layers
   behave well,
   the error may accumulate
-  across layers
-  to an unfeasible degree~\cite{zorn2021rounding}.
+  across layers,
+  producing inaccurate application-level results~\cite{zorn2021rounding}.
 Early end-to-end application level validation is thus essential
   for avoiding expensive and complex late stage hardware design changes.
 \hl{merge or delete below}
@@ -239,15 +276,16 @@ Testing is often
 In response to the challenges
   of hardware validation
   to the common designer,
-  the authors of \hl{cite 3LA}
-  developed
+  Huang et.~al.~developed
+  3LA:
   a methodology
   to make testing
-  easier for new accelerator designs.
+  easier for new accelerator designs~\cite{huang2022specialized,huang2024application}.
 The primary contribution of 3LA
   is 
   a methodology to end-to-end evaluate accelerators on unmodified, full applications.
-Explain how we're just a component of 3LA.
+\hl{fix 3LA citation: i think it might be duplicated, and update it todaes.}
+\hl{Explain how we're just a component of 3LA.}
 
 \begin{figure}
     \centering
@@ -277,20 +315,79 @@ Second, even given a simulator
   it is then difficult
   to run full applications
   on the simulator.
+  
+3LA solves the first problem
+  using the Instruction-Level Abstraction (ILA)~\cite{huang2018instruction,huang2018formal}.
+ILA is a specification system
+  originally designed for
+  system-on-chip verification purposes.
+The authors of 3LA
+  repurposed the ILA
+  as a tool for capturing
+  and simulating
+  machine learning accelerator behavior,
+  giving accelerator developers
+  a framework for generating fast,
+  high-level simulators
+  for their accelerators.
 The first contribution
   of 3LA
   we do not consider
   a contribution of this dissertation;
   please refer to the dissertation
-  of Bo-Yuan Huang~\cite{huang2022instruction}.
+  of Bo-Yuan Huang~\cite{huang2022instruction}
+  and Steven Lyubomirsky~\cite{lyubomirsky2022compiler}
+  for more information about 3LA as a whole.
 
 However,
-  the second contribution of 3LA
-  results directly from contributions
-  of this thesis.
-One of the challenges
-  that 3LA solves:
-  compiling to custom hardware is hard.
+  the second challenge of 3LA:
+  namely that, even given a simulator,
+  running full programs on your simulator
+  is difficult,
+  is much more pertinent.
+Specifically, the challenge
+  is that
+  compiling to custom hardware
+  (whether real or simulated) is difficult,
+  and, at the time of developing 3LA,
+  there were few open-source, flexible 
+  compiler frameworks
+  for targeting custom hardware.
+
+One open-source framework
+  supporting mapping
+  to custom accelerators
+  is TVM's Bring Your Own Codegen (BYOC)~\cite{byoc,chen2021byoc}.
+Initially, the 3LA authors
+  attempted to use BYOC
+  to address their second issue.
+To use BYOC, the user
+  provides syntactic patterns
+  which BYOC then searches for
+  in the workloads of interest.
+However,
+  exact syntactic pattern matching 
+  (which we refer to simply as
+    ``exact matching'')
+  faces difficulties
+  as there is often no canonical way
+  to represent an operation,
+  necessitating either the addition of more patterns
+  or manual modifications to the input program
+  to match the expected patterns.
+Application code can vary greatly in structure,
+  particularly in the case of compiler IRs,
+  which may be produced after several iterations
+  of program transformations.
+Code variations are especially prevalent
+  in machine learning compilers,
+  where workloads are often imported
+  from other languages via importers.
+Even for the same machine learning model,
+  importers from different languages
+  can produce wildly different (but equivalent)
+  imported programs.
+ 
 This is where I was able
   apply my dissertation.
 We developed a language
@@ -301,6 +398,7 @@ We developed a language
 
 %% GLENSIDE INTRO
 
+\hl{I would summarize the glenside intro here, and then provide the full intro in the glenside chapter.}
 Adding accelerator support to
   an existing compiler typically
   uses custom pattern matching to
@@ -493,9 +591,53 @@ But we also need to make sure
 
 
 % 3LA methodology needs flexible matching.
-\section{3LA Methodology}
+\section{Summary of the 3LA Methodology}
+
+The 3LA methodology as a whole
+  (or just 3LA for short)
+  is not a contribution of this dissertation---%
+  see the dissertations of
+  Bo-Yuan Huang~\cite{huang2022instruction}
+  and 
+  Steven Lyubomirsky%
+  ~\cite{lyubomirsky2022compiler}.
+However,
+  \g, a contribution of this dissertation,
+  is a 
+  significant component of 3LA,
+  and its development 
+  is inextricably linked to the development
+  of 3LA.
+As such,
+  some understanding of the 3LA
+  methodology
+  is required for understanding
+  \g.
+  
 
 
-We now give a description
-  of the structure
-  of the 3LA methodology
+\hl{
+Copied from 3LA paper, rephrase: 
+}
+
+The ILA is an ISA-like formal model 
+  for specifying the functional behavior of accelerators.
+It generalizes the ISA to accelerators, 
+%and provides a modular functional specification as a set of instructions. Each 
+  where each 
+  instruction of an accelerator ILA corresponds 
+  to a command at the accelerator interface, i.e., an MMIO load or store from a host processor.
+Like processor ISAs, 
+  the ILA captures a formal semantics of the accelerator behavior, by specifying how each instruction 
+  reads or updates software-visible (viz., architectural) state variables in the accelerator,
+  while abstracting out implementation details. 
+  
+Fig.~\ref{fig.ila-example} shows an example
+  ILA specification for one of the instructions of FlexASR~\cite{tambe20219} (one of the three accelerators used in our evaluation studies). The ILA models are written in ILAng, a DSL embedded in C++. The figure caption points out the per-instruction modular specification, where each instruction is specified by defining its decode condition (i.e., when the instruction is triggered) and state update functions (i.e., how it updates
+  the architectural state variables). 
+  %updates are specified.
+
+Thus far, the ILA has been used only for accelerator implementation verification and co-verification of firmware~\cite{huang2018formal,huang2018instruction}.
+In this work, we use ILA as a formal SW/HW interface that drives the key tasks in compilation and application-level testing for accelerators.
+
+\hl{end copy from 3LA }

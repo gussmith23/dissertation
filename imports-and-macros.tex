@@ -372,12 +372,20 @@
     Automatically generating compiler backends
       enables verification.
 }
+\newcommand{\thesisalgorithmslabel}{\textbf{\textsc{Algorithms}}}
+\crefformat{thesis:algorithms}{#2\thesisalgorithmslabel#3}
+\newcommand{\thesismodelslabel}{\textbf{\textsc{Models}}}
+\crefformat{thesis:models}{#2\thesismodelslabel#3}
 \newcommand{\mythesis}{
 Compiler backends
   should be generated
+  (\thesisalgorithmslabel)
   from explicit formal models
+  (\thesismodelslabel)
   of the hardware they target,
   for the following reasons:
+  \label[thesis:algorithms]{thesis:algorithms}
+  \label[thesis:models]{thesis:models}
   \hl{rephrase}
 
   \hl{HYPERLINK LOCATIONS ARE STILL WRONG!!!}
@@ -387,8 +395,8 @@ Compiler backends
 \begin{itemize}[%label=\textbf{Claim \arabic*},
                 itemindent=0pt,leftmargin=90pt]
                 
-  \item[\thesisubiquitylabel] \label[thesis:ubiquity]{thesis:ubiquity}
-    \thesisclaimubiquity
+  % \item[\thesisubiquitylabel] \label[thesis:ubiquity]{thesis:ubiquity}
+  %   \thesisclaimubiquity
     
   \item[\thesisoptimizationslabel] 
     \label[thesis:optimizations]{thesis:optimizations} 

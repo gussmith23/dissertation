@@ -52,7 +52,7 @@ The designer is specifically aiming to use
 \end{center}
 The designer's hardware block
   involves the computation
-  \texttt{(d+a)*b\&c},
+  \texttt{(d+a)*b+c},
   which the manual states is implementable with a single DSP.
 %Specifically, imagine their design
 %involves the following computation, 
@@ -63,7 +63,7 @@ In particular, suppose the design
 \begin{center}
 \begin{minted}[baselinestretch=1]{verilog}
  for(i=0; i<4; i++) begin
-  r[i] <= (d[i] + a[i]) * b[i] & c[i];
+  r[i] <= (d[i] + a[i]) * b[i] + c[i];
  end
 \end{minted}
 \end{center}
@@ -74,6 +74,7 @@ It would be reasonable for the designer
   to expect the design
   to use a total of four DSPs.
 
+\hl{ todo update these}
 \textit{\textbf{Current tools fail.}}
 After compiling the design
   with existing tools,
@@ -92,7 +93,7 @@ It does use four DSPs,
   the DSP}---%
   it has not configured a DSP48E2
   to implement
-  \texttt{(d+a)*b\&c} but has instead
+  \texttt{(d+a)*b+c} but has instead
   implemented a portion of the
   computation
   with LUTs and registers.
@@ -116,12 +117,12 @@ For example, a hardware design simply may not fit on an FPGA
   of interest into a separate module:
 
 \begin{minted}[baselinestretch=1]{verilog}
-// add_mul_and.v: computes (a+b)*c&d in two clock cycles.
-module add_mul_and(input clk, input [15:0] a, b, c, d,
+// add_mul_add.v: computes (a+b)*c+d in two clock cycles.
+module add_mul_add(input clk, input [15:0] a, b, c, d,
                    output reg [15:0] out);
  reg [15:0] r;
  always @ (posedge clk) begin
-   r <= (a+b)*c&d; out <= r;
+   r <= (a+b)*c+d; out <= r;
  end
 endmodule
 \end{minted}
@@ -158,7 +159,7 @@ Again, the designer must decide:
 The hardware designer presses on and
   % having failed to coax the compiler
   % into mapping the
-  % \texttt{add\_mul\_and} module to a single
+  % \texttt{add\_mul\_add} module to a single
   now has only one option remaining:
   manually instantiating a DSP48E2
   with the desired behavior.
@@ -226,24 +227,24 @@ Let us imagine how the designer
   %chooses to use \lr
   %during partial design mapping.
 After putting 
-  \texttt{add\_mul\_and}
+  \texttt{add\_mul\_add}
   into its own module,
   the designer calls
   \lr from the command line:
 \begin{minted}[baselinestretch=1]{bash}
 $ lakeroad --template dsp \
            --arch-desc xilinx-ultrascale-plus.yml \
-           add_mul_and.v
+           add_mul_add.v
 \end{minted}
 % (Note that we have excluded some flags for this example.)
 The \texttt{lakeroad} command outputs
-  \texttt{add\_mul\_and\_impl},
+  \texttt{add\_mul\_add\_impl},
   an implementation
-  of \texttt{add\_mul\_and}
+  of \texttt{add\_mul\_add}
   that uses a single UltraScale+ DSP48E2:
 \hl{would really like this to not break across pages}
 \begin{minted}[baselinestretch=1]{verilog}
-module add_mul_and_impl(input clk, input [15:0] a, b, c, d,
+module add_mul_add_impl(input clk, input [15:0] a, b, c, d,
                         output [15:0] out);
  DSP48E2 #(
   .ACASCREG(32'd0), .ADREG(32'd0), .ALUMODEREG(32'd0),
@@ -265,7 +266,7 @@ Unlike current compilers,
 Importantly, this compiled design
   is also formally guaranteed
   to implement
-  the input \texttt{add\_mul\_and}
+  the input \texttt{add\_mul\_add}
   design.
   
 \begin{wrapfigure}{r}{.5\textwidth}
@@ -298,13 +299,13 @@ As shown in \cref{fig:lakeroad-diagram},
   to generate an efficient and correct
   DSP48E2 implementation
   of
-  the \texttt{add\_mul\_and}
+  the \texttt{add\_mul\_add}
   design.
 %This walkthrough follows the steps laid out visually in \cref{fig:lakeroad-diagram}. We begin by describing how \lr generates sketches.
 
 \textit{\textbf{Step 1: Generating a Sketch.}}
 In
-  the \texttt{add\_mul\_and}
+  the \texttt{add\_mul\_add}
   example,
   \lr
   generates
@@ -334,10 +335,10 @@ It is easy to see
   the parallels
   between \texttt{sketch}
   and
-  \texttt{add\_mul\_and\_impl};
+  \texttt{add\_mul\_add\_impl};
   \texttt{sketch}
   is simply 
-  \texttt{add\_mul\_and\_impl}
+  \texttt{add\_mul\_add\_impl}
   with holes.
 But how does \lr generate \texttt{sketch}
   in the first place?
@@ -495,7 +496,7 @@ Once the sketch is ready,
   to generate correct programs
   by encoding program generation
   as a constraint solving problem.
-In our \texttt{add\_mul\_and} example,
+In our \texttt{add\_mul\_add} example,
   \lr, aided  by
   Rosette~\cite{torlak2013growing,torlak2014lightweight}, 
   generates a query like the following:\footnote{
@@ -503,7 +504,7 @@ In our \texttt{add\_mul\_and} example,
 }
 \footnotesize
 $$\exists \ \mathtt{ACASCREG}, \mathtt{ADREG}, ...\ .\ \forall \ \mathrm{inputs} . \ 
-  \texttt{add\_mul\_and}(\mathrm{inputs}) 
+  \texttt{add\_mul\_add}(\mathrm{inputs}) 
   = \texttt{sketch}(\mathrm{inputs}, \mathtt{ACASCREG}, \mathtt{ADREG}, ...)
 $$
 \normalsize
@@ -528,7 +529,7 @@ However, if \lr tries to pass the preceding formula
   between bitvector expressions,
   using simple Boolean or arithmetic
   operations.
-While it is conceivable that \texttt{add\_mul\_and}
+While it is conceivable that \texttt{add\_mul\_add}
   could be converted to
   a bitvector expression
   since its core computation is already
@@ -569,7 +570,7 @@ Rather than requiring
   solver-ready semantics from these vendor-provided HDL models,
   which we detail in \cref{sec:implementation:importing-semantics}.
 For the
-  \texttt{add\_mul\_and} example,
+  \texttt{add\_mul\_add} example,
   the DSP48E2's semantics have already been imported into \lr.
 Semantics need to be imported only when
   adding support for a new architecture, i.e., %
@@ -605,7 +606,7 @@ Compiling \lr's internal representation into Verilog
 In our example,
   the final Verilog produced
   results in the
-  \texttt{add\_mul\_and\_impl}
+  \texttt{add\_mul\_add\_impl}
   we saw at the start of \cref{sec:overview-part-2}.
 
 \textit{\textbf{In summary.}}
@@ -613,7 +614,7 @@ In our example,
   delivered 
   an implementation
   of the designer's
-  \texttt{add\_mul\_and}
+  \texttt{add\_mul\_add}
   module,
   improving upon both state-of-the-art compilers
   and manual approaches

@@ -1,58 +1,113 @@
-\section{Introduction}
 
-\hl{should this stuff be moved up to 3LA?}
+\vspace{10mm}
+\noindent
+In the previous chapter,
+  we laid out our need
+  for tooling
+  which can allow us
+  to reason about tensor programs
+  flexibly.
+While developing the 3LA methodology~\cite{huang2024application},
+  we needed a 
+  tool 
+  which would allow us to find opportunities
+  to invoke accelerators
+  within machine learning workloads.
+TVM's Bring Your Own Codegen (BYOC)~\cite{chen2021byoc} framework
+  was ostensibly designed for this purpose,
+  but as we saw,
+  BYOC was not flexible enough
+  for the workloads we cared about.
+  
 
-Machine learning (ML) and other
-  high-performance computing (HPC)
-  applications increasingly rely on
-  specialized hardware accelerators to
-  provide speed and energy efficiency~\cite{jouppi2017tpu, krizhevsky2012conv, reuther2019survey}.
-This trend has highlighted the need
-  for flexible accelerator support
-  in domain-specific compilers like
-  Halide~\cite{halide},
-  TVM~\cite{chen2018tvm},
-  TensorFlow/MLIR~\cite{tensorflow, mlir}, and
-  PyTorch~\cite{pytorch}.
-
-Adding accelerator support to
-  an existing compiler typically
-  uses custom pattern matching to
-  map expensive tensor operations
-  from applications down to
-  accelerator invocations~\cite{
-    yang2020interstellar, byoc}.
-Pattern matching often additionally relies on
-  various other transformations
+To increase the likelihood of finding matches,
+  pattern matching often relies on
+  additional transformations
   to canonicalize intermediate representations (IRs)
-  %~\cite{??}
   and massage data layouts into
-  formats matching accelerator requirements~\cite{nvidia2020nhwc}.
-Even with these changes,
-  users may need to manually modify their application to
-  help the compiler discover opportunities
-  for dispatching operations to accelerators, 
-  such as by changing data types or unrolling loops.
-    
-In principle, term rewriting techniques~\cite{baader1998term}
-  should be able to facilitate many of
-  these transformation and mapping tasks
-  within a compiler.
-Halide and TVM already rely
-  on extensive rewrite systems for
-  optimizing scalar computations and
-  simplifying loop bounds in order to
-  support further downstream optimizations~\cite{newcomb2020halide-rewrite,
+  formats matching accelerator requirements~\cite{nvidia2020nhwc,newcomb2020halide-rewrite,
   hagedorn2020func-high-perf}.
+Put in terms of our thesis,
+  these transformations increase the
+  \textit{flexibility}
+  of our underlying matching \cref{thesis:algorithms},
+  pushing us further up in our 
+  algorithm adaptability--model explicitness spectrum
+  (\cref{fig:intro:model-alg-spectrum}).
+Once we start modifying the source program
+  to find matches,
+  the problem of mapping to accelerators
+  becomes a \textit{term rewriting} problem,
+  and thus
+  we should be able to take advantage of
+  the wealth of existing knowledge on 
+  term rewriting techniques~\cite{baader1998term}.
 
-Unfortunately, existing IRs in compilers for
-  array/tensor programming DSLs tend to
-  present abstraction and granularity mismatches
-  that hamper term rewriting approaches.
-Term rewriting is most easily applied in
+Term rewriting is a well-known technique 
+  for program transformations,
+  with some compiler optimizations being implemented
+  as term-rewriting systems~\cite{
+    dershowitz1993taste,
+    baader1999term,
+    blindell2016instruction,
+    regis-pact22}.
+%to transform program fragments to equivalent program fragments. 
+Given a set of syntactic rewrite rules ($\ell \rightarrow r$) that also preserve semantic equality, 
+  a term-rewriting system 
+  rewrites instances of pattern $\ell$ 
+  in the input program with semantically equivalent pattern $r$ where applicable.
+%If all the rules preserve semantic equality,
+%  then the application of multiple rules
+%  also preserves equality,
+%  allowing for modular correctness checking 
+%  by verifying the individual rewrite rules.
+%It has a variety of applications in compilers including replacing a program with an equivalent program that is optimal for some cost function. 
+
+One term rewriting approach
+  of particular interest
+  is \textit{equality saturation} \hl{define}.
+In traditional term rewriting,
+  % the ordering of rewrites is important,since 
+  applying one rewrite rule
+  may prevent
+  using other, potentially profitable, rewrite rules;
+  this is referred to as the phase-ordering problem~\cite{whitfield1997approach}.
+  %and it may impact the quality of the final results
+Equality saturation avoids
+  phase-ordering issues % when applying rewrites
+  by searching over many equivalent rewritings of the same program~\cite{tate2011equality,joshi2002denali}.
+  %including different choices of accelerator operations, which ultimately 
+  %reduces the need for manual program restructuring.
+%  and improves application portability.
+Given an input program $p$, 
+  equality saturation repeatedly applies 
+  the given rewrite rules 
+  to explore all equivalent ways to express $p$
+%  (with respect to the rewrite rules and resource limits)
+%This is accomplished 
+using an \textit{e-graph} data structure
+  to efficiently represent an exponentially large set of equivalent program expressions~\cite{nelson1980fast,nieuwenhuis2005proof}.
+Upon reaching a fixed point, 
+  i.e., when no application of any rewrite rule can introduce a new program expression,
+  or upon hitting a predetermined resource limit,
+  the optimal rewritten program
+  can be extracted from an e-graph
+  according to a given cost function.
+  % thus providing for searching over many candidate rewritings 
+  % without sophisticated ordering considerations. 
+
+To increase flexibility
+  of accelerator mapping \cref{thesis:algorithms},
+  {\TLA} sought to employ equality saturation;
+  unfortunately, existing IRs in compilers for
+  array/tensor programming DSLs 
+  are not compatible with equality saturation.
+Equality saturation is most easily applied in
   \textit{pure} (side effect--free) IRs
   that support equational reasoning.
-At the same time,
+Due to their purity, these IRs tend to be
+  high-level.
+However,
   mapping to accelerators requires considering
   low-level hardware details like data layout.
 Existing pure IRs for ML frameworks are used
@@ -64,7 +119,10 @@ On the other hand,
   operator fusion must support
   precise reasoning about memory use,
   and therefore are typically impure,
-  hampering term rewriting.% approaches.
+  hampering term rewriting.
+In summary, for our purposes,
+  existing IRs are either pure but too high-level,
+  or low-level enough but impure.
 
 To help mitigate such impedance mismatches,
   we present \textit{\g},\footnote{Publicly available at \url{https://github.com/gussmith23/glenside}.}
@@ -118,6 +176,7 @@ Figure~\ref{fig:access-pattern-examples}(c)
   some computation applied to each
   corresponding 2D matrix.
 
+\hl{todo: this should probably moved up?}
 We demonstrate how \g
   enables implementing representative
   hardware-level transformation via term rewriting,
@@ -136,6 +195,7 @@ In particular,
   from a handful of general rewrites concerning tensor
   transposition, Cartesian product, dot product, etc.,
   expressed in terms of access patterns.
+\hl{end todo}
 
 To summarize, the contributions of this chapter include:
 \begin{itemize}
@@ -149,7 +209,7 @@ To summarize, the contributions of this chapter include:
   term rewriting to enable support for
   specialized accelerators
   
-\item A library of generic rewrites over \g programs
+\item A library of generic rewrites over \g programs \hl{true?}
   
 % \item Case studies demonstrating how
 %   \g enables automatically discovering
@@ -161,8 +221,6 @@ To summarize, the contributions of this chapter include:
 
 \hl{i moved related work, so probably need to rework this}
 The rest of this chapter is organized as follows:
-Section~\hl{todo} provides background
-  and briefly surveys closely related work.
 Section~\hl{todo} motivates
   \g via a running example exploring
   pure matrix multiplication.

@@ -4,27 +4,6 @@ In \cref{part:lakeroad} of this dissertation,
   I apply my thesis
   to a fully separate domain:
   \textit{hardware} compilers.
-I clearly demonstrate
-  how a component of hardware compilers
-  called a \textit{technology mapper}
-  can be automatically generated
-  using widely-available
-  (\cref{thesis:ubiquity})
-  simulation
-  and verification models
-  of the hardware platform
-  the compiler targets.
-Furthermore,
-  I show how these automatically-generated
-  technology mappers
-  are more correct
-  (\cref{thesis:correctness}),
-  more complete
-  (\cref{thesis:optimizations}),
-  and more extensible
-  (\cref{thesis:devtime}).
-
-\hl{i moved this up here. is it weird to have these two paragraphs next to each other?}
 FPGA technology mapping is the process of
   implementing a hardware design expressed in 
   high-level HDL (hardware design language) code
@@ -38,21 +17,32 @@ As FPGAs become increasingly heterogeneous,
   like digital signal processors (DSPs).
 Current tools
   support DSP mapping via handwritten special-case mapping rules,
-  which are laborious to write, error-prone, and often overlook mapping opportunities.
+  which are laborious to write
+  (poor \cref{thesis:devtime}),
+  error-prone
+  (poor \cref{thesis:correctness}),
+  and often overlook mapping opportunities
+  (poor \cref{thesis:optimizations}).
 In \cref{part:lakeroad} of this dissertation,
   we introduce \lr,
   a principled approach to technology mapping via
-  sketch-guided program synthesis.
-\lr leverages two techniques---architecture-independent 
-  sketch templates and semantics extraction from HDL---to
-  provide extensible (\labelcref{thesis:devtime})
+  sketch-guided program synthesis
+  (\cref{thesis:algorithms}).
+A primary insight of \lr
+  is to utilize vendor-provided
+  simulation models
+  (\cref{thesis:models})
+  to generate the semantics
+  neede by program synthesis.
+\lr provides more
+  extensible (\cref{thesis:devtime})
   technology mapping 
   with stronger correctness guarantees
-  (\labelcref{thesis:correctness})
+  (\cref{thesis:correctness})
   and higher coverage of 
   % micro-design 
   mapping opportunities
-  (\labelcref{thesis:optimizations})
+  (\cref{thesis:optimizations})
   than state-of-the-art tools.
 Across representative microbenchmarks,
   \lr produces
