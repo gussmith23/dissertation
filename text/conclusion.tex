@@ -1,1 +1,240 @@
-\chapter{Conclusion}
+\addcontentsline{toc}{part}{Wrapping Up}
+\chapter{Conclusion and Broader Thoughts}
+
+
+In this dissertation,
+  I have presented an argument
+  for a certain method of building compiler backends:
+  namely,
+  automatically generating them
+  from explicit \cref{thesis:models}
+  of hardware
+  using \gls{automated-reasoning} \cref{thesis:algorithms}.
+I demonstrated how this method of backend generation
+  leads to improved
+  \cref{thesis:optimizations},
+  greater 
+  \cref{thesis:correctness}, and
+  reduced
+  \cref{thesis:devtime}
+  in two case studies.
+In \cref{part:glenside-and-3la},
+  I introduced
+  \g, a language and tool
+  enabling the use of equality saturation
+  on machine learning workloads.
+When incorporated into the 
+  \TLA methodology, \g
+  enabled more flexible mapping
+  of machine learning workloads
+  to accelerators,
+  ultimately enabling
+  easier developer testing
+  of hardware designs.
+In \cref{part:lakeroad},
+  I introduced \lr, which
+  utilizes sketch-guided program synthesis
+  and semantics extracted from vendor-supplied simulation models
+  to generate more correct,
+  more complete, and more extensible
+  FPGA technology mappers.
+While the examples presented in this dissertation
+  are specific---%
+  applying equality saturation to accelerator mapping,
+  applying sketch-guided synthesis to technology mapping---%
+  the underlying recipe is portable.
+In the end, I hope it is this recipe you take away:
+  to automatically generate better compiler backends,
+  apply automated reasoning \cref{thesis:algorithms}
+  to explicit, formal \cref{thesis:models} of the target hardware.
+  
+
+Though this dissertation
+  may come to represent
+  a substantial amount of my life's research output,
+  I also consider it just a piece
+  of a larger vision.
+To conclude this dissertation,
+  I will attempt to capture the
+  the higher level thoughts,
+  ideas, and inspirations
+  underlying the projects in my dissertation.
+
+This dissertation is simply
+  two useful, testable
+  implementations (\g and \lr)
+  of a larger idea
+  that's been bugging me
+  since I was a Master's student
+  at Penn State.
+At Penn State,
+  I worked on the problem of
+  computing with emerging devices---%
+  in our case, transistor which
+  provided computing primitives other than just
+  Boolean logic~\cite{raychowdhury2018computing,yoon2018fefet,yoon2019ferrofet}.
+This is where the nagging feeling started:
+  namely, the feeling that
+  \textit{the hardware tells us what it does.}
+Let me  explain what I mean.
+
+Models of hardware are ubiquitous.
+Any representation of hardware
+  that isn't the literal silicon itself---%
+  from a low-level GDSII file,
+  to a mid-level \gls{rtl} representation,
+  to a high-level \gls{hls} implementation or Python simulator---%
+  is a \textit{model} of hardware.
+All hardware in use
+  likely has at least one model behind it,
+  if not more.
+Furthermore,
+  models come in all shapes and sizes,
+  and capture far more than just
+  computational functionality,
+  but also things like
+  timing,
+  area,
+  and power.
+The SkyWater PDK (recently open sourced
+  by Google)
+  or the ASAP7 PDK from Arizona State University
+  are great examples
+  of open-source process development kits,
+  rich with models (simulation, timing, power, and area)
+  of real, fabricatable
+  hardware platforms.
+
+There is currently a directionality
+  associated with hardware models.
+For example, the simulation
+  models
+  of an FPGA's primitives
+  packaged inside \gls{hardwaresynthesis}
+  tools
+  are meant to be used
+  to simulate a design
+  after it has been compiled
+  from its higher-level specification.
+Alternatively,
+  hardware designs intended for synthesis
+  of an FPGA
+  or ASIC
+  are intended to be run through a synthesis tool
+  and lowered to a netlist
+  (to eventually become an ASIC
+    or FPGA bitstream).
+In both cases,
+  the hardware model is only 
+  \textit{lowered,} 
+  such as when a synthesis-ready design
+  is compiled,
+  or \textit{lowered to,}
+  such as when a design is compiled
+  to simulation models.
+It is not often the case that
+  these models are used in the opposite direction---%
+  i.e.~\textit{lifting} models
+  to higher levels of abstraction,
+  to generate higher-level outputs
+  (like compiler backends).
+
+It is surprising
+  that models are only used in the lowering direction,
+  as many of them are
+  prime for lifting.
+Models written in Verilog,
+  for example,
+  are readily usable
+  by \gls{automated-reasoning} tools
+  like \gls{smt} solvers.
+For the most part,
+  automated reasoning tools
+  are only used to do post-lowering
+  \gls{verification},
+  but there is no reason that they
+  can't be run ``in the other direction''---%
+  in fact, this is exactly what \lr does.
+
+With all of that in mind,
+  let's return to the idea that
+  \textit{the hardware tells us what it does.}
+Rephrasing this idea
+  in the terms presented in the paragraphs above,
+  we are overflowing with rich,
+  varied hardware models
+  that are prime for use
+  with automated reasoning tools,
+  ready to have interesting,
+  higher-level semantics
+  lifted from them.
+It's for these reasons
+  that,
+  for years,
+  it's felt like hardware
+  has been practically screaming at us,
+  \textit{directly} providing all the information we need
+  to understand how to compile to it optimally.
+Yet we ignore it, choosing instead to use
+  the models \textit{indirectly.}
+
+When I say that tools use models ``indirectly'', 
+  I'm referring to the current optimization loop
+  standard in many optimization tasks.
+Consider \gls{hardwaresynthesis} tools.
+During synthesis, the tool will
+  make some guesses during compilation
+  about what optimizations will generate optimal output
+  (often informed, indirectly, by the underlying hardware models).
+The designer then
+  simulates the results using the hardware models,
+  to check whether the tool's guesses were correct.
+The odd part of this loop, to me,
+  is the \textit{indirect} use of the models
+  to inform compiler construction,
+  and the \textit{direct} use of the models
+  only after the fact, to check compilation results.
+Why not shorten this loop, and use the models \textit{directly}
+   during compiler construction?
+Hardware tells us what it does---%
+  so why not listen?
+
+\lr was the most concrete
+  instantiation of this idea
+  that I was able to achieve
+  in the span of my PhD.
+Rather than encoding DSP mapping rules
+  as patterns (informed, indirectly, from models
+    and DSP documentation),
+  \lr determines how to map to primitives
+  by ingesting models directly,
+  utilizing \gls{program-synthesis}
+  to map to primitives based on the ingested models.
+However, \lr only scratches the surface
+  of the broader idea 
+  I'm discussing here.
+\lr only maps based on functional behavior alone;
+  it does not take advantage of, for example,
+  the timing information
+  also available in the models.
+
+Furthermore,
+  these ideas go far beyond digital hardware.
+I've been lucky enough to apply these ideas
+  in non-boolean, analog computing~\cite{yoon2018fefet,yoon2019ferrofet,raychowdhury2018computing}
+  as well as DNA circuit design~\cite{wathieu2023fridge}.
+It isn't just digital hardware
+  that is telling us what it does.
+Any computing substrate has \glspl{primitive};
+  most primitives have models.
+These models can be similarly used to generate compilers.
+
+
+\vspace{10mm}
+
+\noindent
+With that, I will conclude this dissertation.
+If nothing else, I hope you take with you
+  the idea that
+  \textit{hardware is telling us what it does}---%
+  it's on us to listen!

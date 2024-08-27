@@ -1,3 +1,7 @@
+% are we compiling for arxiv?
+\newif\ifarxiv
+\arxivfalse % Change between \arxivtrue and \arxivfalse
+
 % Global option passing "before" document class
 \PassOptionsToPackage{table}{xcolor} % for coloring table cells
 
@@ -152,8 +156,8 @@ something something
 \begin{center}
   University of Washington \\[1em]
   \textbf{Abstract}        \\[1em]
-  \mytitle                 \\[1em]
-  \hl{todo remove line break above}
+  Generation of Compiler Backends from Formal Models of Hardware
+                   \\[1em]
   \myauthor                \\[1em]
 
   % Supervisory Committee: \\[-0.5em]
@@ -161,12 +165,14 @@ something something
   % Adriana Schulz   \qquad
   % Zachary Tatlock  \\[-0.5em]
   Chair of the Supervisory Committee: \\[-0.5em]
-  someone \\[-0.5em]
-  \pgas
+  Zachary Tatlock \\[-0.5em]
+  %\pgas
+  Computer Science \& Engineering
   \\[2em]
 \end{center}
 \input{text/abstract}
 
+\setcounter{tocdepth}{1}
 \begin{spacing}{1.5}
   \tableofcontents
 \end{spacing}
@@ -186,18 +192,18 @@ something something
 
 \part{Compilation to Machine Learning Accelerators}
 \label{part:glenside-and-3la}
-\input{part 1/abstract}
-\input{part 1/chapter-introduction-and-motivation-3la}
+\input{part1/abstract}
+\input{part1/chapter-introduction-and-motivation-3la}
 \input{glenside}
-\input{part 1/chapter-evaluation}
-\input{part 1/intro-and-background-and-related-work}
+\input{part1/chapter-evaluation}
+\input{part1/intro-and-background-and-related-work}
+\input{part1/conclusion}
 
 \part{Compilation to FPGAs}
 \label{part:lakeroad}
-\input{part 2/part2}
+\input{part2/part2}
 
 \input{text/conclusion}
-\input{text/broader-thoughts.tex}
 
 \clearpage
 \addcontentsline{toc}{chapter}{Bibliography}

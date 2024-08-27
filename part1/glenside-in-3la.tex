@@ -1,0 +1,221 @@
+\section{\g in \TLA}
+\label{sec:glenside-in-3la}
+
+Now that we have presented
+  \g,
+  we will now briefly describe
+  how \g was used within 3LA.
+
+Operations which can be offloaded
+  to accelerators
+  can be captured via patterns,
+  as discussed with 
+  TVM's Bring Your Own Codegen
+  framework.
+Rather than attempt to enumerate all semantically equivalent patterns
+ (a task that is tedious, error-prone, and likely to result in an incomplete enumeration), 
+ or expect users to modify their application code to expose expected patterns (demanding knowledge of the model and patterns
+  as well as engineering effort), 
+  %, engineering time, and debugging effort),
+   \TLA 
+   increases the flexibility
+   of compiler backend algorithms
+  by utilizing term rewriting and \gls{equality-saturation} techniques to transform programs
+  to expose the most  matching opportunities for accelerator operation selection. 
+It is in this task
+  that 
+  \TLA uses \g.
+
+Flexible matching uses two kinds of rewrite rules, both expressed in \g:
+\begin{itemize}
+\item Compiler IR rewrite rules: These are general-purpose \g-to-\g rules, independent of the accelerator, and are reusable and composable for various applications. We have developed a general set in \TLA %that is used across all our benchmarks. 
+including rules for, e.g., merging/splitting tensors, commutativity, associativity, and identities for common operators. 
+%\recheck{skip? These rules can also be extended by the system designer, e.g., in case of compiler IR updates, but in our experience they have largely stabilized and we expect they will be complete-in-practice for most users.}
+
+\item \mapping rules: These rewrite rules are accelerator-specific,
+  and translate from \g to black-box
+  accelerator calls.
+When targeting new accelerators, accelerator designers are expected to provide these mappings.
+\end{itemize}
+
+All rewrites in {\TLA} are polymorphic over tensor size, which requires specifying relationships between the input and output sizes for operations that merge, split, or broadcast over tensors. This also makes a given \mapping more general and provides support for applications using different block sizes, strides, etc., without changing any rules. 
+%Note that this separation provides many benefits for compiler IR rewrites: (a) they become a one-time-cost that can be shared across accelerators, (b) one can use off-the-shelf term rewriting systems for implementing them, and (c) these rewrites can use purely functional IRs, without requiring bespoke compilation steps for state/effect analysis. 
+
+In the extraction phase of equality saturation, the rewritten program optimizing the cost function is chosen. % as the final version of the program. 
+This provides flexibility in the criteria for selection among functionally equivalent candidates for accelerator offloads. In our evaluations where we focused on end-to-end functional testing, we used a simple cost function that maximizes the number of accelerator invocations. More sophisticated cost functions can incorporate information about performance or data movement costs, and thereby result in different offloads.
+
+%% Aarti: \iffalse around submitted text below
+\iffalse
+%\paragraph{Flexible Matching.} 
+Specifically, we utilize equality saturation
+  to perform ``\textit{flexible matching}'':
+  The search applies \mapping rules %IR--ILA rewrites 
+  to insert accelerator operations into the program,
+  as well as equivalent rewrites within the compiler IR (compiler IR--compiler IR rewrites)
+  to expose even more acceleration opportunities. % to apply accelerator operations.
+  \iffalse
+Equality saturation avoids
+  phase-ordering issues when applying rewrites
+  by searching over many equivalent rewritings of the same program,
+  including different choices of accelerator operations,
+  which ultimately reduces the need for manual program restructuring
+  and improves application portability.
+Given an input program $p$, 
+  equality saturation repeatedly applies 
+  the given rewrite rules 
+  to explore all equivalent ways to express $p$
+  (with respect to the rewrite rules).
+This is accomplished using an \textit{e-graph} data structure
+  to efficiently represent an exponentially large set of equivalent program expressions~\cite{nelson1980fast,nieuwenhuis2005proof}.
+Upon reaching a fixed point, 
+  i.e., when no application of any rewrite rule can introduce a new program expression, 
+  the optimal rewritten program
+  can be extracted from an e-graph
+  according to a given cost function,
+  thus providing for searching over many candidate rewritings without sophisticated ordering considerations.
+\fi
+%The use of equality saturation
+  %also exposes opportunities for optimizations,
+Since all rewritings with respect to the given rules 
+  are available for the search,
+  choosing an optimal rewriting
+  reduces to framing the right cost function and search heuristics.
+This allows %for automatically testing 
+the use of \textit{unmodified} off-the-shelf applications
+  and exploring all possible mappings to the accelerator operations (as demonstrated in our evaluation, \S\ref{sec.compilation-stats})---%
+  a very useful capability during early design exploration. 
+  
+  %---requiring only a \textit{one-time} effort per accelerator
+  %in the form of providing the compiler IR--accelerator rewrite rules.
+%,
+ % requires a \textit{one-time} effort per accelerator (the addition of compiler IR--accelerator rewrite rules),
+  %and allows for exploring all possible mappings to the accelerator---%
+  %a useful capability during early design exploration.
+\fi 
+
+\iffalse
+Two additional advantages of our flexible-matching approach
+  are that the general-purpose rewrite rules
+  can be used with \emph{all} target accelerators and applications,
+  %and thus require only a one-time effort to specify
+  and that rewrite rules for multiple accelerators
+  can be \emph{simultaneously} included, 
+  %in the equality saturation,
+  thereby searching over all opportunities 
+  to invoke all available accelerators in concert.
+In the extraction phase of equality saturation,
+  the rewritten version maximizing the cost function
+  is chosen as the final version of the program.
+  This provides flexibility in the criteria for selection among functionally equivalent candidates for accelerator offloads.
+  \fi 
+%, by designing a suitable cost function.
+%Because this approach often exposes more opportunities to invoke accelerators (\S\ref{sec.compilation-stats}), we refer to this approach as ``flexible matching,'' in contrast to ``exact.''
+  %\aarti{add a forward pointer to flexible matching results}
+
+\textit{Compiler IR rewrite rules.} Here, we describe three examples of compiler IR rewrite rules to show different types of opportunities that can be exposed.
+%
+\footnotesize
+\begin{eqnarray} 
+  \texttt{(compute dot-product (reshape \%x \%s))} &\rightarrow& \texttt{(reshape (compute dot-product \%x) \%s)} \label{rr-reshape-bubbling} \\
+  \texttt{(add (reshape (dense \%a \%b) \%s) \%c)} &\rightarrow& \texttt{(reshape (bias\_add (dense \%a \%b) \%c) \%s)} \label{rr-linear-layer} \\
+  \texttt{\%x} &\rightarrow& \texttt{(reshape (flatten \%x) (shape-of \%x))} \label{rr-flatten}
+\end{eqnarray}
+\normalsize
+%
+The \texttt{reshape} operator takes a tensor and a shape vector as input and re-arranges the layout of the tensor to the given shape, and the \texttt{dot-product} operator takes a tensor as input and computes the inner product of vectors under the given axis~\cite{smith2021pure}. Rule~\ref{rr-reshape-bubbling} exploits the properties of the two operators and shows that rearranging the application order of \texttt{reshape} and \texttt{dot-product} operators
+  preserves the semantics.
+Rule~\ref{rr-linear-layer} shows that linear layer \glspl{mlkernel} can be expressed 
+  using different arrangement and combinations of operators, e.g., $\texttt{bias\_add}$ (broadcasting) or the 
+  elementwise $\texttt{add}$.
+Rule~\ref{rr-flatten} shows that de-simplifying a computation 
+  (e.g., flattening then unflattening) could expose more opportunities for matching 
+  rewrites.
+Moreover, combining these individual rewrite rules together enables more 
+  sophisticated rewrites. 
+For example, combining Rule~\ref{rr-reshape-bubbling} and Rule~\ref{rr-flatten} 
+  allows for the emerging $\texttt{im2col}$ transformations for convolution kernels, 
+  without needing to specify the transformation as a new rewrite rule.
+
+\iffalse
+In addition to matching the compiler \mapping by adding them as rewrite rules 
+  in Glenside, this approach also facilitates \emph{additional} matches through 
+  the inclusion of \textit{general-purpose rewrite rules} within Glenside, such 
+  as tensor shape transformations and algebraic manipulations of combinators.
+  %including algebraic manipulations of various combinators in the language. 
+%  \aarti{mention shape transformations here?}
+These general-purpose rules
+  allow the term-rewriting system to conclude
+  that different variations of an expression
+  (like the linear layer examples above)
+  are, in fact, equivalent.
+In our examples, using the rewrite rules in Glenside
+  exposed acceleration opportunities in both
+  the LSTM-WLM and ResNet-20 programs
+  through specifying \textit{only a single}
+  %compiler IR--ILA rewrite 
+  \mapping rule for each accelerator operator.
+  %we are able to annotate desirable accelerator operations in
+  %both the LSTM-WLM and ResNet-20 implementations,
+  %specifying only a single compiler IR--ILA rewrite for each accelerator operation
+  %and relying on Glenside's general-purpose rewrite rules 
+  %to expose opportunities to invoke the former.
+% \todaes{[Mike] to rewrite this para and add explanation/examples of the rewrite rules.}
+
+\todaes{Glenside IR and its rewrite rules support expressing commonly used deep learning kernels (e.g. nn\_dense, conv2d) as well as the underlying tensor-level computations. For example:
+}
+\begin{enumerate}
+    \item \todaes{\textit{Equivalent linear layers using kernels}}
+    \todaes{\[\texttt{(add (reshape (nn\_dense \%a \%b) \%s) \%c) => (reshape (bias\_add (nn\_dense \%a \%b) \%c) \%s)}\]
+    % This  rule matches the pattern of a linear layer using elementwise addition and rewrites to an equivalent biased addition by pushing the \texttt{reshape} operator to the outer-most level.
+}
+    \item \todaes{\textit{Bubble reshape operators in tensor-level computations}}
+    \todaes{\[\texttt{(compute dot-product (reshape \%x \%s)) => (reshape (compute dot-product \%x) \%s)}\]}
+    \item \todaes{\textit{Flatten and unflatten tensors}}
+    \todaes{\[\texttt{\%x => (reshape (flatten \%x) (shape-of \%x))}\]
+    % This rewrite rule says that given an arbitrary tensor \texttt{\%x}, flattening \texttt{\%x} and reshaping it back to its original shape gives the same tensor. When combined with other rewrite rules (such as the one above), flexible matching in Glenside is able to perform \texttt{im2col} transformations for convolution kernels.
+    }
+\end{enumerate}
+\todaes{The above rules embody three of the crucial properties of applications that make term-rewriting promising. Rule (1) shows that computations that can be rewritten into equivalent representations using different operations (such as using a $\texttt{bias\_add}$ instead of an elementwise $\texttt{add}$ by pushing out the $\texttt{reshape}$). Rule (2) exposes computations where rearranging the application of existing operations remains equivalent. Finally, rule (3) exemplifies how "de-simplifying" a computation can expose opportunities to offload. Exploring these properties together exposes more sophisticated offloads. For example, combining (3) with (2) allows the matching procedure to perform $\texttt{im2col}$ transformations for convolution kernels. These rewrite rules address the mismatch of static pattern matchers introduced in Sec \ref{sec.method.matching}.}
+\fi
+
+\textit{IR-to-accelerator mapping rules.}
+Similar to compiler IR rewrite rules, we specify IR-to-accelerator mapping 
+  rules in Glenside.
+These rules are accelerator-specific, mapping supported 
+  operations to accelerator invocations.
+We now describe three examples of IR-to-accelerator mapping rules.
+  %
+\scriptsize
+\begin{eqnarray}
+  \texttt{(compute dot-product (cartesian-product ?x ?w))} &\rightarrow& \texttt{(vta-dense ?x ?w)} \label{rr-vta} \\
+  \texttt{(conv2d ?input ?kernel ?group ...)} &\rightarrow& \texttt{(hlscnn-conv2d ?input ?kernel ?group)} \label{rr-hlscnn} \\
+  \texttt{\{\{LSTM Relay Pattern\}\}} &\rightarrow& \texttt{(flexasr-lstm ?input ?hidden\_0 ...)} \label{rr-flexasr}
+\end{eqnarray}
+\normalsize
+%
+%The above rules showcase three ways to match and instantiate accelerator invocation operators: 
+Rule~\ref{rr-vta} maps tensor-level computation of dense matrix multiplication 
+  to VTA's \texttt{dense} operation. 
+This allows matching decomposed coarse-grained operators and mapping to 
+  fine-grained accelerator operations.
+%Matching on tensor-level operations makes it easier to match computations decomposed from coarse-grained operators and map to accelerators with fine-grained computation supports. 
+Rule~\ref{rr-hlscnn} maps kernel-level computation of a 2D convolution to 
+  HLSCNN's \texttt{conv2d} operation---a common accelerator offloading for 
+  deep learning kernels.
+%This is a conventional way of using an accelerator to speed up computations of certain DL kernels. 
+Rule~\ref{rr-flexasr} maps an LSTM computation to FlexASR's \texttt{lstm} operation.
+Note that the LSTM computation (left-hand side) is specified using a pattern 
+  compiled from a Relay program; this Glenside feature helps express complex
+  operations.
+%The left-hand side of Rule~\ref{rr-flexasr} denotes the LSTM computation pattern compiled from a Relay program that computes LSTM. This approach is useful when the computation is complicated and error-prone to write in \texttt{egg}. 
+%Leveraging \texttt{egg}'s interface, these rewrite rules are all conditioned on predicates that check whether the corresponding accelerators support the set-up of the computation (e.g. dimensions of inputs, grouping of convolution kernels). 
+%We omit the conditions here due to space constraints.
+
+%\paragraph{Flexible matching via equality saturation}
+%General-purpose rewrite rules and IR-to-accelertor mapping rewrite rules are implemented in Glenside~\cite{smith2021pure} using interfaces provided by \texttt{egg}~\cite{willsey2021egg}. 
+%Leveraging equality saturation, these rules are applied exhaustively to input programs: general-purpose rewrite rules enable discovering semantically equivalent programs; IR-to-accelerator mapping rules match on all these equivalent programs and explore opportunities of offloading computations to corresponding accelerators.
+\TLA utilizes equality saturation and the two types of rewrite rules to transform 
+  programs, aiming to expose the most matching opportunities for accelerator 
+  operation selection.
+It was not clear \textit{a priori} whether flexible matching would be performant for accelerators with complex \mapping rules needed for available accelerator designs. Our evaluation results in the next chapter show that compiler IR rewrites can be combined effectively with a few \mapping rules in flexible matching, which finds more matches than exact matching in a reasonable time. 
+

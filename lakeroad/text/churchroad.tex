@@ -1,0 +1,69 @@
+\chapter{Future Work: Churchroad}
+\label{chapter:churchroad}
+
+I wanted to briefly mention
+  an ongoing extension to \lr.
+A fundamental limitation
+  of solver-aided approaches
+  like \lr
+  is problem size:
+  the larger a constraint problem,
+  the more likely solvers are to time out
+  while trying to find a solution.
+In \lr, this means that
+  compiling larger hardware designs
+  will present issues;
+  we already saw in \cref{sec:evaluation}
+  that \lr's underlying solvers
+  time out
+  on some benchmarks.
+Furthermore, even some small tasks
+  are 
+  notably difficult for solvers---%
+  namely, reasoning about multiplication~\cite{rath2024polysat,brain2021further}.
+Scaling to large designs
+  and compiling multipliers
+  are core requirements
+  for a hardware compiler,
+  however.
+So how do we ensure that
+  we can use \lr
+  on large designs?
+
+In response,
+  we have been developing Churchroad~\cite[section 4]{smith2024there},
+  which combines many of the techniques from this dissertation.
+Namely, we employ
+  \gls{equality-saturation}---%
+  our algorithm of choice in \cref{part:glenside-and-3la}.
+Using equality saturation,
+  we can capture an entire design
+  in an \egr.
+Once we have captured a full design, we can
+  use equational reasoning via rewrites
+  to achieve tasks that
+  would otherwise be challenging
+  for SMT solvers---%
+  for example, splitting a wide
+  multiplier
+  into multiple multipliers and adders.
+Similarly, we can use rewrites
+  to discover places in the design
+  where we might want to invoke \lr.
+Consider the benchmarks
+  we generated to evaluate DSP mapping in
+  in \cref{sec:evaluation}---%
+  we could similarly generate patterns
+  to identify potential places where DSPs could be used
+  in larger designs.
+Once these locations are identified within the design,
+  we can call \lr as a subroutine,
+  and if \lr finds a mapping,
+  we can then import it back into the \egr.
+
+Churchroad has already shown promise as a method
+  of scaling solver-aided hardware compilation.
+Beyond that, however,
+  Churchroad also presents new strategies
+  for leveraging the strengths of
+  of SMT solvers and equality saturation.

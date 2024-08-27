@@ -8,6 +8,12 @@
 % 3. what do the results tell us
 
 %Although comparing the accuracy of individual operators
+Having now evaluated \cref{thesis:devtime}
+  and \cref{thesis:optimizations},
+  we will evaluate \cref{thesis:correctness}.
+We do so by demonstrating how \g, via \TLA,
+  enables testing of accelerators.
+We begin by evaluating single operators. 
 Although evaluating individual operators
   does not suffice to characterize
   how an accelerator performs on a full application,
@@ -50,7 +56,7 @@ Here, we discuss both functional validation and performance evaluation at the op
 
 \subsubsection{Functional Validation}
 
-\input{part 1/evaluation/tab-verif-mapping}
+\input{part1/evaluation/tab-verif-mapping}
 
 The {\TLA} methodology readily enables operator-level validation through auto-generated ILA simulators.
 %For operator-level testing,

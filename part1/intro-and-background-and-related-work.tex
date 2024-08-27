@@ -1,6 +1,6 @@
   
 \chapter{Background and Related Work}
-\label{sec:part1-background}
+\label{chapter:part1-background}
 
 In \cref{part:glenside-and-3la}
   of this dissertation,
@@ -108,7 +108,7 @@ Tensor program compilers must translate
   is an incredibly important task---%
   so important, in fact, that it often represents
   a majority of the cost
-  for a new hardware design \hl{cite this}.
+  for a new hardware design.
 Validating a hardware design
   is the process of ensuring
   that it behaves as intended.
@@ -177,7 +177,7 @@ In these cases,
   higher-level, non-cycle-accurate simulation
   can enable fast simulation.
 SystemC~\cite{SystemC}
-  and ILA~\cite{todo},
+  and ILA~\cite{huang2018instruction},
   are common tools for implementing
   these high-level models.
 The 3LA framework relies on ILA, which,
@@ -271,7 +271,7 @@ Machine learning workloads
  such as 2D convolution
  or dense matrix multiplication.
 Machine learning frameworks
- (such as TensorFlow \cite{tensorflow}
+ (such as TensorFlow \cite{abadi2016tensorflow}
    and PyTorch \cite{pytorch})
  and machine learning compilers
  (such as TVM \cite{chen2018tvm})
@@ -900,7 +900,7 @@ In particular,
 \subsection{Pattern Matching Accelerator Calls}
 
 The most closely related work to flexible matching is from 
-   TVM BYOC~\cite{chen2021byoc}, which only provides exact syntactic matching as discussed in \S\ref{sec.background}.
+   TVM BYOC~\cite{chen2021byoc}, which only provides exact syntactic matching.
 Past work has also explored rewrite-based techniques for
   automatically inferring instruction selection passes
   between ISAs~\cite{

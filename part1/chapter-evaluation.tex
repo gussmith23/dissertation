@@ -1,0 +1,67 @@
+\chapter{Evaluation}
+\label{chapter:part1-evaluation}
+
+Thus far, we have described
+  how we have applied
+  the thesis of this dissertation---%
+  that compiler backends
+  should be generated
+  from formal models of hardware---%
+  in the realm of deep learning accelerators.
+We first described the difficulties
+  in developing compilers
+  for deep learning accelerators.
+We then described how these difficulties
+  motivated the creation of
+  3LA: a mostly-automated, end-to-end
+  methodology
+  for accelerator development.
+(Note again that 3LA itself
+  is not a contribution of this dissertation.)
+We identified a specific problem
+  within this domain
+  as a problem of interest:
+  mapping applications to accelerators.
+To address this problem,
+  this dissertation
+  introduced
+  \g,
+  a tensor language
+  which enables powerful rewriting techniques.
+We then integrated \g 
+  into \TLA,
+  to bring the power of equality saturation
+  to bear on the task
+  of mapping to accelerators.
+  
+This evaluation will first demonstrate the utility of
+  \g
+  via a number of case studies
+  in \cref{sec:case-studies}.
+Then, 
+  in \cref{secion:eval-3la}
+  we will evaluate the specific claims
+  of our thesis
+    (improved \cref{thesis:optimizations},
+     \cref{thesis:correctness}, and
+     \cref{thesis:devtime})
+  by evaluating the components of \TLA 
+  to which \g was essential.
+
+  
+
+
+\input{part1/evaluation/eval-glenside}
+
+
+\input{part1/evaluation/eval-accelerator}
+\input{part1/evaluation/eval-application}
+\input{part1/evaluation/tab-compilation}
+\input{part1/evaluation/eval-compilation}
+\input{part1/evaluation/eval-validation-op}
+\input{part1/evaluation/eval-validation-app}
+\input{part1/evaluation/eval-fpga}
+
+
+% \subsection{Extensibility}
+% How hard to add a new accelerator support.

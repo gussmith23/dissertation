@@ -32,6 +32,9 @@ In ResNet-20 and MobileNet-V2,
   %IR-accelerator rewrites 
   {\mapping}s
   we included in flexible matching.
+Note again that this validation
+  would not have been possible without the mapping power
+  of \g.
 
 %Each of the three accelerators considered is used in some application, and even combinations of these accelerators are used in individual applications:
 %\begin{inlinelist}
@@ -151,9 +154,11 @@ accuracy recovered.
 {This is shown in Column~5 ``Results with Numerics Tuning'' in Table~\ref{tab.verif-sim}.}
 This case study readily demonstrates
   %thus also emphasizing
-  how the {\TLA} methodology
+  how the {\TLA} methodology,
+  enabled by \g,
   \textit{facilitates debugging and improving accelerator designs
-  with rapid turnaround.}
+  with rapid turnaround,} and thus improving overall
+  \cref{thesis:correctness}.
 
 \iffalse
 {
@@ -188,7 +193,9 @@ The overall results in Table~\ref{tab.verif-sim} reaffirm the need for applicati
 %Our experiments demonstrate how \TLA provides systematic and largely automatic compilation-results validation at the application level and also show its usefulness in software/hardware co-design.
 %
 %Specifically, due to 
-Thanks to formal ILA models, \TLA provides quick design space exploration and numerics tuning without hardware engineering overhead %(e.g., deploying to FPGA) 
+Thanks to formal ILA models
+  and flexible compilation via \g, 
+  \TLA provides quick design space exploration and numerics tuning without hardware engineering overhead %(e.g., deploying to FPGA) 
 in each design iteration.
 %
 %A repetitive

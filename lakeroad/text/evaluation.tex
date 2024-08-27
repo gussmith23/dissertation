@@ -6,7 +6,13 @@ We now evaluate
   (related to \cref{thesis:optimizations})
   and extensibility
   (related to \cref{thesis:devtime}).
-\hl{also add a reference to thesis:correctness to formalization.}
+Note that we consider our formalization
+  in \cref{sec:formalization}
+  as evidence for our \cref{thesis:correctness}
+  claim,
+  and thus we don't include
+  an evaluation of correctness
+  in this chapter.
 In the following experiments,
   we target four FPGA architectures:
   \textbf{Xilinx UltraScale+},
@@ -93,18 +99,28 @@ In particular,
 In the context of this dissertation,
   this corresponds to providing evidence
   for our \cref{thesis:optimizations} claim:
-\begin{quote}
-  \thesisclaimoptimizations
-\end{quote}
-\hl{punch harder}
+  namely,
+  through the use of
+   more adaptable \cref{thesis:algorithms}
+  (program synthesis)
+  and more explicit \cref{thesis:models}
+  (vendor-supplied simulation models),
+  we can build a compiler,
+  \lr,
+  which finds more \cref{thesis:optimizations}
+  in the form of mappings to
+  specialized primitives.
+  
   
 \paragraph{\textnormal{\textit{\textbf{Evaluation Setup.}}}}
 
-We highlight three particularly complex
+We highlight four particularly complex
   DSPs for the Xilinx Ultrascale+,
+  Xilinx 7-series,
   Lattice ECP5,
   and Intel Cyclone 10 LP architectures: 
   the Xilinx DSP48E2,
+  Xilinx DSP48E1,
   Lattice ALU54A--MULT18X18C 
   (a single DSP composed of 
   two primitives),
@@ -129,15 +145,14 @@ For each architecture, we compare \lr
   state-of-the-art toolchain for
   the architecture 
   as well as to Yosys.
-For Xilinx Ultrascale+, 
-  the DSP48E2 configuration manual details the
+For Xilinx Ultrascale+ and 7-series, 
+  the DSP48E2 (resp.~DSP48E1) configuration manual details the
   structure of designs mappable
   to the primitive.
 Our designs for Xilinx include 
   all permutations of the design form
-  $((a \pm b) * c) \odot d$,
-  where $\odot \in \{\&, |, \pm, \oplus \}$,
-  as well as designs of the forms $(a * b)$ and $((a * b) \pm c)$.
+  $((a \pm b) * c) \pm d$,
+  as well as designs of the forms $(a * b)$, $(a\pm b) * c$ and $((a * b) \pm c)$.
 We pipeline each of these
   workloads from zero to three stages 
   and use bitwidths from 8 to 18 bits.
@@ -148,7 +163,7 @@ For each of these designs,
   we use zero to two stages
   and bitwidths from 8 to 18 bits.
 This results in
-    1320 microbenchmarks for Xilinx UltraScale+,
+    792 microbenchmarks for Xilinx UltraScale+,
     396 for Lattice ECP5,
     and 66 for Intel Cyclone 10 LP.
 Though \lr's output is correct by construction,
@@ -168,18 +183,24 @@ Though \lr's output is correct by construction,
     \begin{tabular}{|l|S[table-format=3.2]|S[table-format=3.2]|S[table-format=3.2]|}
     \hline
      Tool & {Median Time (s)} & \multicolumn{2}{c|}{Min / Max Time (s)} \\ \hline
-    \multicolumn{4}{|c|}{\textbf{Xilinx}} \\ 
+    \multicolumn{4}{|c|}{\textbf{Xilinx UltraScale+}} \\ 
     \hline
          \lr & 14.99 & 2.99 & 127.70 \\  \hline
          SOTA Xilinx & 261.61 & 227.82 & 598.67 \\ \hline
          Yosys & 14.97 & 6.66 & 21.10 \\ \hline
          %
-    \multicolumn{4}{|c|}{\textbf{Lattice}} \\
+    \multicolumn{4}{|c|}{\textbf{Xilinx 7-series}} \\ 
+    \hline
+         \lr & 5.63 & 3.13 & 62.68 \\  \hline
+         SOTA Xilinx & 94.50 & 89.32 & 111.61 \\ \hline
+         Yosys & 6.99 & 5.64 & 9.39 \\ \hline
+         %
+    \multicolumn{4}{|c|}{\textbf{Lattice ECP5}} \\
     \hline
          \lr & 9.49 & 6.70 & 55.23 \\ \hline
          SOTA Lattice & 2.32 & 0.95 & 4.52 \\ \hline
          Yosys & 2.31 & 0.90 & 4.01 \\ \hline
-    \multicolumn{4}{|c|}{\textbf{Intel}} \\
+    \multicolumn{4}{|c|}{\textbf{Intel Cyclone 10 LP}} \\
     \hline
          \lr & 2.92 & 2.12 & 4.13 \\ \hline
          SOTA Intel & 38.73 & 19.11 & 43.49 \\ \hline
@@ -201,7 +222,7 @@ Results of
   the completeness experiments
   described in \cref{sec:completeness},
   measuring the completeness 
-  of technology mapping tools for DSPs on Xilinx UltraScale+ and Lattice ECP5,
+  of technology mapping tools for DSPs on Xilinx UltraScale+, Xilinx 7-series, Lattice ECP5, and Intel Cyclone 10 LP,
   plus timing information.
 A single bar in the bar chart
   communicates,
@@ -223,19 +244,19 @@ For the other tools,
     but the mapping uses more than
     a single DSP).
 There are a total of 
-  1320 experiments/microbenchmarks for Xilinx,
+  792 experiments/microbenchmarks for Xilinx,
   396 for Lattice,
   and 66 for Intel.
     }
     \label{fig:xilinx-completeness}
 \end{figure}
 
-  
+
 \paragraph{\textnormal{\textit{\textbf{Comparison to Existing Toolchains.}}}}
 As demonstrated in Figure~\ref{fig:xilinx-completeness} (top),
-  \lr maps $44\times$ more
+  \lr maps $29\times$ more
   designs than Yosys
-  and $2.1\times$ more designs
+  and $1.4\times$ more designs
   than the proprietary,
   state-of-the-art toolchain on Xilinx Ultrascale+.
 On Lattice ECP5,
@@ -266,11 +287,11 @@ marked failure past that (though bitvector synthesis problems
 are decidable).}
 Note that \lr
   returns ``UNSAT'' on 
-  approximately 260
-  designs on UltraScale+, i.e., 
+  a number of
+  designs on Xilinx UltraScale+ and 7-series, i.e., 
   \lr claims there is
   \textit{no} possible mapping
-  to a DSP48E2 for the
+  to a DSP48E2/DSP48E1 for the
   requested workload.
 In all of these cases,
   both Xilinx SOTA
@@ -303,7 +324,7 @@ This is explored more deeply in
   terminate quickly,
   with a long tail of slower queries.
 Note that the state-of-the-art technology
-mapper for Ultrascale+ has a slow running time
+mapper for Ultrascale+/7-series has a slow running time
   due to its long start-up process.\tighten
 
 Regarding which solvers
@@ -314,30 +335,10 @@ Regarding which solvers
   \lr experiments,
   Bitwuzla was the first
   to complete
-  for 671 of them,
-  STP for 519,
-  Yices2 for 464,
-  and cvc5 for 64.
-
-\lr's greater completeness
-  directly translates into resource reduction.
-On average, for each microbenchmark,
-  \lr uses 3.9 fewer LEs
-  (logic elements: LUTs, muxes, or carry chains)
-  and 7.5 fewer registers than the Xilinx SOTA,
-  7.2 fewer LEs/11.9 fewer registers than the Lattice SOTA,
-  8.2 fewer LEs/14.3 fewer registers than the Intel SOTA,
-  and 33.3 fewer LEs/11.4 fewer registers than Yosys. 
-In the real world, the small modules
-  captured by our microbenchmarks
-  may be reused dozens
-  if not hundreds of times
-  across a large design.
-Thus, the sizable resource
-  reduction \lr provides on a single
-  microbenchmark
-  will be multiplied significantly
-  for an entire design.\tighten
+  for 806 of them,
+  STP for 595,
+  Yices2 for 538,
+  and cvc5 for 54.
 
 
 \paragraph{\textnormal{\textit{\textbf{Discussion.}}}}
@@ -393,6 +394,7 @@ In the context of a larger
 \begin{figure}
     \centering
     \includegraphics[width=0.7\textwidth]{lakeroad/assets/time/lakeroad\_time\_xilinx.png}
+    \includegraphics[width=0.7\textwidth]{lakeroad/assets/time/lakeroad\_time\_xilinx\_7\_series.png}
     \includegraphics[width=0.7\textwidth]{lakeroad/assets/time/lakeroad\_time\_lattice.png}
     \includegraphics[width=0.7\textwidth]{lakeroad/assets/time/lakeroad\_time\_intel.png}
 \caption{
@@ -493,14 +495,19 @@ Furthermore, automatic primitive semantics extraction
   from vendor-provided HDL simulation models
   enables \lr to support diverse, highly configurable
   FPGA primitives.
-Evaluating \lr's extensibility and expressiveness
-  corresponds to
-  evaluating the \cref{thesis:devtime} claim
-  of this dissertation's thesis:
-\begin{quote}
-    \thesisclaimdevtime
-\end{quote}
-\hl{punch up}
+In the context of this dissertation,
+  this corresponds to providing evidence
+  for our \cref{thesis:devtime} claim:
+  namely,
+  through the use of
+   more adaptable \cref{thesis:algorithms}
+  (program synthesis)
+  and more explicit \cref{thesis:models}
+  (vendor-supplied simulation models),
+  supporting new FPGA architectures in
+  \lr
+  requires less \cref{thesis:devtime}
+  compared to other tools.
 
 
 The architecture descriptions
@@ -513,7 +520,7 @@ The architecture descriptions
 %
 SOFA (20 SLoC) is the simplest, shown in full
   in \cref{fig:sofa-architecture-description}.
-The descriptions for Xilinx (185 SLoC), 
+The descriptions for Xilinx UltraScale+ (185 SLoC), Xilinx 7-series (174),
   Lattice (240 SLoC), and Intel (178 SLoC)
   are longer since those
   FPGA architectures provide a
@@ -622,7 +629,8 @@ It is difficult and error-prone
 % \end{table}
 
 \begin{table}
-\caption{FPGA primitives imported 
+\caption{
+FPGA primitives imported 
   automatically by \lr from vendor-provided 
   Verilog models, with number of source lines of code 
   (excluding comments and empty lines) of 
@@ -637,6 +645,10 @@ It is difficult and error-prone
                      & CARRY8 & 23       \\
                      & DSP48E2 & 896       \\
                      % & \\
+                     \hline
+ Xilinx 7-series
+                     
+                     & DSP48E1 & 1129       \\
                      \hline
  Lattice ECP5 & LUT2 & 5       \\
               & LUT4 & 7       \\

@@ -1,9 +1,19 @@
-\section{Target Accelerators}
+\section{Evaluation as Part of 3LA}
+\label{secion:eval-3la}
+
+Next, we evaluate \g 
+  by way of evaluating \TLA.
+We first begin by describing
+  the evaluation setup of \TLA:
+  the accelerators we compile to in
+  \cref{sec.eval-acc},
+  and the workloads we compile in \cref{sec.eval-app}.
+This section is drawn from Huang et al.~\cite{huang2024application}.
+
+\subsection{Target Accelerators}
 \label{sec.eval-acc}
 
-\hl{EVERYTHING BELOW THIS LINE IS STILL COPY-PASTE FROM 3LA}
-
-We added support for three DL accelerators that provide hardware operators at different levels of granularity:
+We added support for three deep learning accelerators that provide hardware operators at different levels of granularity:
 \begin{enumerate}[leftmargin=*]
 
 \item \textbf{FlexASR} is an accelerator for speech and natural language processing (NLP) tasks that supports various RNNs~\cite{tambe20219}.
@@ -45,7 +55,9 @@ operating on 8-bit integer data.
 %
 %\hl{(Please review.)} 
 % \recheck{@Yi: please review (combined LHS and RHS LoC and gave total for mappings).}
-For each accelerator, we defined an ILA model and a set of \mapping rules.
+For each accelerator, we defined an ILA model and a set of \mapping rules
+  such as those described in
+  \cref{sec:glenside-in-3la,sec:case-study-tensorization}.
 %
 The ILA models for FlexASR, HLSCNN, and VTA are approximately 5600, 1600, and 2100 lines of ILAng code (C++), respectively. 
 %--- note that these ILAs serve the dual purposes of enabling compilation via the \TLA methodology as well as validating the RTL design.
@@ -73,6 +85,12 @@ respectively.
 %\recheck{It might also be more confusing/TMI since we didn't say much about their diffs and roles.}
 %\recheck{Based on previous discussion, we agreed that we just LoCs for the mappings, which is added before, for counting the manual effort for providing the mappings. I think we should avoid adding more implementation details such as "API wrapper" or "python" stuff here.}
 These indicate the implementation of the code generation module in our prototype, as well as reusable utilities for data movement, handling custom numerics, and emitting the low-level MMIO code for each selected accelerator offload for end-to-end simulation of the application.
+This reduction in total lines of code
+  between \g and BYOC mapping rules
+  represents a significant
+  decrease in \cref{thesis:devtime}
+  for those seeking to build a compiler
+  for their accelerator.
 
 \iffalse
 %(Note that the SystemC HLS models are more difficult to simulate compared to using ILAng.

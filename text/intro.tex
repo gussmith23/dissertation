@@ -1,19 +1,18 @@
 \chapter{Introduction}
 
-\hl{cite} \cite{ebner2008generalized}: using a solver for optimal instruction selection
-
 A \gls{compiler}
   is a tool which
   converts from one representation
   to another---%
   usually, from a
   higher-level,
-  human-readable representation
+  human-writeable
+  representation
   to a lower-level,
   machine-readable representation.
 A classic example
   is the clang compiler
-  from the LLVM suite,
+  from the LLVM suite~\cite{lattner2004llvm},
   which
   compiles programs written in 
   processor-independent C code
@@ -102,7 +101,7 @@ However, we will also consider
   of this dissertation,
   respectively.
 First,
-  the TVM compiler~\cite{tvm,chen2018tvm},
+  the TVM compiler~\cite{chen2018tvm},
   which will be a main focus
   of \cref{part:glenside-and-3la},
   is a compiler for deep learning
@@ -113,11 +112,13 @@ First,
   \gls{dsl}
   into optimized code
   for CPUs, GPUs,
-  and custom accelerators.
+  and custom \glspl{accelerator}.
 Second,
   the open-source \gls{hardwaresynthesis}
   tool Yosys
-  is a compiler for hardware designs,
+  is a compiler for hardware designs
+  supporting hardware targets such as
+  \glspl{fpga}
   and will be a focus of
   \cref{part:lakeroad}.
 
@@ -126,25 +127,21 @@ Compiler backends are composed
   and each stage is implemented with
   one or a number of core
   \textbf{algorithms.}
-A key stage in clang's x86 backend
+For example, a key stage in clang's x86 backend
   when compiling our example in
   \cref{fig:clang-c-to-x86}
   is
-  \textit{instruction selection,}
-  \hl{glossary}
+  \gls{instruction-selection},
   in which clang decides how to implement
   each operation in the C program
   using actual instructions
-  provided by the processor.
-It is in this stage, for example, 
+  provided by the processor~\cite{llvminstructionselection}.
+It is in this stage
   where clang decides to
   implement
   C's \texttt{*} operator
   using x86's
   \texttt{imul} instruction.
-clang does this using
-  an \textit{instruction selection}
-  algorithm~\cite{llvminstructionselection}.
 
 \begin{figure}
 \centering
@@ -170,12 +167,11 @@ with T.attr("VTAPushGEMMOp"):
 \end{minipage}
   \egroup;
 
-\draw[inner sep = 5pt] (4.5,0) node [draw, thin] (compiler) {TVM};
+\draw[inner sep = 5pt] (4,0) node [draw, thin] (compiler) {TVM};
 
   \draw[->, very thick] (c) edge (compiler) (compiler) edge (asm);
 \end{tikzpicture}
-\caption{Tensorizing a 2D convolution to VTA~\cite{moreau2018vta} accelerator calls.
-\hl{fix this figure and tech mapping figure, they look wonky and they're not in the right places}}
+\caption{Tensorizing a 2D convolution to VTA~\cite{moreau2018vta} accelerator calls.}
 \label{fig:intro:tensorization}
 \end{figure}
 
@@ -184,11 +180,11 @@ with T.attr("VTAPushGEMMOp"):
 \centering
 \begin{tikzpicture}
   \draw[inner sep = 5pt] (0,0) node [draw, thin] (c) \bgroup%
-\begin{minipage}{16em}
+\begin{minipage}{13em}
 \begin{minted}[fontsize=\small,baselinestretch=1]{verilog}
-module add_mul_add(input a,b,c,d,
-  output o);
- assign out <= ((d + a) * b) + c;
+module sub_mul(input a,b,c,
+               output o);
+ assign out <= (c - a) * b;
 endmodule
 \end{minted}
 \end{minipage}
@@ -222,14 +218,14 @@ Our other two compiler examples,
   TVM and Yosys,
   also rely on a few core algorithms
   to implement their backends.
-TVM, for example, implements a step
+TVM implements a step
   called 
-  \textit{tensorization}~\cite{tvmtensorization},
+  \gls{tensorization}~\cite{tvmtensorization},
   which, among other things, maps high-level 
   \glspl{mlkernel}
   to target-specific implementations,
   including invocations
-  of specialized hardware.
+  of specialized hardware \glspl{accelerator}.
 \Cref{fig:intro:tensorization}
   shows an example of tensorizing 
   a 2-dimensional convolution
@@ -238,8 +234,8 @@ TVM, for example, implements a step
 Similarly,
   a core step in hardware compilation
   for
-  Yosys and other hardware synthesis tools \hl{glossary}
-  is \textit{technology mapping,} \hl{glossary}
+  Yosys and other hardware synthesis tools 
+  is \gls{technology-mapping}
   in which the tool determines
   how to implement the high-level
   hardware design
@@ -253,7 +249,7 @@ An example of technology mapping is shown in
   is implemented using an
   architecture-specific hardware primitive
   (in this case, a DSP48E2 primitive
-    present on Xilinx FPGAs).
+    present on Xilinx \glspl{fpga}).
 Both tensorization
   and technology mapping
   will be key focuses of this dissertation,
@@ -267,8 +263,8 @@ To implement their core algorithms,
 %   built into every compiler backend
 %   are \textbf{models}
 %   of the target platform.
-clang's instruction selection algorithm,
-  for example,
+Following our running examples, 
+  clang's instruction selection algorithm
   directly utilizes a model
   of the x86 architecture's
   instructions
@@ -298,7 +294,16 @@ Declaration of x86's
 }
     \label{fig:intro:llvm-tablegen}
 \end{figure}
-
+\noindent
+This instruction declaration
+  tells clang's instruction selector
+  that there is an instruction,
+  \texttt{imul},
+  available for use;
+  other parts of the model (omitted)
+  describe the functionality of the instruction,
+  which helps the instruction selector
+  decide when to use the \texttt{imul} instruction.
 
 Not all models within compilers
   are made the same, however.
@@ -321,7 +326,7 @@ Unlike \cref{fig:intro:llvm-tablegen},
   \textit{used by} clang's instruction selector algorithm,
   the above example is \textit{both} algorithm
   \textit{and} model:
-  encoded \textit{implicitly}
+  encoded implicitly
   within this algorithm
   is a model of the underlying hardware.%
 \footnote{In fact, it would be quite difficult
@@ -331,8 +336,9 @@ Unlike \cref{fig:intro:llvm-tablegen},
 That is, any compiler which generates code
   for a hardware target
   will encode facts about the hardware
-  which amount to a model of the hardware,
-  however implicit.}
+  which amount to a model of the hardware.
+The less those facts are explicitly separated out,
+  the more implicit the model.}
 Soon, I will argue why this method
   of entwining algorithm
   and model
@@ -381,12 +387,11 @@ We consider
   and interpret.
 Model explicitness is also highly correlated
   to whether or not the model
-  is captured in a \textit{declarative} form---%
-  that is, in a non-executable format,
+  is captured in a non-executable, \textit{declarative} form
   such as the static list of instructions
-  in \cref{fig:intro:llvm-tablegen}---%
-  or in an \textit{imperative} form
-  such as the executable pattern matching
+  in \cref{fig:intro:llvm-tablegen},
+  or in an executable, \textit{imperative} form
+  such as the pattern matching
   algorithm in \cref{fig:intro:yosys-pmgen}.
 
 \paragraph{Algorithm adaptability.}
@@ -410,7 +415,8 @@ For example,
   and hardware targets
   by simply being supplied
   a new list of instructions~\cite{llvminstructionselection}.
-Yosys's technology mapping algorithm
+The snippet of 
+  Yosys's technology mapping algorithm
   presented in 
   \cref{fig:intro:yosys-pmgen},
   on the other hand,
@@ -475,15 +481,21 @@ Meanwhile, clang's instruction selection
   % more adaptable algorithms
   % and more explicit models
   % leads to better compiler backends.
-I specifically focus on
-  using adaptable automated reasoning algorithms
-  to \textit{automatically generate}
+By ``pushing up'',
+  I mean
+  using
+  more adaptable
+  \gls{automated-reasoning} algorithms
+  to automatically generate
   compiler backends
-  from explicit, formal models of hardware.
-I claim there are three primary classes
-  of improvements
-  from automatically generating 
-  compiler backends:
+  from explicit, formal models of hardware,
+  as opposed to 
+  hardcoding backends
+  using inflexible algorithms
+  and implicit models.
+By ``better compiler backends'',
+  I focus on three primary classes
+  of improvements:
   correctness,
   optimization,
   and development time improvements.
@@ -492,8 +504,6 @@ Next, I present my formal
   thesis statement.
 Afterwards, I will break down the statement
   and discuss each part.
-
-\hl{"all models are wrong, some are useful"}
 
 \mdfsetup{
     frametitle={\colorbox{white}{\space{Thesis Statement}\space}},
@@ -525,6 +535,8 @@ I will use a set of five keywords
 
 \paragraph{Automatically generating compiler 
   backends.}
+  \label[thesis:algorithms]{thesis:algorithms}
+  \label[thesis:models]{thesis:models}
 At the highest level,
   my thesis advocates for
   automatically generating compiler backends.
@@ -532,27 +544,35 @@ By this, I mean
   utilizing automated reasoning techniques
   to automatically implement
   compiler backend tasks like
-  tensorization in ML compilers
-  and technology mapping in FPGA compilers.
+  \gls{tensorization} in ML compilers
+  and \gls{technology-mapping} in \gls{fpga} \gls{hardwaresynthesis} tools.
 At the highest level,
   automatically generating compiler backends
   takes the form of
-  feeding
-  a hardware model
-  into an algorithm,
-  allowing the algorithm
-  to reason about the hardware.
-\hl{weak}
-I break down the automated generation
+  specializing an automated reasoning algorithm
+  to a specific compilation task
+  by feeding it
+  a hardware model.
+Thus, I break down the automated generation
   of compiler backends
   into two primary design decisions:
   choosing an automated reasoning algorithm
-  (which we refer to via
+  (hence referred to with the keyword
     \cref{thesis:algorithms})
   and choosing the formal hardware models
   to feed into the algorithms
-  (which we refer to via
+  (hence referred to with the keyword
     \cref{thesis:models}).
+\cref{thesis:algorithms}
+  refers
+  to the automated reasoning algorithms
+  we use
+  to automatically generate our backends.
+\cref{thesis:models}
+  refers to the hardware models
+  which the automated reasoning algorithms
+  consume
+  to generate the compiler backend.
 I thus consider   
   the
   \cref{thesis:algorithms}
@@ -568,41 +588,25 @@ In \cref{part:glenside-and-3la,part:lakeroad},
   and
   \cref{thesis:models}
   produce different results.
-I will now discuss
-  each of these inputs
-  in more detail.
-
-\paragraph{\cref{thesis:algorithms}.}
-\cref{thesis:algorithms}
-  refers
-  to the automated reasoning algorithms
-  we use
-  to automatically generate our backends.
 In
   \cref{part:glenside-and-3la},
   we focus on an algorithm called
-  equality saturation;
-  in
-  \cref{part:lakeroad},
-  we focus on an algorithm called
-  program synthesis.
-
-\paragraph{\cref{thesis:models}.}
-\cref{thesis:models}
-  refers to the hardware models
-  which the automated reasoning algorithms
-  consume
-  to generate the compiler backend.
-In \cref{part:glenside-and-3la},
+  \gls{equality-saturation},
+  and
   our models take the form
-  of program rewrites,
+  of program rewrites
   capturing the high-level 
   functional behavior
   of hardware accelerators.
-In \cref{part:lakeroad},
+In
+  \cref{part:lakeroad},
+  we focus on an algorithm called
+  \gls{program-synthesis},
+  and
   we directly utilize
   vendor-provided
-  Verilog simulation models.
+  Verilog simulation models
+  as our models of hardware.
 
 \vspace{10mm}
 
@@ -620,6 +624,7 @@ We consider these the ``outputs''
 I now describe each in detail.
 
 \paragraph{\cref{thesis:optimizations}.}
+  \label[thesis:optimizations]{thesis:optimizations}
 A key task of a compiler backend
   is to utilize the target hardware
   efficiently
@@ -628,11 +633,23 @@ Compiler backends which rely on poor,
   implicitly encoded models
   and inflexible algorithms
   leave key optimizations on the table.
-\hl{would be nice to show that automated methods have clearly shown
-  to be superior when it comes to optimizing programs.
-  STOKE, AutoTVM, synthesis in general, ML guided?}
+In \cref{part:glenside-and-3la},
+  we demonstrate how inflexible algorithms
+  lead to missed accelerator mapping opportunities
+  in deep learning compilers.
+In \cref{part:lakeroad},
+  we show how inflexible algorithms
+  and implicit models
+  lead to poor utilization
+  of specialized FPGA primitives
+  during FPGA compilation.
+Both of these cases correspond to missed opportunities for optimization.
+% \hl{would be nice to show that automated methods have clearly shown
+%   to be superior when it comes to optimizing programs.
+%   STOKE, AutoTVM, synthesis in general, ML guided?}
 
 \paragraph{\cref{thesis:correctness}.}
+  \label[thesis:correctness]{thesis:correctness}
 Compiler backends are expected to produce correct code.
 However,
   backends which are built on
@@ -653,8 +670,28 @@ Furthermore, many of the
   than a hand-implemented
   algorithm used only within
   a single compiler backend.
+In \cref{part:glenside-and-3la},
+  I demonstrate how
+  the difficulty of building compilers
+  leads to a lack of validation
+  in machine learning accelerators.
+I show how automatically generating compilers
+  for accelerators aids in rapid
+  testing and validation,
+  and directly leads to uncovering bugs
+  in real hardware designs.
+In \cref{part:lakeroad},
+  I demonstrate how
+  utilizing automated reasoning methods,
+  we can generate correctness
+  guarantees
+  stronger than the guarantees
+  provided by any
+  existing hardware synthesis tool.
+  
 
 \paragraph{\cref{thesis:devtime}.}
+  \label[thesis:devtime]{thesis:devtime}
 And lastly,
   more explicit models
   and more adaptable algorithms
@@ -685,6 +722,20 @@ Second, the greater flexibility
   allows them to adapt to new
   hardware
   with less engineering effort.
+In both \cref{part:glenside-and-3la,part:lakeroad},
+  we demonstrate
+  how compiler backends
+  generated with automated reasoning algorithms
+  are more easily extensible.
+In both cases, to target a new hardware platform,
+  users simply need to provide
+  models of the target hardware.
+In \cref{part:glenside-and-3la},
+  these models come in the form of
+  rewrites capturing accelerator functionality.
+In \cref{part:lakeroad},
+  we use simulation models of FPGA primitives
+  provided by the FPGA vendors.
 
 \vspace{10mm}
 
@@ -695,8 +746,9 @@ These parts are visualized on
   spectrum in
   \cref{fig:intro:model-alg-spectrum}.
 In \cref{part:glenside-and-3la},
-  I introduce Glenside,
-  which demonstrates how
+  I introduce Glenside~\cite{smith2021pure}
+  and \TLA~\cite{huang2024application},
+  which demonstrate how
   a more adaptable algorithm
   can increase a compiler's
   ability to offload operations
@@ -705,18 +757,23 @@ As is shown in
   \cref{fig:intro:model-alg-spectrum},
   \cref{part:glenside-and-3la}
   only pushes along one axis 
-  of our spectrum.
+  of our spectrum:
+  namely, algorithm adaptability.
 In \cref{part:lakeroad}, I
   more fully realize
   my thesis statement
-  via Lakeroad:
+  via Lakeroad~\cite{smith2024fpga}:
   a technology mapper for FPGAs
   which utilizes both more
   adaptable algorithms
   and
   more explicit models.
-Glenside and Lakeroad
-  both demonstrate
+In the end of \cref{part:lakeroad},
+  I also describe Churchroad~\cite{smith2024there},
+  which seeks to extend the power of \lr
+  to larger hardware designs.
+Glenside, Lakeroad, and Churchroad
+  demonstrate
   how,
   by automatically generating
   portions of compiler backends
@@ -727,186 +784,69 @@ Glenside and Lakeroad
   correctness, while
   easing development effort.
 
-\hl{we still don't land the intro very strongly}
+Before jumping into the content
+  of this dissertation, though,
+  let me first take the time
+  to situate this work
+  in the existing literature
+  and explain my novel contributions.
 
-\hl{STUFF BELOW THIS LINE IS ROUGH}
-
-\hl{Hardware models are pervasive:}
-The reliance of modern compilers
-  on \textit{implicit} models is truly odd, 
-  given that
-  explicit, formal models
-  of the target hardware
-  almost certainly exist
-  in all cases.
-In fact, nearly all hardware design
-  \textit{begins} from the construction
-  of these models
-  at a high level of abstraction;
-  the bulk of the hardware design process
-  is building low-level implementations
-  of the high-level specification,
-  and verifying the implementation
-  is equivalent.
-Thus, \textbf{there is wealth
-  of explicit, formal models of hardware
-  which could be used
-  instead of implicit models.}
-\hl{examples of explicit hw models? alistair's work?
-should probably go into a later paragraph}
-\hl{maybe something about declarative programming being good?
-a trend towards declarative programming?}
-
-\hl{Hardware models are prime for use with automated tools:}
-Furthermore, 
-  there exist plenty of automated
-  tools
-  which deal with
-  these formal models.
-Oddly, though,
-  many of these tools
-  are concerned only with
-  what happens \textit{after}
-  compilation.
-\hl{cite zach sisco latte, he says this directly}
-That is, the formal models
-  of hardware
-  are used to check that 
-  the compiled program is correct.
-Why not instead
-  just ensure
-  that you can't compile an incorrect
-  program?
-
-\hl{The models are more correct:}
-Lastly, and perhaps most importantly,
-  these explicit models
-  are perhaps \textit{more correct}
-  than any implicit, handwritten models
-  that could be written,
-  as in many cases, these models
-  are the \textit{ground truth.}
-
-Furthermore, it is our position that
-  \textbf{recent advances
-  in programming languages
-  make automated compiler construction
-  feasible.}
-The idea of automatically generating
-  compiler backends is not new:
-  previous work includes
-  synthesizing instruction selectors%
-  ~\cite{buchwald2018synthesizing,dias2010automatically,brandner2007compiler,daly2022synthesizing}
-  and code generators~\cite{leupers1997retargetable,brandner2013automatic},
-  among other work.
-However, much of this work
-  is a decade old, if not more,
-  and does not benefit from
-  advances in
-  languages and type systems
-  for hardware~\cite{durst2020type,nigam2023modular,nigam2020predictable},
-  equational reasoning via equality saturation~\cite{tate2009equality,willsey2021egg},
-  program synthesis~\cite{solar2008program,torlak2013growing},
-  and machine learning for program generation~\cite{alon2019code2vec,austin2021program}.Furthermore, it is our position that
-  \textbf{recent advances
-  in programming languages
-  make automated compiler construction
-  feasible.}
-The idea of automatically generating
-  compiler backends is not new:
-  previous work includes
-  synthesizing instruction selectors%
-  ~\cite{buchwald2018synthesizing,dias2010automatically,brandner2007compiler,daly2022synthesizing}
-  and code generators~\cite{leupers1997retargetable,brandner2013automatic},
-  among other work.
-However, much of this work
-  is a decade old, if not more,
-  and does not benefit from
-  advances in
-  languages and type systems
-  for hardware~\cite{durst2020type,nigam2023modular,nigam2020predictable},
-  equational reasoning via equality saturation~\cite{tate2009equality,willsey2021egg},
-  program synthesis~\cite{solar2008program,torlak2013growing},
-  and machine learning for program generation~\cite{alon2019code2vec,austin2021program}.
-
-In this dissertation,
-  I present the case for
-  automatically generating compiler backends
-  from
-  formal models of hardware.
-I apply this technique
-  to two separate domains:
-  (1) compilation for
-  domain-specific 
-  deep learning accelerators,
-  and
-  (2) hardware compilation 
-  (or \textit{synthesis})
-  for Field-Programmable
-  Gate Arrays (FPGAs).
-In both of these cases,
-  I show how
-  automatically generating
-  a portion of the compiler backend
-  leads to increased correctness,
-  greater extensibility,
-  and more powerful automated optimization.
-
-In the first part,
-  I demonstrate
-  how explicit,
-  handwritten
-  models of hardware,
-  captured as
-  \textit{rewrites,}
-  can be used 
-  to automatically implement
-  ``instruction selection''
-  for machine learning
-  accelerators.
-
-In the second part,
-  I apply this thesis
-  even more literally, by using
-  formal models of hardware
-  not written by us,
-  but found in the wild,
-  to build a compiler
-  which automatically knows
-  how to map designs
-  to FPGAs.
-
-The primary contributions of this dissertation
-  are
-\begin{itemize}
-
-    \item blah
-\end{itemize}
+\section*{Situating this Dissertation: What's New?}
 
 
-\hl{
-TODO: people keep asking about the other direction;
-  i.e. software generating hardware.
-Have to explain why we're not doing that here.
-}
-  
-
-\section{Situating this Dissertation: Related Work}
+The automatic generation
+  of compilers
+  is not a new idea;
+  in fact, it has been somewhat
+  of a holy grail
+  for decades.
+So what does this 
+  dissertation bring to the table?
+Before elaborating on that question,
+  I will briefly chronicle
+  related work from the past five decades
+  related to the top-level topic
+  of compiler generation.
+Then, I will discuss
+  the novel insights of this dissertation:
+  namely, 
+  (1) taking advantage of the new wave of 
+  powerful, off-the-shelf
+  automated reasoning tools,
+  (2) constraining ourselves
+  to domain-specific tasks
+  to limit the size of the problem, and
+  (3) directly generating
+  compiler backends from 
+  externally-supplied
+  (i.e., not written by us)
+  models of hardware.
 
 The earliest citations
   for automated compiler generation
   go back to the late 1960s and early 1970s.
-  \hl{cite}
-However, much of this work focused on
+However, 
+  though it was often referred to as
+  \textit{compiler} generation,
+  much of this work focused solely on
   compiler \textit{frontends:}
-  parsers and lexers.
+  parsers and lexers~\cite{
+    Newcomer1975MachineindependentGO,
+    % peter mosses's phd thesis
+    % https://ora.ox.ac.uk/objects/uuid:b590173b-0a86-40c0-8e75-6a6fc5035c43/files/m0e27900b33858b8d881526a8be4b5096
+    % generates parsers and lexers from language description
+    mosses1975mathematical,
+  Jones1980CompilerGF,
+  Sethi1981CircularEE,
+  Smith2005SemanticsDirectedCG,
+  Feldman1968TranslatorWS}.
 A common task was,
   given a grammar for a new programming language,
   could you generate the parser and lexer
   for that language.
-Today, there exist industry-standard tools
-  like Yacc and GNU Bison
-  which handle these tasks.
+This work culminated in 
+  industry-standard tools
+  like Yacc and GNU Bison.
 Even just Yacc's name, which stands for
   ``yet another compiler--compiler''
   shows how our terminology may have changed;
@@ -918,65 +858,81 @@ Even just Yacc's name, which stands for
 However, not all of the initial wave of research
   focused on compiler frontends.
 There was also work on generating components
-  of compiler backends---%
-  often referred to specifically as 
+  of compiler \textit{backends}---%
+  often referred to as 
   ``code generation.''
-  
-  
+In a 1977 survey of code generators 
+  from R.~G.~Cattell~\cite{cattell1977survey},
+  he states:
+  \begin{quote}
+Traditionally, compiler-generation systems have
+been weak on automating the later stages of compilation, specifically code generation.
+But as the formal methods and grammars applied have become better understood and
+more powerful, their scope has gradually been evolving towards the later stages of
+compilation.
+  \end{quote}
+Certainly this entire dissertation
+  can simply be seen as one more step
+  in this gradual evolution.
+As we will discuss later,
+  this dissertation benefits from
+  the nearly five decades
+  of formal methods and automated reasoning research
+  since the time of Cattell's writing.
 
-
-\hl{todo}
-
-\begin{quote}
-``In general, there have been two kinds of approaches to more automatic production of
-code generators. The first is the development of a specialized language for code
-generators, with built-in machinery for dealing with common details of the process.
-The second extreme is the development of a program to build a code generator for a
-language from a purely structural and behavioral machine description. Rather than
-being mutually exclusive, these procedural and descriptive language approaches,
-respectively, represent points in a continuum of degrees of automatic programming.''
-\end{quote}
-
-
-\hl{[BOOK] Automatic generation of code generators. CW Fraser - 1977 - search.proquest.com}
-
-The automated generation of compilers
-  is not a new topic.
-In this section, I situate this thesis
-  amongst the existing 
-  automatic compiler generation
-  literature.
-However, there are two ways
-  in which this dissertation
-  advances the state of the art:
-  first is our choice
-  to target \textit{domain-specific}
-  compiler backends,
-  and second is our focus on applying
-  existing, off-the-shelf
-  automated reasoning algorithms
-  when generating our backends.
-Before going into more depth
-  on how this dissertation
-  advances the state of the art,
-  we will first discuss the existing
-  literature.
-
+Nonetheless,
+  researchers did approach the topic
+  of backend generation~\cite{
+  snyder1975portable,
+  fraser1988automatic}.
+Interestingly,
+  the spectrum I identify
+  earlier in this chapter---%
+  the model explicitness--algorithm adaptability spectrum---%
+  seems to apply even in the early years
+  of automated backend generation research.
 % https://apps.dtic.mil/sti/tr/pdf/ADA056027.pdf
-A 1977 survey of code generators 
-  from Cattell~\cite{cattell1977survey}
-  includes a list of
-  projects that had attempted
-  some amount of compiler generation automation.
-
-\hl{a great line from cattell that captures my thesis:}
-``In general, there have been two kinds of approaches to more automatic production of
+In his 1977 survey, Cattell
+  describes a very similar spectrum
+  in methods of 
+  automatically producing code generators:
+\begin{quote}
+In general, there have been two kinds of approaches to more automatic production of
 code generators. The first is the development of a specialized language for code
 generators, with built-in machinery for dealing with common details of the process.
 The second extreme is the development of a program to build a code generator for a
 language from a purely structural and behavioral machine description. Rather than
 being mutually exclusive, these procedural and descriptive language approaches,
-respectively, represent points in a continuum of degrees of automatic programming.''
+respectively, represent points in a continuum of degrees of automatic programming.
+\end{quote}
+The two extremes on Cattell's spectrum
+  have analogous points on my
+  model explicitness--algorithm adaptability spectrum.
+At one extreme
+  on his spectrum,
+  he is essentially describing
+  code generator \glspl{dsl}:
+  specialized languages for
+  building procedural (in his words)
+  or imperative (in mine)
+  code generators.
+We've already seen a
+  modern example of this---%
+  Yosys's pmgen DSL
+  in \cref{fig:intro:yosys-pmgen}.
+At the other extreme of his spectrum
+  are programs which produce code generators from
+  descriptive/structural (in his words)
+  or declarative (in mine)
+  machine descriptions and hardware models.
+Again, we have seen a modern example of this
+  in \cref{fig:intro:llvm-tablegen}: 
+  clang's instruction selector
+  and the declarative model of the ISA
+  which it consumes.
+  
+
+
 % From Cattell's [PDF] A survey and critique of some models of code generation
 % There is a comparatively long history of compiler-writing systems, dealing with codegeneration to lesser or greater extents. These efforts have all taken the specialized
 % language approach. An early example is Feldman [1966], who uses a language FSL for
@@ -993,150 +949,350 @@ respectively, represent points in a continuum of degrees of automatic programmin
 % This paper has an insanely helpful table near the end.
 % Things to look into basedd on the table:
 
-One thing to note about early work
-  in compiler generation
-  is that it's mostly macro-based:
-  that is, to ``generate'' compilers,
-  early work introduced some intermediate
-  representation
-  (much like LLVM's LLVM IR)
-  
+Much of the early work on
+  the automated generation of code generators
+  (i.e.~compiler backends)
+  was based on intermediate representations.
+To generate compilers,
+  these works introduce an intermediate
+  representation;
+  then, those wishing to generate a compiler
+  would then specify how to compile
+  that intermediate representation
+  to their target machine.
+A prime example of this 
+  was Perry Miller's DMACS system~\cite{miller1971automatic}
+  where DMACS stood for
+  ``Descriptive MACro code generating System.''
+This
+  system introduced
+  macros, which were 
+  machine-independent
+  operations
+  which could be implemented
+  differently
+  for each target machine.
+Much of this work can be seen
+  as the predecessors
+  of the 
+  now-standard method of building compilers
+  using one or a number of
+  intermediate representations,
+  most recently made popular
+  by the
+  foundational LLVM compiler 
+  toolchain~\cite{lattner2004llvm}.
 
-\hl{
-Miller 1971 Automatic Creation of a Cod. Generator frans a Machis. Description
-}
+While it is further
+  from the work of this dissertation,
+  it is also worth mentioning work on
+  partial evaluation~\cite{consel1993tutorial,futamura1999partial}.
+Futamura projections
+  specifically
+  are of interest,
+  as they describe how compilers can
+  be viewed as partial evaluations
+  of interpreters.
+I do not use any partial evaluation techniques
+  in this dissertation.
 
-\hl{
-Donegan 1973 An Approach to the Autonio.tic Generation of Cod. Cen.rtuors
-}
+% \hl{
+% Donegan 1973 An Approach to the Autonio.tic Generation of Cod. Cen.rtuors
+% }
 
-\hl{
-Weingart 1973 An Eff icient and Systematic Method of Compiler Cod. Generat ion
-}
+% \hl{
+% Weingart 1973 An Eff icient and Systematic Method of Compiler Cod. Generat ion
+% }
 
-\hl{
-Newcomer 1975 : Machine Independent Generation of Optimal Local Code
-}
-
-\hl{
-Snyder 1975 A Portable Compiler for the Language C,
-}
-
-
-The dream of automated compiler generation
-  is not a new one;
-  it goes back at least to the 1960s,
-  if not earlier.
-
-\hl{there are levels of what "compiler generation" means. it can mean things like LLVM, which much earlier work is leading up to, which essentially make it easier to generate compilers but lack automated reasoning. then there's the application of automated reasoning to compilers.}
+% \hl{
+% Newcomer 1975 : Machine Independent Generation of Optimal Local Code
+% }
 
 
 %https://www.semanticscholar.org/paper/Survey-on-Instruction-Selection%3A-An-Extensive-and-Blindell/628a73a92c6112c3b4651cf2d940a5ba51590f21
-\hl{
-survey on instruction selection
-}
+% \hl{
+% survey on instruction selection
+% }
 
 %https://www.semanticscholar.org/paper/A-truly-generative-semantics-directed-compiler-Ganzinger-Giegerich/ec945309806c3090f6da62d8063d953b3fecfea9
-\hl{Ganzinger's work.}
-The MUG2 system~\cite{Ganzinger1982ATG,Ganzinger1977AutomaticGO}
-  is a so-called ``compiler compiler'', 
-  which takes 
-
-% peter mosses's phd thesis
-% https://ora.ox.ac.uk/objects/uuid:b590173b-0a86-40c0-8e75-6a6fc5035c43/files/m0e27900b33858b8d881526a8be4b5096
-\hl{
-MATHEMATICAL SEMANTICS
-AND
-COMPILER GENERATION
-Peter David Mosses.
-Seems like it doesn't go
-  down to the codegen level.
-I.e. doesn't produce code for an actual backend.
-But it does take a language description.
-
-In general, it seems to moreso be providing what I'd call a 
-  framework, more than
-  a generator.
-In their case, you can specify your grammar
-  and your semantics
-  in separate DSLs,
-  and get out a parser
-  and...what, interpreter? respectively.
-  } 
-In Peter Mosses's PhD dissertation~\cite{mosses1975mathematical},
-  he describes a framework for compiler generation.
-
-It seems like the expected meaning
-  of ``compiler generation''
-  is more frontend generation.
-This is the assumption in \cite{
-  mosses1975mathematical,
-  Jones1980CompilerGF,
-  Sethi1981CircularEE,
-  Smith2005SemanticsDirectedCG}.
-This differs
-  from my dissertation
-  as I focus specifically on
-  \textit{backend} generation.
-The simplest capturing
-  of this cited work
-  is that it mostly focuses on
-  compiler \textit{frontend}
-  and \textit{middle-end}
-  generation
-Rather than producing compilers
-  which produce code 
-  in some 
+% \hl{Ganzinger's work.}
+% The MUG2 system~\cite{Ganzinger1982ATG,Ganzinger1977AutomaticGO}
+%   is a so-called ``compiler compiler'', 
+%   which takes 
 
 % https://apps.dtic.mil/sti/pdfs/ADA019571.pdf
-\cite{Newcomer1975MachineindependentGO}
-As he puts it,
-``There has been extensive research into the automatic generation of compilers.
-Much of this has concentrated on the issues of syntax and semantics, while little has
-been done on the problems of code generation.''
-He states
-  how efficiency has been mostly ignored
-  when considering portability;
-  that is, if someone came up with a system to port code
-  from one system to another,
-  they'd be satisfied,
-  regardless of how good the port was.
-He argues we need to pay more attention to 
-  producing efficient code.
-You can potentially simplify that argument:
-  we shouldn't always assume
-  translators are available in the first place.
-Especially once you begin considering
-  the broad range of targets which exist
-  at the backend of a compiler, especially
-  now.
-If they were just considering 
-  general-purpose processors back then,
-  then maybe retargeting was reasonable.
+% \cite{Newcomer1975MachineindependentGO}
+% As he puts it,
+% ``There has been extensive research into the automatic generation of compilers.
+% Much of this has concentrated on the issues of syntax and semantics, while little has
+% been done on the problems of code generation.''
+% He states
+%   how efficiency has been mostly ignored
+%   when considering portability;
+%   that is, if someone came up with a system to port code
+%   from one system to another,
+%   they'd be satisfied,
+%   regardless of how good the port was.
+% He argues we need to pay more attention to 
+%   producing efficient code.
+% You can potentially simplify that argument:
+%   we shouldn't always assume
+%   translators are available in the first place.
+% Especially once you begin considering
+%   the broad range of targets which exist
+%   at the backend of a compiler, especially
+%   now.
+% If they were just considering 
+%   general-purpose processors back then,
+%   then maybe retargeting was reasonable.
 
 
-\hl{miller and donegan came up again in newcomer re: machine-independent codegen, so should def read those.}
+In the ensuing five decades,
+  the topic of automated backend
+  generation
+  has seen steady interest~\cite{
+  buchwald2018synthesizing,
+  dias2010automatically,
+  brandner2007compiler,
+  daly2022synthesizing,
+  leupers1997retargetable,
+  brandner2013automatic}.
+In the next few paragraphs,
+  I highlight notable trends
+  and important projects.
+  
+A common pattern in recent research
+  is the application
+  of more and more powerful
+  \gls{automated-reasoning} algorithms,
+  especially those employed in this dissertation:
+  term rewriting~\cite{Richards2006VerificationOC,Despland1990UsingRT,Emmelmann1991CodeSB,Despland1990PAGODEAB,Daly2024EfficientlySL} and 
+  synthesis based on \gls{smt}~\cite{Daly2024EfficientlySL}.
+% Spiral
+One of the most notable projects
+  in this space
+  is SPIRAL~\cite{franchetti2018spiral}. 
+Historically,
+  SPIRAL is an umbrella
+  over many related grants,
+  researchers, and projects,
+  but at its core is the
+  SPIRAL compiler.
+The SPIRAL compiler's goal
+  is to enable performance
+  portability
+  of specialized kernels
+  across a wide range of architectures.
+They use many techniques
+  also used in this dissertation,
+  such as
+  capturing programs in a high-level,
+  backend-nonspecific language
+  and
+  utilizing automated reasoning 
+  (in their case, term rewriting systems)
+  to adapt their compiler
+  to different backends.
 
-% Miller DMACS
 
-Some early work did consider
-  the target machine.
-Perhaps most relevant to this dissertation
-  is the DMACS system presented by Miller.
-As input, DMACS takes
-  a machine description---that is,
-  an explicit, formal model of the hardware
-  targeted by the compiler (\cref{thesis:models}).
-\cite{miller1971automatic} 
+% Norman Ramsey
+Another point worthy of note
+  is the work of Norman Ramsey
+  and his student Jo\~{a}o Dias,
+  whose work on generating
+  instruction selectors
+  (among other compiler components)
+  is very reminiscent
+  of the work in this dissertation~\cite{
+  ramsey2003pragmatic,
+  ramsey2011resourceable,
+  dias2010automatically}.
+As is the general pattern
+  in the work in this area,
+  Ramsey and Dias
+  focus on utilizing automated reasoning algorithms
+  and high-level machine descriptions
+  to implement compiler backend components,
+  saving compiler development time.
 
-\hl{this is a good survey:} \cite{Feldman1968TranslatorWS}
-Clearly, the focus was on
-  parser generators.
-\hl{why wasn't backend generation really 
-  targeted? 
-  were they just not concerned about it? was it too hard?
-  too easy?}
 
-% \input{text/argument-structure}
+If this dissertation focuses on
+  generating software (i.e.~compilers)
+  from hardware,
+  it is important to also mention
+  the parallel line of research
+  which attempts to generate hardware from software.
+Programs are a literal description
+  of what needs to be computed;
+  why not use them to determine
+  what hardware we should make?
+A perfect example of this is
+  the concept of \gls{hls}~\cite{cong2011high,cong2022fpga}
+  which allows hardware designers to produce hardware
+  from
+  software algorithms
+  written in high-level languages like C.\footnote{
+Note that the reality of modern HLS
+  is a little messier than described,
+  but this is the intention.
+}
+There is also an entire literature on
+  hardware--software codesign~\cite{teich2012hardware,kokila2016survey,schaumont2012practical,wolf2003decade,Gupta1993HardwaresoftwareCF},
+  which, while rich and varied,
+  generally centers on the idea
+  of exploring the hardware design space
+  using representative software workloads
+  as a starting place.
+In fact,
+  \g (presented in \cref{part:glenside-and-3la})
+  was originally a
+  hardware--software codesign tool
+  which aimed to use equality saturation
+  to rewrite machine learning models
+  into potential accelerator designs.
 
-% \input{text/roadmap}
+The ideas presented in this dissertation
+  are complementary
+  to the ideas of hardware--software codesign,
+  and
+  I believe we should pursue both directions.
+The core idea presented in
+  this dissertation---%
+  generating compiler backends
+  from formal models of hardware---%
+  targets the lower layers of the compiler stack.
+In general, this dissertation answers the question of,
+  given low-level primitives,
+  how do we find places 
+  to use those primitives 
+  in programs or hardware designs?
+Hardware--software codesign, on the other hand,
+  targets higher levels of the stack.
+Codesign seeks to answer the question,
+  what hardware \textit{should} we design,
+  given the software we need to run?
+Thus, the methods presented here
+  will only benefit codesign;
+  better technology mapping from \lr, for example,
+  will only benefit the designs
+  produced by HLS tools.
+  
+
+
+I claim there are three specific features
+  of this dissertation
+  which set it apart from existing literature.
+First is our focus on
+  using
+  \textit{off-the-shelf}
+  automated reasoning tools,
+  rather than developing our own.
+Second is constraining ourselves
+  to domain-specific tasks
+  to limit the size of the 
+  generation problem.
+And last is the generation of
+  compiler backends from 
+  \textit{externally-supplied}
+  (i.e., not written by us)
+  models of hardware.
+I will now discuss each of these in detail.
+
+First, since the inception of
+  automated compiler backend generation
+  as a research topic,
+  there have been significant
+  advances in
+  \gls{automated-reasoning} techniques,
+  e.g.~%
+  % languages and type systems
+  % for hardware~\cite{durst2020type,nigam2023modular,nigam2020predictable},
+  equational reasoning via \gls{equality-saturation}~\cite{tate2009equality,willsey2021egg},
+  \gls{program-synthesis}~\cite{solar2008program,torlak2013growing},
+  and machine learning for program generation~\cite{alon2019code2vec,austin2021program}.
+Many of these advances
+  have made automated reasoning techniques
+  accessible to a broader audience.
+Whereas previous work
+  often may need to build 
+  automated reasoning techniques
+  by hand,
+  in this dissertation I show how
+  off-the-shelf tools
+  have become powerful enough
+  to use for tasks of this magnitude.
+Specifically, I utilize
+  the
+  equality saturation
+  library \texttt{egg}~\cite{willsey2021egg}
+  in \cref{part:glenside-and-3la}
+  and the program synthesis library
+  Rosette~\cite{
+  torlak2013growing,torlak2014lightweight}
+  in \cref{part:lakeroad}.
+  
+  
+
+Second, we focus on
+  compiler generation
+  for specialized hardware backends.
+Compiler backend generation projects
+  of the past often focused on
+  generating compiler components
+  for general-purpose processors~\cite{
+  fauth1995describing,
+  leupers1997retargetable,
+  brandner2007compiler,
+  brandner2009automatic,
+  brandner2013automatic,
+  ramsey2003pragmatic,
+  ramsey2011resourceable,
+  dias2010automatically}.
+As hardware becomes more heterogeneous,
+  however,
+  the variety of hardware targets
+  needing compilers
+  has increased.
+In this dissertation,
+  we focus instead on 
+  building compiler components
+  for new, specialized platforms---%
+  machine learning accelerators
+  in \cref{part:glenside-and-3la}
+  and specialized \gls{fpga} \glspl{primitive}
+  like DSPs in
+  \cref{part:lakeroad}.
+Not only are compilers
+  needed for these new specialized targets,
+  but their specialization
+  also constrains the search space,
+  making automated reasoning
+  far more tractable.
+
+
+Lastly,
+  while previous works have often leaned
+  on machine descriptions~\cite{
+  ramsey2011resourceable}
+  when generating compiler components,
+  these machine descriptions
+  generally must be handwritten
+  by the compiler engineer
+  utilizing the compiler generation
+  framework.
+In \cref{part:lakeroad}
+  we introduce a new technique---%
+  semantics extraction from Verilog---%
+  which directly leverages vendor-supplied
+  Verilog.
+Many of these models are
+  built to be used with
+  automated reasoning tools,
+  but are currently only utilized for
+  \textit{post-compilation verification,}
+  rather than in compilation itself~\cite{sisco2022position,sisco2022synthesis}.
+I demonstrate how these models
+  can be used
+  to generate more correct, more complete compilers
+  for specialized hardware.
+

@@ -47,9 +47,9 @@
 % \end{abstract}
 
 \chapter{Glenside}
-\label{sec:part1-glenside}
+\label{chapter:part1-glenside}
 
-\textit{This chapter is derived from Smith et.~al.~\cite{smith2021pure}.}
+\textit{This chapter is derived from Smith et al.~\cite{smith2021pure}.}
 
 \input{glenside/introduction}
 
@@ -257,7 +257,6 @@ These features can provide sufficient
   issues that otherwise may require
   dimension-specific operators like
   \tcd{cartProd2D} and \tcd{mapAt2} above.
-\hl{maybe make specific references here?}
 For example, given curried versions
   of \tcd{dotProd} and \tcd{map},
   we could have used such features
@@ -304,7 +303,7 @@ All the above constraints inform \g's key design goal:
   over arbitrary dimensions while still enabling
   high-performance term rewriting techniques
   like equality saturation.
-In the rest of this paper,
+In the rest of \cref{part:glenside-and-3la},
   we show how \textit{access patterns} enable achieving
   these goals with a focus on applications to
   mapping application fragments down to
@@ -713,8 +712,9 @@ In the rest of this paper,
   
 % Trying to get this to end up on the right page...
 \begin{table*}
+\small
     \centering
-    \caption{\g's access pattern transformers. \hl{formatting}}
+    \caption{\g's access pattern transformers.}
     \label{tab:access-pattern-transformers}
     \begin{tabularx}{\linewidth}{lXX}
     Transformer 
@@ -1228,3 +1228,4 @@ $N$ is batch size; $H$/$W$ are spatial dimension sizes; $C$/$O$ are input/output
 \label{fig:all-kernels}
 \end{figure*}
 
+\input{part1/glenside-in-3la}

@@ -1,27 +1,6 @@
 \section{Overview}
 \label{sec:overview}
-% \input{figures/sketch-generation}
-%\sandy{For brevity, I suggest you delete the first 3 sentences that follow and begin the section with "We now walk through..."}
 
-% Modern FPGAs include
-%   specialized
-%   components such as DSPs
-%   to efficiently
-%   implement common patterns of
-%   expensive computations. %, such as
-%   %multiply accumulates.
-% Despite these highly optimized
-%   components being commonplace
-%   across different architectures,
-%   modern tooling struggles to
-%   automatically map design
-%   fragments to DSPs,
-%   which results in hours of extra effort
-%   for hardware designers.
-%   %\sandy{In the following, you mention "these" shortcomings, but you only mention a "struggle" and one byproduct, i.e., extra effort. Mention others briefly (since they're already in Introduction)?}
-% We built \lr to target these
-%   shortcomings
-%   in modern FPGA tooling.
 We now walk through an 
   example
   of how current FPGA technology mapping tools can fail
@@ -52,7 +31,7 @@ The designer is specifically aiming to use
 \end{center}
 The designer's hardware block
   involves the computation
-  \texttt{(d+a)*b+c},
+  \texttt{(c-a)*b},
   which the manual states is implementable with a single DSP.
 %Specifically, imagine their design
 %involves the following computation, 
@@ -63,7 +42,7 @@ In particular, suppose the design
 \begin{center}
 \begin{minted}[baselinestretch=1]{verilog}
  for(i=0; i<4; i++) begin
-  r[i] <= (d[i] + a[i]) * b[i] + c[i];
+  r[i] <= (c[i] - a[i]) * b[i];
  end
 \end{minted}
 \end{center}
@@ -74,7 +53,6 @@ It would be reasonable for the designer
   to expect the design
   to use a total of four DSPs.
 
-\hl{ todo update these}
 \textit{\textbf{Current tools fail.}}
 After compiling the design
   with existing tools,
@@ -82,21 +60,19 @@ After compiling the design
   to find that the compiler returns a design
   that uses more
   resources than anticipated.
-It does use four DSPs,
-  but it also uses 128
-  \textit{registers}
-  (which hold state)
-  and 64 \textit{lookup tables} 
-  (LUTs, which implement logic functions).
+Instead of using the expected
+  four DSPs, it uses eight---%
+  a 100\% increase in resource consumption!
 \textbf{The compiler has thus failed to 
   fully utilize
   the DSP}---%
   it has not configured a DSP48E2
   to implement
-  \texttt{(d+a)*b+c} but has instead
-  implemented a portion of the
+  \texttt{(c-a)*b} but has instead
+  overflowed the
   computation
-  with LUTs and registers.
+  onto
+  an extra DSP.
 The designer now faces a choice:
   either accept the result or attempt to coax the compiler
   into returning a more optimal design.
@@ -104,7 +80,7 @@ The designer now faces a choice:
 \textit{\textbf{Coaxing the compiler, to no avail.}}
 Though many 
 may choose to accept a less optimal result,
- this tenacious\footnote{
+ this tenacious designer\footnote{
 This may not be purely a personal preference. %of a tenacious designer.
 %that go down this path.
 For example, a hardware design simply may not fit on an FPGA
@@ -117,13 +93,9 @@ For example, a hardware design simply may not fit on an FPGA
   of interest into a separate module:
 
 \begin{minted}[baselinestretch=1]{verilog}
-// add_mul_add.v: computes (a+b)*c+d in two clock cycles.
-module add_mul_add(input clk, input [15:0] a, b, c, d,
+module sub_mul(input clk, input [15:0] a, b, c,
                    output reg [15:0] out);
- reg [15:0] r;
- always @ (posedge clk) begin
-   r <= (a+b)*c+d; out <= r;
- end
+ assign out = (c-a)*b;
 endmodule
 \end{minted}
 
@@ -148,8 +120,8 @@ They attempt various strategies,
   the compiler still cannot 
   map the design
   to a single DSP,}
-  instead using one DSP, 
-  32 registers, and 16 LUTs.
+  instead using two DSPs
+  for the partial design.
 Again, the designer must decide:
   give up and accept
   suboptimal results,
@@ -159,14 +131,14 @@ Again, the designer must decide:
 The hardware designer presses on and
   % having failed to coax the compiler
   % into mapping the
-  % \texttt{add\_mul\_add} module to a single
+  % \texttt{sub\_mul} module to a single
   now has only one option remaining:
   manually instantiating a DSP48E2
   with the desired behavior.
 Skimming through the daunting 75-page DSP48E2's online user manual,
   the designer quickly discovers that
   configuring even
-  the ``pre-add'' \texttt{a+b}
+  the ``pre-sub'' \texttt{c-a}
   requires correctly setting 
   multiple ports and parameters
   (\texttt{INMODE}, \texttt{AMULTSEL}, \texttt{BMULTSEL}, and \texttt{PREADDINSEL}),
@@ -227,25 +199,23 @@ Let us imagine how the designer
   %chooses to use \lr
   %during partial design mapping.
 After putting 
-  \texttt{add\_mul\_add}
+  \texttt{sub\_mul}
   into its own module,
   the designer calls
   \lr from the command line:
 \begin{minted}[baselinestretch=1]{bash}
 $ lakeroad --template dsp \
            --arch-desc xilinx-ultrascale-plus.yml \
-           add_mul_add.v
+           sub_mul.v
 \end{minted}
 % (Note that we have excluded some flags for this example.)
 The \texttt{lakeroad} command outputs
-  \texttt{add\_mul\_add\_impl},
+  \texttt{sub\_mul\_impl},
   an implementation
-  of \texttt{add\_mul\_add}
+  of \texttt{sub\_mul}
   that uses a single UltraScale+ DSP48E2:
-\hl{would really like this to not break across pages}
 \begin{minted}[baselinestretch=1]{verilog}
-module add_mul_add_impl(input clk, input [15:0] a, b, c, d,
-                        output [15:0] out);
+module sub_mul_impl(input clk, input [15:0] a, b, c, output [15:0] out);
  DSP48E2 #(
   .ACASCREG(32'd0), .ADREG(32'd0), .ALUMODEREG(32'd0),
   .AMULTSEL("AD"), .AREG(32'd0), .AUTORESET_PATDET("NO_RESET"), 
@@ -266,18 +236,18 @@ Unlike current compilers,
 Importantly, this compiled design
   is also formally guaranteed
   to implement
-  the input \texttt{add\_mul\_add}
+  the input \texttt{sub\_mul}
   design.
   
-\begin{wrapfigure}{r}{.5\textwidth}
-%\begin{figure}
+% \begin{wrapfigure}{r}{.5\textwidth}
+\begin{figure}
     \centering
     \hspace{-1cm}%
     \includegraphics[width=.5\columnwidth]{lakeroad/assets/lakeroad-diagram.drawio.png}
    \caption{The components within \lr.}
     \label{fig:lakeroad-diagram}
-%\end{figure}
-\end{wrapfigure}
+\end{figure}
+% \end{wrapfigure}
 
 How does \lr provide 
   \textit{verified, more complete} support
@@ -299,13 +269,13 @@ As shown in \cref{fig:lakeroad-diagram},
   to generate an efficient and correct
   DSP48E2 implementation
   of
-  the \texttt{add\_mul\_add}
+  the \texttt{sub\_mul}
   design.
 %This walkthrough follows the steps laid out visually in \cref{fig:lakeroad-diagram}. We begin by describing how \lr generates sketches.
 
 \textit{\textbf{Step 1: Generating a Sketch.}}
 In
-  the \texttt{add\_mul\_add}
+  the \texttt{sub\_mul}
   example,
   \lr
   generates
@@ -313,10 +283,10 @@ In
   which we refer to as \texttt{sketch}:\footnote{
 Though this example is presented in a Verilog-like language,
   \lr's sketches are actually encoded in a Racket DSL that resembles structural Verilog.
-  \hl{why is this footnote breaking across pages??}}
+  }
+% \begin{minipage}{\textwidth} % To prevent breaking the code across pages
 \begin{minted}[baselinestretch=1]{verilog}
-module sketch(input clk, input [15:0] a, b, c, d,
-              output [15:0] out);
+module sketch(input clk, input [15:0] a, b, c, output [15:0] out);
  DSP48E2 #(
   .ACASCREG(??), .ADREG(??), .ALUMODEREG(??), .AMULTSEL(??), 
   .AREG(??), .AUTORESET_PATDET(??), ...
@@ -327,6 +297,8 @@ module sketch(input clk, input [15:0] a, b, c, d,
  );
 endmodule
 \end{minted}
+  % \end{minipage}
+\noindent
 This sketch consists of a single DSP48E2 instance
   with \textit{holes} 
   (represented by \texttt{??}) 
@@ -335,10 +307,10 @@ It is easy to see
   the parallels
   between \texttt{sketch}
   and
-  \texttt{add\_mul\_add\_impl};
+  \texttt{sub\_mul\_impl};
   \texttt{sketch}
   is simply 
-  \texttt{add\_mul\_add\_impl}
+  \texttt{sub\_mul\_impl}
   with holes.
 But how does \lr generate \texttt{sketch}
   in the first place?
@@ -359,7 +331,7 @@ Instead of storing
 A simplified form of this template looks like the following:
 \begin{minted}[baselinestretch=1]{verilog}
 module dsp_sketch_template(input clk,
-                           input [n-1:0] a, b, c, d,
+                           input [n-1:0] a, b, c,
                            output [n-1:0] out);
  DSP dsp_instance(.clk(clk), .A(a), .B(b), .C(c), .D(d), .out(out));
 endmodule
@@ -407,7 +379,9 @@ For example,
   captures the facts that
   DSPs on all FPGA platforms
   generally have two to four data inputs
-  (captured by \texttt{A}--\texttt{D})
+  (captured by \texttt{A}--\texttt{D};
+  note that our example doesn't use
+  input \texttt{D})
   and a clock input
   (captured by \texttt{clk}).
 To convert the
@@ -456,6 +430,7 @@ Architecture descriptions
   written only once per FPGA architecture; 
   \lr already contains such descriptions
   for Xilinx UltraScale+,
+  Xilinx 7-series,
   Lattice ECP5,
   Intel Cyclone 10 LP,
   and the open-source FPGA SOFA~\cite{sofa}.
@@ -489,14 +464,14 @@ Once the sketch is ready,
   hardware design,
   which is done automatically
   using a technique called
-  \textbf{program synthesis}.
+  \gls{program-synthesis}.
 \textit{Program synthesis} is the process of
   using automated reasoning tools
-  (like SMT solvers) 
+  (like \gls{smt} solvers) 
   to generate correct programs
   by encoding program generation
   as a constraint solving problem.
-In our \texttt{add\_mul\_add} example,
+In our \texttt{sub\_mul} example,
   \lr, aided  by
   Rosette~\cite{torlak2013growing,torlak2014lightweight}, 
   generates a query like the following:\footnote{
@@ -504,7 +479,7 @@ In our \texttt{add\_mul\_add} example,
 }
 \footnotesize
 $$\exists \ \mathtt{ACASCREG}, \mathtt{ADREG}, ...\ .\ \forall \ \mathrm{inputs} . \ 
-  \texttt{add\_mul\_add}(\mathrm{inputs}) 
+  \texttt{sub\_mul}(\mathrm{inputs}) 
   = \texttt{sketch}(\mathrm{inputs}, \mathtt{ACASCREG}, \mathtt{ADREG}, ...)
 $$
 \normalsize
@@ -529,12 +504,12 @@ However, if \lr tries to pass the preceding formula
   between bitvector expressions,
   using simple Boolean or arithmetic
   operations.
-While it is conceivable that \texttt{add\_mul\_add}
+While it is conceivable that \texttt{sub\_mul}
   could be converted to
   a bitvector expression
   since its core computation is already
   expressed as
-  \texttt{(a+b)*c\&d},
+  \texttt{(c-a)*b},
 it is unclear how to express
   \texttt{sketch}
   as an expression over bitvectors.
@@ -570,7 +545,7 @@ Rather than requiring
   solver-ready semantics from these vendor-provided HDL models,
   which we detail in \cref{sec:implementation:importing-semantics}.
 For the
-  \texttt{add\_mul\_add} example,
+  \texttt{sub\_mul} example,
   the DSP48E2's semantics have already been imported into \lr.
 Semantics need to be imported only when
   adding support for a new architecture, i.e., %
@@ -606,7 +581,7 @@ Compiling \lr's internal representation into Verilog
 In our example,
   the final Verilog produced
   results in the
-  \texttt{add\_mul\_add\_impl}
+  \texttt{sub\_mul\_impl}
   we saw at the start of \cref{sec:overview-part-2}.
 
 \textit{\textbf{In summary.}}
@@ -614,16 +589,14 @@ In our example,
   delivered 
   an implementation
   of the designer's
-  \texttt{add\_mul\_add}
+  \texttt{sub\_mul}
   module,
   improving upon both state-of-the-art compilers
   and manual approaches
   in multiple ways.
 \lr's implementation
   is significantly more resource-efficient
-  than the state-of-the-art compiler's---%
-  one DSP versus one DSP,
-  32 registers, and 16 LUTs.
+  than the state-of-the-art compiler's.
 \lr delivered its implementation
   in mere seconds,
   compared to the hours to days

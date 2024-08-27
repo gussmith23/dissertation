@@ -3,11 +3,11 @@
 In \cref{part:lakeroad} of this dissertation,
   I apply my thesis
   to a fully separate domain:
-  \textit{hardware} compilers.
-FPGA technology mapping is the process of
+  \gls{hardwaresynthesis} tools.
+\gls{fpga} \gls{technology-mapping} is the process of
   implementing a hardware design expressed in 
   high-level HDL (hardware design language) code
-  using the low-level, architecture-specific primitives of 
+  using the low-level, architecture-specific \glspl{primitive} of 
   the target FPGA.
 As FPGAs become increasingly heterogeneous, 
   achieving high performance
@@ -26,14 +26,14 @@ Current tools
 In \cref{part:lakeroad} of this dissertation,
   we introduce \lr,
   a principled approach to technology mapping via
-  sketch-guided program synthesis
+  sketch-guided \gls{program-synthesis}
   (\cref{thesis:algorithms}).
 A primary insight of \lr
   is to utilize vendor-provided
   simulation models
   (\cref{thesis:models})
   to generate the semantics
-  neede by program synthesis.
+  needed by program synthesis.
 \lr provides more
   extensible (\cref{thesis:devtime})
   technology mapping 
@@ -46,10 +46,10 @@ A primary insight of \lr
   than state-of-the-art tools.
 Across representative microbenchmarks,
   \lr produces
-  2--3.5$\times$ the number of optimal mappings
+  1.4--3.6$\times$ the number of optimal mappings
   compared to proprietary state-of-the-art tools
   and
-  6--44$\times$ the number of optimal mappings
+  6--30$\times$ the number of optimal mappings
   compared to popular open-source tools,
   while also providing correctness guarantees
   not given by any other tool.

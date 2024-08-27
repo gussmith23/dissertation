@@ -1,80 +1,422 @@
 \chapter*{Acknowledgments}
-
-% \hl{michaela}
-
-% \hl{hannah}
-
-% \hl{simon}
-
-% \hl{spencer, imaz}
-
-% \hl{tim, tony}
-
-% \hl{vijay, jack}
-
-% \hl{todo thank funding agencies?
-% RTML, ADA, CRISP}
-
-% \hl{vishal, andrew, andrew liu}
-
-% \hl{
-% Glenside:
-% Thanks to Chandrakana Nandi
-%   for her extensive and enthusiastic
-%   editing.
-% We also thank 
-%   Sorawee Porncharoenwase,
-%   Luis Vega, and
-%   Max Willsey
-%   for their helpful comments.
-% }
-
-% \hl{steven}
-
-% \hl{all coauthors on all papers, including papers not here (i.e. lancelot)}
-
-% \hl{priya}
+% \addcontentsline{toc}{chapter}{Acknowledgements}
 
 
-% %%% LAKEROAD ACKS
+%% FUNDERS
 
-% This work was funded
-%   by generous grants
-%   and awards
-%   from
+% Before acknowledging the people
+%   who made this happen,
+%   let me first acknowledge 
+%   the SRC CRISP and ADA centers,
+%   the DARPA RTML project,
 %   Intel,
 %   the U.S. Department
-%   of Energy (award number DE-SC0022081),
-%   % Office of Science,
-%   % Office of Advanced Scientific Computing Research,
-%   % (ComPort: Rigorous Testing Methods to Safeguard Software Porting, award number DE-SC0022081)
-%   and the NSF (grant numbers 1836724 and 1749570).
+%   of Energy,
+%   and the NSF,
+%   who paid my stipend.
 
-% We would like to thank
-%   our anonymous reviewers
-%   for their constructive feedback.
-% Thank you to
-%   Jonathan Balkind for serving
-%   as our shepherd.
-% Thank you to those who contributed code
-%   to early versions of \lr, including
-%   David Cao and Zihao Ye.
-% Thank you to Jin Yang and his
-%   team at Intel.
-% Thank you to 
-%   Daniel Petrisko, Scott Davidson,
-%   Rachit Nigam, and Adrian Sampson
-%   for sharing their deep knowledge of
-%   the hardware design workflow.
-% Thank you to Chandrakana Nandi
-%   for her enthusiasm and unwavering support.
-% Thank you to Claire Xenia Wolf, Nina Engelhardt,
-%   Jannis Harder,
-%   and the YosysHQ team.
-% Finally, thank you to the entire PLSE lab
-%   for their support and camaraderie.
+%% PEOPLE
 
-%%%% END LAKEROAD ACKS
+First, allow me to thank
+  everyone in my life 
+  \textit{not} mentioned in the following paragraphs.
+My PhD was far more than just a collection
+  of projects;
+  for the past six years,
+  it was my life.
+Anyone who has contributed to my life
+  has contributed to
+  this dissertation.
+
+
+Thanks to my early research mentors.
+To Vijay Narayanan and Jack Sampson at Penn State.
+Without their early mentorship,
+  I would have never considered
+  the PhD a viable option.
+To my initial research mentors in SAMPL:
+  Thierry Moreau, Tianqi Chen, Jared Roesch, and Luis Vega.
+Thank you for bringing me on
+  to TVM
+  and introducing me to compilers research.
+To my advisor Luis Ceze,
+  who hired me on at UW
+  and changed
+  the course of my entire life.
+I could never thank Luis enough
+  for the impact that single decision
+  had on me.
+
   
+Thanks to everyone I've worked with in industry.
+To Aart Bik, Mangpo Phothilimthana,
+  and Penporn Koanantakool
+  at Google
+  for their mentorship throughout my 
+  extended 2021 internship.
+To Aart and Penporn
+  for bringing me onto the MLIR team,
+  and to Mangpo for her patient tutelage
+  in applying machine learning to compilers.
+To Noah Evans and everyone at Sandia,
+  for bringing me on
+  and being interested in my research.
+To Nina, Jannis, Claire, and the entire YosysHQ team
+  for their support.
+To Jin Yang and Jeremy Casas at Intel.
+
+Thanks to every research team
+  I've worked with.
+To the Glenside team: Andrew Liu, Steven Lyubomirsky, Scott Davidson, Joseph McMahan, Michael Taylor, Zach Tatlock, and Luis Ceze.
+To the 3LA team: Bo-Yuan Huang, Steven, Yi Li, Mike He, Thierry Tambe, Akash Gaonkar, Vishal Canumalla, Andrew Cheung, Gu-Yeon Wei, Aarti Gupta, Zach, and Sharad Malik.
+To the Lakeroad team: Ben Kushigian, Vishal, Andrew, Steven, Sorawee Porncharoenwase, Ren\'e Just, Gilbert Bernstein, and Zach.
+To the Churchroad team:
+  Dan Petrisko,
+  Colin Knizek,
+  Chandra Nandi, Zach,
+  Jonathan Balkind, Zach Sisco and Thanawat Techaumnuaiwit.
+
+
+Thanks to those who volunteered to be on my committee---%
+  to Mike Taylor,  Scott Hauck, 
+  and Gilbert Bernstein.
+Thanks especially to Gilbert,
+  who invested time and effort
+  into making me a sharper, more precise
+  PL researcher
+  in my last year at UW.
+Gilbert was brave enough to
+  attempt to teach me about coinduction---%
+  and persistent enough to (mostly) succeed.
+I will always appreciate his willingness to
+  take the time and effort
+  required
+  to explain difficult concepts.
+
+Thanks to the MISL lab
+  for letting me hang around
+  all these years,
+  despite my utter lack of any formal
+  training in biology.
+Thanks to Chris Thachuk
+  and Lancelot Wathieu
+  for taking the
+  Fridge Compiler
+  from half-working course project
+  to published paper.
+Thanks to Jeff Nivala,
+  Gwen Roote, Carina Imburgia,
+  and the whole
+  FPCA team
+  for letting me tag along
+  on the project.
+A more down-to-earth lab I may never find.
+
+To the entire Cornell Capra lab.
+To Rachit Nigam, who
+  served as my model of 
+  success
+  in programming languages and hardware design research.
+To Adrian Sampson,
+  who I can always look to for advice.
+To Priya Srikumar,
+  whose brief presence in PLSE
+  in the summer of 2023
+  was a blessing.
+Priya's passing was felt
+  throughout the Programming Languages
+  research world,
+  into their communities in Ithaca and Seattle,
+  and beyond.
+I will always remember Priya sharing
+  a Tom Wayman poem with me,
+  titled
+  ``Did I Miss Anything?'',
+  an excerpt of which
+  will always remind me of them:
+\begin{quote}
+Nothing. When you are not present\\
+how could something significant occur?
+\end{quote}
+% My last messages with Priya were from the day they left Seattle. They wanted to say goodbye in person, but I was out of town. The last message they sent me was, “aww no worries!! im leaving tomorrow and i wanted to say bye, but we’ll see each other again!!” Someday, somewhere, maybe we will.
 
 \clearpage
+To the PLSE lab.
+It is harder to imagine a
+  better lab
+  exists anywhere on the planet.
+The energy of the lab
+  can be felt
+  even before stepping through the door.
+Whether it's laughter,
+  or spirited research discussion,
+  or someone playing one of the lab's many instruments,
+  or even just the peaceful silence
+  of face-in-laptop
+  research progress,
+  the energy of the lab is one of a kind.
+Without realizing it,
+  the lab has become my family;
+  leaving it
+  has been one of the most challenging things
+  I've ever done.
+I can only hope to start something
+  half
+  as vibrant, half as connected,
+  half as supportive,
+  wherever I end up.
+
+Thanks to my mentee Hannah Leung,
+  whose unyielding positivity
+  and bravery
+  in the face of challenges
+  the likes of which I'll never 
+  myself experience
+  was a constant source of inspiration.
+Though she may not know it,
+  I've learned more from her
+  than she has from me.
+  
+
+To my mentees
+  Vishal Canumalla
+  and Andrew Cheung.
+Thanks for trusting me
+  to mentor you in research and in life,
+  and thanks for your friendship
+  along the way.
+I am so proud of you guys,
+  and cannot wait to see what you do next.
+Furthermore, thanks to Vishal's family,
+  the Canumallas,
+  who brought me in.
+Thank you Anu and Sridhar
+  for making me feel at home
+  and making sure I'm well fed.
+
+Thanks to Race Condition Running
+  for the miles and miles of fun
+  over the years.
+Through my best and worst times
+  in the PhD and in my personal life,
+  the Saturday run and brunch
+  were there for me
+  as a consistent source of companionship
+  and connection.
+Thanks to Zach, Nick Walker, Ellis,
+  Chandra, Max,
+  and everyone else who
+  kept the club going.
+Thanks to everyone else who kept me active
+  during my PhD---%
+  thanks to Eric Zeng and Chien-Yu Lin
+  for getting me out in the backcountry
+  when the snow was good
+  and to Gwen Roote for keeping me humble
+  on the BJJ mats.
+  
+Thanks to the lab jam crew---%
+  Ben, Carina, Rohan, and everyone else---%
+  for providing a safe space
+  to be a musical beginner.
+
+
+
+To Ben Kushigian---a wonderful coauthor and friend.
+  
+To Nick and Danielle.
+To Holly and Peter.
+To Jared.
+
+To Anjali, for all of the time you've given me.
+
+To \texttt{\#binary-blobs}, \texttt{\#spicelords}, and associated friends:
+  Pratyush Patel, Chien-Yu Lin,
+  Jacob Van Geffen,
+  Dan Petrisko, 
+  Luzdary Ruelas,
+  Ellis Michael,
+  Max Ruttenberg,
+  and Katie Lim.
+Thanks to the countless hours
+  of Twilight Imperium.
+
+
+To Max Willsey and Sami Davies.
+Without Max's urging,
+  I may have never joined UW;
+  even after I joined UW, without Max's urging,
+  I may have never joined PLSE.
+Max's quiet, confident intelligence
+  served as a model for the entire PLSE lab.
+I was lucky to witness
+  a golden age of PLSE research,
+  with Max's \texttt{egg} at the forefront.
+Max showed me that a new project,
+  an empty buffer,
+  a clean slate,
+  was nothing to be scared of
+  if you face it with confidence and excitement.
+And to Sami,
+  whose intimidating intelligence
+  is softened by her infectious smile
+  and sincere desire for connection.
+
+
+To Steven Lyubomirsky---%
+  \textit{Lex Lyubomiricus} will forever guide my research.
+Thank you for your constant mentorship
+  at every stage of my research career.
+Steven helped me present my first Programming Languages
+  Reading Group paper in 2018---%
+  ``Build Systems \`a la Carte'' by Mokhov et al.---%
+  before I had any
+  formal Programming Languages research
+  under my belt.
+Six years later, in 2024,
+  Steven helped me publish the final
+  first-author publication of my PhD,
+  the Lakeroad paper.
+  
+To Chandra Nandi---%
+  I could not have asked for a better
+  research mentor and friend.
+Chandra helped
+  in every single one of my paper pushes
+  in grad school,
+  simply out of the love
+  of camaraderie.
+She taught me how
+  to feel the unabashed joy
+  that comes 
+  from working hard
+  on cool problems
+  with your closest friends.
+
+
+To Jeff's sons,
+  Christian, Nick, and Aaron.
+You all are so much like your father.
+Thanks for 
+  bucking the Seattle Freeze
+  and making me feel at home here
+  in my first 
+  few years.
+Here's to 
+  many, many more rounds
+  of pitch and putt.
+
+To Eric, Rick, Zach,
+  and the other men in the Montlake Men's Group.
+Your support
+  and mentorship
+  helped me navigate the most challenging chapters
+  of my life to date.
+  
+To my friends
+  from the previous chapters of my life
+  that I've been lucky enough
+  to bring into this one:
+  Spencer Norris, Imaz Athar,
+  Anthony Marucci, Tim Lagnese, Jacob Brunette,
+  and Drew Abbott.
+Thank you to my oldest 
+  and best friends,
+  Spencer and Imaz.
+There is something
+  bittersweet about how,
+  more than almost anything else,
+  it's simply \textit{time} 
+  that is the key ingredient
+  for a deep relationship---%
+  I'm so lucky to have invested
+  my time in you guys.
+You two are
+  and will always be
+  my brothers.
+It has been an honor and a joy
+  to grow with you
+  through life's changes,
+  to have you guys help me
+  through my lowest lows
+  and celebrate with me during my highest highs.
+HSNE, boys.
+Thanks to
+  Anthony, Tim, and Jacob.
+I could not have picked a better crew
+  of friends to move to Seattle with,
+  to spend my 20s with.
+May our caps always fly true.
+To Drew and Em---%
+  we've rarely lived in the same city,
+  but you two are family to me.
+  
+Boundless love and thanks to my older brother Simon.
+In all my 29 years,
+  he has never
+  been far from my mind.
+
+
+Thank you to Michaela,
+  whose five years of love and loyalty transformed me
+  into the man I am.
+Her support carried me through the single
+  continuous paper push
+  that was the two years
+  of my PhD.
+Her patience with the all-consuming nature
+  of my PhD
+  was more than I could have asked for.
+Her genuine care
+  for everyone around her
+  showed me that there is nothing more to life
+  than the people in it.
+There is no one more deserving
+  of happiness.
+Furthermore, thanks to the entire Brock and Lowe family,
+  who brought me in
+  without question,
+  who made me a part of their family.
+To Lisa Lowe, whose unhesitating love
+  from the moment we met
+  taught me the meaning of
+  ``unconditional''.
+To Ray Brock,
+  who was
+  a role model for men
+  in a world where they are severely lacking.
+I am immensely lucky to have known him.
+It is through the Lowes
+  that I came to understand
+  the meaning of family---%
+  a gift I could never
+  repay.
+
+  
+Finally, to my advisor, Zach Tatlock.
+Zach is the kind of researcher
+  all should strive to be.
+Intelligent, hardworking,
+  and selfless to a fault.
+Zach brought me on
+  when he didn't need to.
+He has a steady supply
+  of top-tier PL students.
+Bringing me on, as
+  a student with zero formal programming languages
+  research experience,
+  was in many ways a questionable decision.
+But, like Luis's decision to admit me,
+  that single decision altered the course
+  of my entire life.
+Everything I know of research
+  I learned first from Zach.
+But Zach is far more than just a good researcher.
+Zach is, in fact,
+  the only thing I really strive to be---%
+  a good man.
+I've had very few role models in life,
+  and Zach is first among them.
+Thank you, Zach---%
+  none of this could have happened
+  without you.

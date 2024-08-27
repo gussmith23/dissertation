@@ -1,9 +1,12 @@
 \input{lakeroad/figures/firstpage}
 
-\hl{ease into this intro a bit more? }
+\textit{\Cref{part:lakeroad} is adapted from 
+``FPGA Technology Mapping Using Sketch-Guided Program Synthesis'' by Smith, et al.~\cite{smith2024fpga}.
+}
 
-\hl{addmuland to addmuladd}
+\vspace{10mm}
 
+\noindent
 Given a high-level hardware design specification
   (e.g., expressed in behavioral Verilog),
   FPGA technology mappers
@@ -12,12 +15,12 @@ Given a high-level hardware design specification
   in terms of the target FPGA's
   primitives.
 See \cref{fig:firstpage} for an example, where
-the high-level, behavioral \texttt{add\_mul\_add}
+the high-level, behavioral \texttt{sub\_mul}
   module (``input 1'')
   is converted into FPGA-specific implementations
   (``their output'' and ``our output'')
-  using Xilinx-specific
-  \texttt{DSP48E2} and \texttt{LUT2} primitives.
+  using the Xilinx-specific
+  \texttt{DSP48E2} primitive.
   
 Historically,
   FPGAs consisted of relatively simple
@@ -103,15 +106,17 @@ Yet existing toolchains often fail
   \textit{even in the partial design mapping case:}
   \cref{fig:firstpage} shows a
   simple module
-  \texttt{add\_mul\_add}
+  \texttt{sub\_mul}
   which \textit{should} fit on a single DSP48E2
   according to the DSP's manual,
-  but is instead mapped to multiple DSPs and LUTs
-  by current state-of-the-art tools.\footnote{
+  but is instead mapped to 
+  two DSPs by current 
+  state-of-the-art tools\footnote{
     Licensing restrictions forbid naming the
     specific proprietary tools, but they are familiar,
     standard packages used by many hardware designers.
-  }
+  }---%
+  a 100\% increase in resource utilization!
 In the worst case,
   hardware designers are forced to manually
   instantiate complex primitives by hand,
@@ -135,7 +140,7 @@ First,
 Second, they do not provide strong \cref{thesis:correctness} guarantees:
   recent work highlights the significant number of bugs found across 
   all major hardware synthesis tools~\cite{herklotz2020finding}.
-Third, they are \textbf{difficult to extend:}
+Third, they are difficult to extend:
   \textit{each} new complex primitive requires
   supporting detailed semantics
   and adding hundreds of new, special-case
@@ -409,11 +414,11 @@ With the automatically
 that are representative of program fragments
   implemented with DSPs during partial design mapping.
 In particular,
-  \lr maps up to 3.5$\times$ 
+  \lr maps up to 3.6$\times$ 
   more microbenchmarks than 
   state-of-the-art
   tools for Xilinx, Lattice, and Intel,
-  and up to 44$\times$ 
+  and up to 30$\times$ 
   more microbenchmarks 
   than Yosys.\looseness=-1
 % We further show the practical applicability

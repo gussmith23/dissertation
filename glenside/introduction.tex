@@ -65,7 +65,7 @@ Given a set of syntactic rewrite rules ($\ell \rightarrow r$) that also preserve
 
 One term rewriting approach
   of particular interest
-  is \textit{equality saturation} \hl{define}.
+  is \gls{equality-saturation}.
 In traditional term rewriting,
   % the ordering of rewrites is important,since 
   applying one rewrite rule
@@ -157,6 +157,24 @@ When combined with standard arithmetic rewrites
   transformations for accelerator support as
   compositions of simple rewrites.
 
+\begin{figure}
+    \centering
+    \includegraphics[width=.6\linewidth]{glenside/access-pattern-examples-2x2.png}
+    \caption{
+      Four access patterns,
+        representing different ways
+        a
+        tensor program
+        (or \textit{kernel})
+        might access
+        the same 3D tensor. 
+      For example, (c) represents
+        accessing a 3D tensor as
+        a vector of 2D matrices.}
+    \label{fig:access-pattern-examples}
+    \vspace{-1em}
+\end{figure}
+
 Tensors are traditionally characterized
   by their \textit{shape},
   an $n$-tuple 
@@ -176,53 +194,35 @@ Figure~\ref{fig:access-pattern-examples}(c)
   some computation applied to each
   corresponding 2D matrix.
 
-\hl{todo: this should probably moved up?}
-We demonstrate how \g
-  enables implementing representative
-  hardware-level transformation via term rewriting,
-  including mapping computations
-  to systolic arrays~\cite{jouppi2017tpu}
-  (a common hardware module in ML accelerators)
-  and automatically discovering the
-  \tcd{im2col} data layout transformation~\cite{im2col},
-  which enables mapping 2D convolutions
-  to matrix multiplication hardware.
-In particular,
-  by employing \textit{equality saturation}~\cite{willsey2021egg},
-  these transformations ``fall out for free''
-  (i.e., without any carefully crafted
-  rewrite orderings~\cite{phase-ordering}),
-  from a handful of general rewrites concerning tensor
-  transposition, Cartesian product, dot product, etc.,
-  expressed in terms of access patterns.
-\hl{end todo}
+% \hl{todo: this should probably moved up?}
+% We demonstrate how \g
+%   enables implementing representative
+%   hardware-level transformation via term rewriting,
+%   including mapping computations
+%   to systolic arrays~\cite{jouppi2017tpu}
+%   (a common hardware module in ML accelerators)
+%   and automatically discovering the
+%   \tcd{im2col} data layout transformation~\cite{im2col},
+%   which enables mapping 2D convolutions
+%   to matrix multiplication hardware.
+% In particular,
+%   by employing \textit{equality saturation}~\cite{willsey2021egg},
+%   these transformations ``fall out for free''
+%   (i.e., without any carefully crafted
+%   rewrite orderings~\cite{phase-ordering}),
+%   from a handful of general rewrites concerning tensor
+%   transposition, Cartesian product, dot product, etc.,
+%   expressed in terms of access patterns.
+% \hl{end todo}
 
-To summarize, the contributions of this chapter include:
-\begin{itemize}
-\item \textit{Access patterns},
-  a tensor representation that employs a
-  simple, extended tensor shape type to
-  distinguish iteration and computation dimensions
-
-\item The \g IR,
-  a pure compiler IR that facilitates 
-  term rewriting to enable support for
-  specialized accelerators
-  
-\item A library of generic rewrites over \g programs \hl{true?}
-  
-% \item Case studies demonstrating how
-%   \g enables automatically discovering
-%   key transformations for mapping
-%   applications to custom accelerators
-%   via equality saturation with the
-%   \tcd{egg}~\cite{willsey2021egg} library.
-\end{itemize}
-
-\hl{i moved related work, so probably need to rework this}
-The rest of this chapter is organized as follows:
-Section~\hl{todo} motivates
-  \g via a running example exploring
-  pure matrix multiplication.
-Section~\hl{todo} details the
-  design and implementation of \g.
+In the rest of this chapter,
+  we will first walk through an example
+  demonstrating the difficulty
+  in developing a pure tensor IR
+  \cref{sec:matmul}.
+We will then describe  
+  the implementation of \g in
+  \cref{sec:glenside}.
+Lastly, we describe how \g
+  was incorporated into \TLA
+  in \cref{sec:glenside-in-3la}.

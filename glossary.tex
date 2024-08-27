@@ -1,9 +1,13 @@
 
+\ifarxiv
+% do nothing; bottom command is broken for arxiv
+\else
 % Bold the first occurrence of a glossary word
 \DeclareRobustCommand{\glossfirstformat}[1]{\textit{#1}}
 \renewcommand*{\glsdisplayfirst}[4]{\glossfirstformat{#1#4}}
 \usepackage[normalem]{ulem}
 \renewcommand*{\glstextformat}[1]{\color{lightgray}{\dotuline{\color{black} #1}}}
+\fi
 
 
 % \makeglossaries
@@ -16,8 +20,7 @@
 {
     name=compiler,
     description={
-A tool which converts between representations.
-    }
+A tool which converts between representations}
 }
 
 
@@ -25,8 +28,7 @@ A tool which converts between representations.
 {
     name=target,
     description={
-The platform which a \glstext{compiler} generates code for.
-    }
+The platform which a \glstext{compiler} generates code for}
 }
 
 \newglossaryentry{compilerbackend}
@@ -34,8 +36,7 @@ The platform which a \glstext{compiler} generates code for.
     name=compiler backend,
     description={
 The portion of a \glstext{compiler} that concerns the \glstext{target},
-  e.g., target-specific optimizations and code generation.
-    }
+  e.g., target-specific optimizations and code generation}
 }
 
 \newglossaryentry{validation}
@@ -54,8 +55,7 @@ Confusingly,
   validation is often referred to as
   verification,
   while verification (by our definition)
-  is referred to as \textit{formal} verification.
-    }
+  is referred to as \textit{formal} verification}
 }
 
 \newglossaryentry{verification}
@@ -72,8 +72,7 @@ In the world of hardware design,
   ``verification''
   generally refers to what we call validation or testing,
   while ``formal verification''
-  refers to our verification.
-    }
+  refers to our verification}
 }
 
 \newglossaryentry{hardwaresynthesis}
@@ -85,10 +84,20 @@ The process of converting a hardware design
   captured in a high-level language
   to a low-level target implementation,
   for example,
-  a netlist which can be programmed onto an FPGA
-  or a geometry file to be made into an ASIC.
-  \hl{define the terms in here}
-    }
+  a \gls{netlist} which can be programmed onto an FPGA
+  or a geometry file to be made into an ASIC}
+}
+
+\newglossaryentry{netlist}{
+    name={netlist},
+    description={
+Much like \glstext{rtl} or \glstext{hls}, netlists are
+  a way to capture a hardware specification.
+Netlists are lower-level than RTL or HLS, however.
+As their name implies,
+  netlists are simply lists of ``nets'' (or wires),
+  plus, importantly,
+  the modules they are connected to}
 }
 
 % Note: this is a nice hack from
@@ -100,8 +109,13 @@ The process of converting a hardware design
     name={DSL},
     first={domain-specific language (DSL)},
     description={
-A language designed for a custom purpose \hl{fill out}
-    }
+A programming language designed for a narrow domain, generally for a specific purpose.
+DSLs are generally smaller
+  than general-purpose programming languages,
+  with fewer complicated features
+  like general control flow.
+This makes them easier to reason about
+  and optimize}
 }
 
 \newglossaryentry{mlkernel}
@@ -112,6 +126,197 @@ A core subroutine used within many machine learning workloads---for example,
   matrix multiplication.
 Machine learning kernels are often highly optimized,
   often by building custom hardware to implement
-  them efficiently.
-    }
+  them efficiently}
+}
+
+\newglossaryentry{instruction-selection}
+{
+    name={instruction selection},
+    description={
+A core compiler algorithm
+  in which higher-level,
+  hardware-independent operations
+  are lowered to
+  hardware-specific instructions~\cite{blindell2016instruction}}
+}
+
+\newglossaryentry{technology-mapping}
+{
+    name={technology mapping},
+    description={
+A core compiler algorithm
+  in \glstext{hardwaresynthesis} tools
+  in which
+  hardware-independent components of a design
+  (e.g.~a Verilog multiply operator \texttt{*})
+  are lowered to
+  hardware-specific primitive instantiations
+  (e.g.~a Xilinx DSP48E2 DSP)}
+}
+
+\newglossaryentry{hls}
+{
+    name={HLS},
+    first={High-Level Synthesis (HLS)},
+    description={
+A set of tools~\cite{cong2011high}
+  for compiling high-level implementations of algorithms
+  (often written in C)
+  into hardware designs.
+HLS is often contrasted against
+  \glstext{rtl},
+  written in languages like Verilog or VHDL,
+  which is a comparatively lower level
+  of abstraction}
+}
+
+\newglossaryentry{rtl}
+{
+    name={RTL},
+    first={Register Transfer Level (RTL)},
+    description={
+A specific level of abstraction for a hardware design specification,
+  in which registers (hardware modules which hold state)
+  are explicit in the design,
+  but computation is still modeled at a high level.
+This is in contrast to a higher level representation
+  like \glstext{hls}, which does not include timing,
+  or a lower, gate-level or netlist representation
+  which may use specific gates or other hardware primitives}
+}
+
+\newglossaryentry{equality-saturation}
+{
+    name={equality saturation},
+    description={
+A term rewriting algorithm~\cite{tate2009equality,tate2011equality,willsey2021egg}
+  which uses a specific data structure---%
+  the \egr---%
+  to capture a large space of equivalent programs}
+}
+
+\newglossaryentry{tensorization}
+{
+    name={tensorization},
+    description={
+An algorithm within machine learning compilers
+  which uncovers places to invoke primitives
+  operating over tensors---%
+  often in the form of accelerator 
+  invocations~\cite{tvmtensorization}.
+Tensorization is analogous to vectorization
+  in standard compilers,
+  in which groups of instructions are translated
+  into a single vector instruction
+  to improve performance}
+}
+
+\newglossaryentry{accelerator}
+{
+    name={accelerator},
+    description={
+Custom hardware, specialized to a specific task
+  or set of tasks.
+In this dissertation,
+  we are most frequently referring to
+  accelerators for
+  \glstext{mlkernel}s}
+}
+
+\newglossaryentry{program-synthesis}
+{
+    name={program synthesis},
+    description={
+A broad term capturing a set of 
+  techniques for generating programs,
+  often using automated reasoning tools~\cite{gulwani2017program}.
+In this dissertation,
+  we are generally referring to solver-aided synthesis,
+  which formulates program generation as a constraint solving problem
+  and applies solvers (e.g.~\glstext{smt} solvers).
+Specifically, we are generally referring to
+  \textit{sketch-guided} program synthesis,
+  in which the final compiled program
+  is captured as a sketch, with holes to be filled in by the solver~\cite{solar2008program}}
+}
+
+\newglossaryentry{primitive}
+{
+    name={primitive},
+    description={
+The atomic units of a language or representation.
+In the context of this dissertation, we often mean
+  either \glstext{accelerator} primitives
+  or hardware primitives.
+Accelerator primitives are operations
+  implemented by accelerators which are, from the 
+  view of software, black box operations
+  which cannot be split into smaller sets of instructions.
+They represent the smallest unit
+  a compiler can target.
+Hardware primitives are the modules
+  provided for use by a hardware platform---%
+  e.g. the gates and devices available for use
+  on an FPGA.
+A \glstext{netlist}
+  is composed of primitive instantiations}
+}
+
+\newglossaryentry{fpga}
+{
+    name={FPGA},
+    description={
+Field Programmable Gate Arrays are
+  a reprogrammable hardware platform
+  allowing users to design hardware
+  without fabricating an \glstext{asic}.
+FPGAs are pre-fabricated chips
+  composed of programmable \glstext{primitive}s.
+The FPGA can be reprogrammed
+  to configure and connect the various primitives,
+  producing different hardware designs}
+}
+
+\newglossaryentry{asic}
+{
+    name={ASIC},
+    first={Application-Specific Integrated Circuit (ASIC)},
+    description={
+A hardware chip produced for a specific purpose.
+In contrast to FPGAs, which are reprogrammable,
+  ASICs are static.
+As a consequence, the design of ASICs is an intensive process
+  involving significant \glstext{validation} and \glstext{verification}
+  to ensure hardware correctness}
+}
+
+\newglossaryentry{automated-reasoning}
+{
+    name={automated reasoning},
+    description={
+A term to capture algorithms such as \glstext{smt} or \glstext{equality-saturation}.
+In general, automated reasoning algorithms
+  are able to solve
+  complex constraint or optimization problems
+  by applying mathematical and logical rules.
+Automated reasoning algorithms
+  are generally applicable to many tasks in computer science,
+  as long as the can be captured
+  in a way the algorithm can understand}
+}
+
+
+\newglossaryentry{smt}
+{
+    name={SMT},
+    first={SMT (SAT modulo theories)},
+    description={
+A class of constraint problem.
+SMT is simply SAT---Boolean satisfiability---%
+  with extra ``theories'' added in,
+  somewhat like libraries.
+For example, the theory of fixed-width bitvectors,
+  which includes operations over groups of bits.
+SMT solvers are \glstext{automated-reasoning} algorithms
+  which solve SMT problems}
 }

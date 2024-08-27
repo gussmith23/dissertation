@@ -1,4 +1,4 @@
-\section{TODO rename Glenside Evaluation}
+\section{Case Studies}
 \label{sec:case-studies}
 
 % Unsure where this should go for now
@@ -54,8 +54,6 @@
 
 %\hl{1. represent kernels, 2. map to hardware w/ generic rewrite, 3. expand/make flexible that rewrite to other workloads}
 
-\hl{delete these? or move them to eval?}
-
 To demonstrate \g's utility,
   we first show how it enables
   concise specifications of several
@@ -87,6 +85,8 @@ Specifically,
   map large matrix multiplications into a
   sequence of smaller matrix multiplications
   (Section~\ref{sec:case-study-blocking}).
+This portion of the evaluation is drawn from
+  Smith et al.~\cite{smith2021pure}.
   
   
 % We then show how
@@ -621,11 +621,9 @@ Rather than passing configuration parameters to \tcd{windows},
   
 \begin{figure}
 \begin{lstlisting}[escapechar=!]
-(compute dotProd (cartProd ?a0 ?a1)) !$\Longrightarrow$!
-  (systolicArray ?rows ?cols
-    ?a0 (access (transpose ?a1 (list 1 0)) 0))
-!$\textrm{where \texttt{?a0} is of shape $((\mbox{\texttt{?batch}}), (\mbox{\texttt{?rows}}))$}$!
-  !$\textrm{and \texttt{?a1} is of shape $((\mbox{\texttt{?cols}}), (\mbox{\texttt{?rows}}))$}$!
+(compute dotProd (cartProd ?a0 ?a1)) 
+  !$\Longrightarrow$! (systolicArray ?rows ?cols ?a0 (access (transpose ?a1 (list 1 0)) 0))
+!$\textrm{where \texttt{?a0} is of shape $((\mbox{\texttt{?batch}}), (\mbox{\texttt{?rows}}))$ and \texttt{?a1} is of shape $((\mbox{\texttt{?cols}}), (\mbox{\texttt{?rows}}))$}$!
 \end{lstlisting}
 \caption{Our rewrite rewriting matrix multiplication to a systolic array invocation.}
     \label{fig:systolic-array-rewrite}
@@ -634,16 +632,19 @@ Rather than passing configuration parameters to \tcd{windows},
 % Trying to get this on the right page.
 \begin{figure}
 \begin{lstlisting}[escapechar=!]
-                                                    ?a !$\Longrightarrow$! (reshape (flatten ?a) ?shape) 
-(cartProd (reshape ?a0 ?shape0) (reshape ?a1 ?shape1)) !$\Longrightarrow$! (reshape (cartProd ?a0 ?a1) ?newShape)
-                 (compute dotProd (reshape ?a ?shape)) !$\Longrightarrow$! (reshape (compute dotProd ?a) ?newShape)
+?a !$\Longrightarrow$! (reshape (flatten ?a) ?shape) 
+
+(cartProd (reshape ?a0 ?shape0) (reshape ?a1 ?shape1))
+  !$\Longrightarrow$! (reshape (cartProd ?a0 ?a1) ?newShape)
+  
+(compute dotProd (reshape ?a ?shape)) 
+  !$\Longrightarrow$! (reshape (compute dotProd ?a) ?newShape)
 \end{lstlisting}
 \caption{Rewrites enabling the discovery of the \itc transformation.}
 \label{fig:im2col-rewrites}
 \end{figure}
 
 
-\hl{I think I should move the following sections to the next chapter and merge them with the 3LA evaluation. may need to restructure this section as a result.}
 
 %\subsection{Mapping Dense \tcd{matMul}Matrix Multiplication to Accelerators}
 \subsection{Mapping \tcd{matMul} to Accelerators}
@@ -652,7 +653,10 @@ Rather than passing configuration parameters to \tcd{windows},
 
 
 \g can be used to uncover opportunities
-  to invoke accelerator components.
+  to invoke accelerator components---%
+  indeed, this is exactly how \g
+  is used
+  within \TLA.
   %to discover places in our program
   %where we can invoke
   %accelerator components.
@@ -691,8 +695,9 @@ The second list
   contains $c$ vectors,
   while the first
   can be of any length.
-  
-\g's purity
+
+As discussed in \cref{sec:glenside-in-3la},
+  \g's purity
   allows us to implement this hardware mapping task
   using a term rewriting system,
   in which we rewrite a matching program pattern
@@ -1049,27 +1054,22 @@ This example highlights how,
 
 \begin{figure}
 \begin{lstlisting}[escapechar=!]
-?a !$\Longrightarrow$! (concat (slice ?a ?dim ?b0 ?b1)
-               (slice ?a ?dim ?b1 ?b2) ?dim)
+?a !$\Longrightarrow$! (concat (slice ?a ?dim ?b0 ?b1) (slice ?a ?dim ?b1 ?b2) ?dim)
                
-(cartProd ?a (concat ?b0 ?b1 ?dim)) !$\Longrightarrow$!
- (concat (cartProd ?a ?b0) (cartProd ?a ?b1) ?newDim)
+(cartProd ?a (concat ?b0 ?b1 ?dim)) 
+  !$\Longrightarrow$! (concat (cartProd ?a ?b0) (cartProd ?a ?b1) ?newDim)
 !$\textrm{if \texttt{?dim} is an access dimension}$!
  
-(cartProd (concat ?a0 ?a1 ?dim0) 
-          (concat ?a2 ?a3 ?dim1)) !$\Longrightarrow$!
- (concat (cartProd ?a0 ?a2) 
-         (cartProd ?a1 ?a3) ?newDim)
+(cartProd (concat ?a0 ?a1 ?dim0) (concat ?a2 ?a3 ?dim1)) 
+  !$\Longrightarrow$! (concat (cartProd ?a0 ?a2) (cartProd ?a1 ?a3) ?newDim)
 !$\textrm{if \texttt{?dim0} and \texttt{?dim1} are the same shape dimension}$!
 
-(compute dotProd (concat ?a0 ?a1 ?dim)) !$\Longrightarrow$!
- (concat (compute dotProd ?a0)
-         (compute dotProd ?a1) ?dim)
+(compute dotProd (concat ?a0 ?a1 ?dim)) 
+  !$\Longrightarrow$! (concat (compute dotProd ?a0) (compute dotProd ?a1) ?dim)
 !$\textrm{if \texttt{?dim} is an access dimension}$!
 
-(compute dotProd (concat ?a0 ?a1 ?dim)) !$\Longrightarrow$!
- (compute reduceSum (pair (compute dotProd ?a0)
-                          (compute dotProd ?a1)))
+(compute dotProd (concat ?a0 ?a1 ?dim)) 
+  !$\Longrightarrow$! (compute reduceSum (pair (compute dotProd ?a0) (compute dotProd ?a1)))
 !$\textrm{if \texttt{?dim} is a shape dimension}$!
 \end{lstlisting}
 \vspace{-1em}
@@ -1250,6 +1250,3 @@ This case study demonstrates
 %   applications of access patterns and to
 %   build additional optimizations on
 %   \g's foundations.
-
-
-  \hl{there's a missing chapter/section here about where Glensdie fits into 3LA}

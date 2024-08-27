@@ -1,4 +1,59 @@
-Compiler backends
-  implement their core algorithms
-  by relying on models
-  of the hardware they target.
+Compilers convert
+  between representations---%
+  usually, from 
+  higher-level, human writable code
+  to lower-level,
+  machine-readable code.
+A compiler backend is
+  the portion of the 
+  compiler containing
+  optimizations
+  and code generation routines
+  for a specific hardware target.
+% Compiler backends are constructed
+%   using
+%   a number of core
+%   algorithms;
+%   inbuilt into these algorithms
+%   are 
+%   models of the target hardware.
+%
+In this dissertation,
+  I advocate for a specific way of
+  building compiler backends:
+  namely, by automatically generating them
+  from explicit, formal models of hardware
+  using automated reasoning algorithms.
+I describe how automatically generating compilers
+  from formal models of hardware
+  leads to increased optimization ability,
+  stronger correctness guarantees,
+  and reduced development time
+  for compiler backends.
+%
+As evidence, I present two
+  case studies:
+  first, \g,
+  which uses
+  equality saturation
+  to increase the \TLA compiler's
+  ability to offload operations
+  to machine learning accelerators,
+  and second,
+  \lr,
+  a technology mapper for FPGAs
+  which uses program synthesis
+  and semantics extracted from Verilog
+  to map hardware designs
+  to complex, programmable hardware primitives.
+% Glenside and Lakeroad
+%   both demonstrate
+%   how,
+%   by automatically generating
+%   portions of compiler backends
+%   using more adaptable algorithms
+%   and more explicit models of hardware,
+%   we we improve their
+%   optimization ability and
+%   correctness, while
+%   easing development effort.

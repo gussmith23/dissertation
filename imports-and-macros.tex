@@ -23,13 +23,24 @@
 \usepackage[T1]{fontenc}
 %\usepackage{inconsolata}
 \usepackage{graphicx}
+\ifarxiv
+\usepackage{grffile}
+\fi
 \usepackage{hyperref}
 \usepackage[table]{xcolor}
 %\usepackage{amssymb}
 \usepackage{wrapfig} % For \begin{wrapfigure}
 \usepackage{cleveref}
 \usepackage{bibentry}
+\ifarxiv
+% To compile for arxiv, compile on overleaf with finalize,
+% download the necessary aux files, switch to frozen,
+% compile for arxiv, and submit with aux files.
+% \usepackage[finalizecache,cachedir=.]{minted}
+\usepackage[frozencache,cachedir=.]{minted}
+\else
 \usepackage{minted}
+\fi
 \usepackage{tikz}
 \usetikzlibrary{positioning, 
                 quotes}
@@ -353,62 +364,54 @@
 \newcommand{\thesisoptimizationslabel}{\textbf{\textsc{Optimizations}}}
 \crefformat{thesis:optimizations}{#2\thesisoptimizationslabel#3}
 \newcommand{\thesisclaimoptimizations}{
-    Automatically generating compiler backends
-      gives rise to emergent optimizations.
+    enables optimizations\xspace
 }
 %
 % Dev time claim
 \newcommand{\thesisdevtimelabel}{\textbf{\textsc{Devtime}}}
 \crefformat{thesis:devtime}{#2\thesisdevtimelabel#3}
 \newcommand{\thesisclaimdevtime}{
-    Automatically generating compiler backends
-      reduces development time.
+    reduces development time\xspace
 }
 %
 % Correctness claim
 \newcommand{\thesiscorrectnesslabel}{\textbf{\textsc{Correctness}}}
 \crefformat{thesis:correctness}{#2\thesiscorrectnesslabel#3}
 \newcommand{\thesisclaimcorrectness}{
-    Automatically generating compiler backends
-      enables verification.
+    improves correctness\xspace
 }
 \newcommand{\thesisalgorithmslabel}{\textbf{\textsc{Algorithms}}}
 \crefformat{thesis:algorithms}{#2\thesisalgorithmslabel#3}
 \newcommand{\thesismodelslabel}{\textbf{\textsc{Models}}}
 \crefformat{thesis:models}{#2\thesismodelslabel#3}
 \newcommand{\mythesis}{
-Compiler backends
-  should be generated
-  (\thesisalgorithmslabel)
+Automatically generating
+  compiler backends
   from explicit formal models
-  (\thesismodelslabel)
-  of the hardware they target,
-  for the following reasons:
-  \label[thesis:algorithms]{thesis:algorithms}
-  \label[thesis:models]{thesis:models}
-  \hl{rephrase}
+  of the hardware they target
+  enables optimizations,
+  improves correctness,
+  and reduces development time.
 
-  \hl{HYPERLINK LOCATIONS ARE STILL WRONG!!!}
-
-% Still not sure on itemindent/leftmargin.
-% Do I want the hanging indent?
-\begin{itemize}[%label=\textbf{Claim \arabic*},
-                itemindent=0pt,leftmargin=90pt]
+% % Still not sure on itemindent/leftmargin.
+% % Do I want the hanging indent?
+% \begin{itemize}[%label=\textbf{Claim \arabic*},
+%                 itemindent=0pt,leftmargin=90pt]
                 
-  % \item[\thesisubiquitylabel] \label[thesis:ubiquity]{thesis:ubiquity}
-  %   \thesisclaimubiquity
+%   % \item[\thesisubiquitylabel] \label[thesis:ubiquity]{thesis:ubiquity}
+%   %   \thesisclaimubiquity
     
-  \item[\thesisoptimizationslabel] 
-    \label[thesis:optimizations]{thesis:optimizations} 
-    \thesisclaimoptimizations
+%   \item[\thesisoptimizationslabel] 
+%     \label[thesis:optimizations]{thesis:optimizations} 
+%     \thesisclaimoptimizations,
+    
+%   \item[\thesiscorrectnesslabel]
+%     \label[thesis:correctness]{thesis:correctness}
+%     \thesisclaimcorrectness, and
   
-  \item[\thesisdevtimelabel] 
-    \label[thesis:devtime]{thesis:devtime} \thesisclaimdevtime
-    
-  \item[\thesiscorrectnesslabel]
-    \label[thesis:correctness]{thesis:correctness}
-    \thesisclaimcorrectness
-\end{itemize}
+%   \item[\thesisdevtimelabel] 
+%     \label[thesis:devtime]{thesis:devtime} \thesisclaimdevtime.
+% \end{itemize}
 }
 
 %%%%%%%%%%%%%%%%%%% end THESIS STATEMENT MACROS %%%%%

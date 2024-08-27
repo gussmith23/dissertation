@@ -1,4 +1,5 @@
 % \section{Related Work}
+\chapter{Background and Related Work}
 \label{sec:background-and-related-work}
 
 To the best of our knowledge,
@@ -29,13 +30,20 @@ Other works use program synthesis
   Chipmunk~\cite{gao2019chipmunk},
   which targets programmable network switches,
   and Diospyros~\cite{vanhattum2021vectorization},%
-  \footnote{Diospyros uses symbolic evaluation, which is related to program synthesis, to lift imperative programs for digital signal processors into a high-level mathematical representation that can then be used with the technique of equality saturation~\cite{tate2011equality} to generate optimized code for the target devices. This is also distinct from the program synthesis techniques referenced elsewhere in this paper.}
+  \footnote{Diospyros uses symbolic evaluation, which is related to program synthesis, to lift imperative programs for digital signal processors into a high-level mathematical representation that can then be used with the technique of equality saturation~\cite{tate2011equality} to generate optimized code for the target devices. This is also distinct from the program synthesis techniques referenced elsewhere in this dissertation.}
   which generates vectorized programs for standalone digital signal processors (more powerful and general-purpose devices than the DSP units in FPGAs).
 These works demonstrate the utility of program synthesis 
   for generating code that handles
   specific wrinkles in hardware designs,
   as does the use of program synthesis in \lr
   to harness the programmability of FPGA DSPs.
+Note that other types of solvers
+  (beyond the SMT solvers used in Lakeroad)
+  can be used within compilers,
+  e.g.~using partitioned boolean quadratic problem
+  (PBQP) solvers for instruction selection
+  in LLVM~\cite{ebner2008generalized}
+  
 
 \lr is also related to past work in FPGA compilation and techmapping,
   much of which does not 

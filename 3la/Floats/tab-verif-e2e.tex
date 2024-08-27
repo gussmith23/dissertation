@@ -16,8 +16,8 @@
   % \hl{(Please check):} Q-MobileNet is the result of applying an 8-bit quantization~\cite{jacob2017quantization} to MobileNet V2 after flexible matching, turning all matrix multiplications into quantized matrix multiplications via a pass in Relay.
   \label{tab.verif-sim}
   \centering
-  \begin{small}
-  \begin{tabular}{|l|c|c|c|c|r|}
+  \small
+  \begin{tabular}{|l|c|c|c|c|}
   \hline
   % \multicolumn{1}{|c|}{Application} &
   %   \multicolumn{1}{c|}{Processing Platform} &
@@ -30,22 +30,19 @@
       \multirow{2}{*}{Processing Platform} &
       \multirow{2}{*}{Reference Result$^\ast$} &
       {Result without} &
-      {Result with} &
-      \multicolumn{1}{c|}{\multirow{2}{*}{Avg. Sim. Time$^\dagger$}} \\
+      {Result with}\\
     \multicolumn{1}{|c|}{} &
        &
        &
       {Numerical Tuning} &
-      {Numerical Tuning} &
-      \multicolumn{1}{c|}{} \\ 
+      {Numerical Tuning} \\
     \hline \hline
 
   LSTM-WLM & 
     FlexASR & 
     122.15 & 
     121.97 & 
-    N/A &
-    22.4s \\
+    N/A \\
     \hline
 
 %   ResMLP  & 
@@ -60,57 +57,49 @@
     FlexASR &
     91.55\% &
     91.50\% &
-    N/A &
-    11.6s \\
+    N/A  \\
     
    &
     HLSCNN &
     91.55\% &
     \cellcolor[HTML]{E9CECE}29.75\% &
-    \cellcolor[HTML]{DDEFDE}92.10\% &
-    7min 3s \\
+    \cellcolor[HTML]{DDEFDE}92.10\%  \\
     
    &
     FlexASR \& HLSCNN & 
     91.55\% & 
     \cellcolor[HTML]{E9CECE}29.15\% & 
-    \cellcolor[HTML]{DDEFDE}91.85\% & 
-    7min 6s \\ 
+    \cellcolor[HTML]{DDEFDE}91.85\% \\
     \hline
 
   MobileNet-V2 &
     VTA &
     92.40\% &
     89.40\% &
-    N/A &
-    20min 15s \\
+    N/A \\
   
    &
     FlexASR &
     92.40\% &
     92.30\% &
-    N/A &
-    18.1s \\
+    N/A \\
 
    & 
     HLSCNN & 
     92.40\% & 
     \cellcolor[HTML]{E9CECE}10.35\% & 
-    \cellcolor[HTML]{DDEFDE}91.50\% & 
-    20min 33s \\
+    \cellcolor[HTML]{DDEFDE}91.50\% \\
     
    & 
     FlexASR \& HLSCNN & 
     92.40\% & 
     \cellcolor[HTML]{E9CECE}10.35\% & 
-    \cellcolor[HTML]{DDEFDE}91.20\% & 
-    21min 01s \\
+    \cellcolor[HTML]{DDEFDE}91.20\% \\
 
   % Q-MobileNet-V2 & VTA & 91.80\% & \hl{10.80\%} & N/A & 43min 13s \\
 
     \hline
   \end{tabular}
-  \end{small}
   \begin{tablenotes}
     \item $\ast$ The reference result does not represent the best achievable accuracy/perplexity of the model on the given dataset. This table is intended for comparing the application-level results on different processing platforms.
     \item $\dagger$ Average simulation time of running one data point (e.g., an image or a sentence) on an AMD EPYC-7532 core.

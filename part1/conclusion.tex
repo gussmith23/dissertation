@@ -1,0 +1,64 @@
+\chapter*{\Cref{part:glenside-and-3la} Conclusion}
+% \chapter*{Conclusion}
+
+In \cref{part:glenside-and-3la}
+  of this dissertation,
+  I presented the first of two case studies
+  giving evidence to my thesis.
+In \cref{sec:part1-motivation}, 
+  noting the gap in compiler and simulation tools
+  for
+  machine learning \glspl{accelerator}
+  and how it was potentially affecting
+  accelerator \cref{thesis:correctness},
+  the authors of \TLA
+  (including the author of this dissertation)
+  set to developing a methodology for
+  compiling to and testing
+  designs.
+As part of this flow,
+  we needed a tool for finding places in
+  machine learning workloads
+  where we could invoke accelerators.
+Existing
+  tools missed mapping opportunities
+  and were cumbersome to use,
+  and thus poor with regards to \cref{thesis:optimizations}
+  and \cref{thesis:devtime}.
+In response,
+  in \cref{sec:glenside}
+  we introduced \g:
+  a pure, binder-free tensor language
+  which allowing for the use of
+  more flexible \cref{thesis:algorithms}---%
+  namely,
+  \gls{equality-saturation}---%
+  over machine learning workloads.
+We incorporated \g into \TLA
+  to automatically generate \gls{tensorization}
+  routines
+  in our compiler backend.
+In \cref{chapter:part1-evaluation},
+  we demonstrated how \TLA, with the power of \g,
+  finds more accelerator mappings
+  (greater \cref{thesis:optimizations})
+  with less developer input
+  (reduced \cref{thesis:devtime}).
+Furthermore, we showed how we used \TLA
+  to find and fix bugs in real
+  accelerators (aiding in \cref{thesis:correctness}).
+
+Note that, while we improve upon the state of the art 
+  in algorithm flexibility (\cref{thesis:algorithms}),
+  \cref{part:glenside-and-3la}
+  does not improve upon the state of the art
+  in model explicitness (\cref{thesis:models}).
+In \cref{part:lakeroad}, I will
+  more fully realize my thesis
+  by utilizing \textit{both} more adaptable algorithms
+  and more explicit models
+  to automatically generate backends
+  for FPGA compilers.
+  
+  
+  
